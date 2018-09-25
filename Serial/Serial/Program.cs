@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO.Ports;
 using System.Threading;
+using System.Diagnostics;
 namespace Serial
 {
     class MainClass
@@ -9,25 +10,22 @@ namespace Serial
 		static bool _continue = true;
         static SerialPort _serialPort;
 		static Thread readThread = new Thread(Read);
+		static Stopwatch DataTimer = new Stopwatch();
+        
         public static void Main()
         {
-            string message;
             StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
-
-
 
 			ConnectToCom();
             Console.WriteLine("Type QUIT to exit");
 
-            while (_continue)
-            {
-                message = Console.ReadLine();
-                if (stringComparer.Equals("quit", message))
-                {
-                    _continue = false;
-                }
-            }
 
+			while (DataTimer.ElapsedMilliseconds < 20000)
+            {
+                
+            }
+			DataTimer.Stop();
+			_continue = false;
             _serialPort.Close();
         }
 
@@ -53,7 +51,8 @@ namespace Serial
         public static void Read()
         {
 			DataClass Accelerometer = new DataClass();
-            while (_continue)
+			DataTimer.Start();
+            while (_continue && DataTimer.ElapsedMilliseconds < 20000)
             {
                 try
                 {
@@ -78,6 +77,8 @@ namespace Serial
 						//Console.WriteLine($"Y: {Accelerometer.GetY()}");
 						//Console.WriteLine($"Z: {Accelerometer.GetZ()}");
 						Console.WriteLine($"HZ: {Accelerometer.GetHz()}");
+						var TimerString = Math.Round((double)(DataTimer.ElapsedMilliseconds / 1000), 0).ToString();
+						Console.WriteLine($"Timer: {TimerString}");
 					}
                 }
                 catch (TimeoutException) { }
@@ -87,6 +88,10 @@ namespace Serial
 				
 				}
             }
+			_continue = false;
+			Accelerometer.WriteToCSV();
+			Console.Clear();
+			Console.WriteLine("Wrote Data to CSV");
         }
 
 
