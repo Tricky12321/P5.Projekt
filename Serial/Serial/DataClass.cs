@@ -15,6 +15,7 @@ namespace Serial
 		private const int CalibrateTimerMs = 10000; // ms of calibrating time
 		private const int Margin = 5;
 		private const bool UseMargin = true;
+		private const int DecimalCount = 1;
 		public double X;
 		public double Y;
 		public double Z;
@@ -119,19 +120,19 @@ namespace Serial
 		#region Average output
 		public double GetAvgX()
 		{
-			return Math.Round(X_Queue.Average(), 0);
+			return Math.Round(X_Queue.Average(), DecimalCount);
 
 		}
 
 		public double GetAvgY()
 		{
-			return Math.Round(Y_Queue.Average(), 0);
+			return Math.Round(Y_Queue.Average(), DecimalCount);
 
 		}
 
 		public double GetAvgZ()
 		{
-			return Math.Round(Z_Queue.Average(), 0);
+			return Math.Round(Z_Queue.Average(), DecimalCount);
 		}
 		#endregion
 		#region HzCalculation
@@ -188,15 +189,11 @@ namespace Serial
 		{
 			if (_useCalibration)
 			{
-				Console.WriteLine($"X: {Math.Round(X_Calibrated(), 5)}");
-				Console.WriteLine($"Y: {Math.Round(Y_Calibrated(), 5)}");
-				Console.WriteLine($"Z: {Math.Round(Z_Calibrated(), 5)}");
+				PrintXYZ_true(X_Calibrated(), Y_Calibrated(), Z_Calibrated());
 			}
 			else
 			{
-				Console.WriteLine($"X: {X}");
-				Console.WriteLine($"Y: {Y}");
-				Console.WriteLine($"Z: {Z}");
+				PrintXYZ_true(X, Y, Z);
 			}
 		}
 
@@ -204,6 +201,17 @@ namespace Serial
 		{
 
 			Console.WriteLine($"Hz: {GetHz()}");
+		}
+
+		public void PrintXYZ_true(double x, double y, double z)
+		{
+			string X = Math.Round(x, DecimalCount).ToString();
+			string Y = Math.Round(y, DecimalCount).ToString();
+			string Z = Math.Round(z, DecimalCount).ToString();
+			Console.WriteLine($"X: {X.PadLeft(5)}");
+			Console.WriteLine($"Y: {Y.PadLeft(5)}");
+			Console.WriteLine($"Z: {Z.PadLeft(5)}");
+
 		}
 		#endregion
 
@@ -259,10 +267,10 @@ namespace Serial
 		public double X_KalmanVal()
 		{
 			if (_useCalibration)
-            {
+			{
 				return X_Kalman.Output(X_Calibrated());
 
-            }
+			}
 			return X_Kalman.Output(X);
 
 		}
@@ -270,17 +278,18 @@ namespace Serial
 		public double Y_KalmanVal()
 		{
 			if (_useCalibration)
-            {
+			{
 				return Y_Kalman.Output(Y_Calibrated());
 
-            }
+			}
 			return Y_Kalman.Output(Y);
 
 		}
 
 		public double Z_KalmanVal()
 		{
-			if (_useCalibration) {
+			if (_useCalibration)
+			{
 				return Z_Kalman.Output(Z_Calibrated());
 
 			}
@@ -290,9 +299,7 @@ namespace Serial
 		public void PrintXYZKalman()
 		{
 			Console.WriteLine("Kalman");
-			Console.WriteLine($"X: {Math.Round(X_KalmanVal(), 5)}");
-			Console.WriteLine($"Y: {Math.Round(Y_KalmanVal(), 5)}");
-			Console.WriteLine($"Z: {Math.Round(Z_KalmanVal(), 5)}");
+			PrintXYZ_true(X_KalmanVal(), Y_KalmanVal(), Z_KalmanVal());
 		}
 
 		public double X_Calibrated()
