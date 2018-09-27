@@ -3,28 +3,57 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.IO;
+using System.IO.Ports;
+using System.Diagnostics;
 namespace Serial
 {
 	public class DataClass
 	{
 		private const int StackSize = 100;
-        public Int64 X;
-        public Int64 Y;
-        public Int64 Z;
+		private const int CalibrateTimerMs = 10000; // ms of calibrating time
+		private const int Margin = 5;
+		private const bool UseMargin = true;
+		public double X;
+		public double Y;
+		public double Z;
 
-        private Queue<int> X_Queue = new Queue<int>();
-        private Queue<int> Y_Queue = new Queue<int>();
-        private Queue<int> Z_Queue = new Queue<int>();
-        
-		private Queue<int> X_Log = new Queue<int>();
-        private Queue<int> Y_Log = new Queue<int>();
-        private Queue<int> Z_Log = new Queue<int>();
+		public double X_last = 0;
+		public double Y_last = 0;
+		public double Z_last = 0;
 
-        // Used to calculate Hz Rate
+		public double X_calibration = 0;
+		public double Y_calibration = 0;
+		public double Z_calibration = 0;
+
+		private Queue<double> X_Queue = new Queue<double>();
+		private Queue<double> Y_Queue = new Queue<double>();
+		private Queue<double> Z_Queue = new Queue<double>();
+
+		private Queue<double> X_Log = new Queue<double>();
+		private Queue<double> Y_Log = new Queue<double>();
+		private Queue<double> Z_Log = new Queue<double>();
+
+		private Queue<double> X_Calibrate = new Queue<double>();
+		private Queue<double> Y_Calibrate = new Queue<double>();
+		private Queue<double> Z_Calibrate = new Queue<double>();
+
+		private KalmanFilter X_Kalman = new KalmanFilter(2, 2, 0.525, 2, 0.5, 0);
+		private KalmanFilter Y_Kalman = new KalmanFilter(2, 2, 0.525, 2, 0.5, 0);
+		private KalmanFilter Z_Kalman = new KalmanFilter(2, 2, 0.525, 2, 0.5, 0);
+
+		private bool _calibrating = false;
+		private bool _calibrated = false;
+		private bool _useCalibration = true;
+		private SerialPort _serialPort;
+
+		// Used to calculate Hz Rate
 		private double _hz_Rate = 0;
 		private double _hz = 0;
 		private object _hzLock = new object();
+
+		private Stopwatch CalibrateTimer = new Stopwatch();
 		public DataClass()
 		{
 			for (int i = 0; i < StackSize; i++)
@@ -37,83 +66,279 @@ namespace Serial
 			HzThread.Start();
 
 		}
-
-		public void UpdateX(int XVal)
+		#region Updating stuff
+		public void UpdateXYZ(double XVal, double YVal, double ZVal)
 		{
+			UpdateX(XVal);
+			UpdateY(YVal);
+			UpdateZ(ZVal);
+			NewNum();
+		}
+
+		public decimal FindDifference(decimal nr1, decimal nr2)
+		{
+			return Math.Abs(nr1 - nr2);
+		}
+
+		public void UpdateX(double XVal)
+		{
+			if (_calibrating)
+			{
+				X_Calibrate.Enqueue(XVal);
+			}
+			X = XVal;
 			X_Queue.Enqueue(XVal);
 			X_Log.Enqueue(XVal);
 			X_Queue.Dequeue();
 		}
 
-		public void UpdateY(int YVal)
+		public void UpdateY(double YVal)
 		{
+			if (_calibrating)
+			{
+				Y_Calibrate.Enqueue(YVal);
+			}
+			Y = YVal;
 			Y_Queue.Enqueue(YVal);
 			Y_Log.Enqueue(YVal);
 			Y_Queue.Dequeue();
 		}
 
-		public void UpdateZ(int ZVal)
+		public void UpdateZ(double ZVal)
 		{
+			if (_calibrating)
+			{
+				Z_Calibrate.Enqueue(ZVal);
+			}
+			Z = ZVal;
 			Z_Queue.Enqueue(ZVal);
 			Z_Log.Enqueue(ZVal);
 			Z_Queue.Dequeue();
 		}
-
-		public int GetX()
+		#endregion
+		#region Average output
+		public double GetAvgX()
 		{
-			return Convert.ToInt32(Math.Round(X_Queue.Average(), 0));
+			return Math.Round(X_Queue.Average(), 0);
 
 		}
 
-		public int GetY()
+		public double GetAvgY()
 		{
-			return Convert.ToInt32(Math.Round(Y_Queue.Average(), 0));
+			return Math.Round(Y_Queue.Average(), 0);
 
 		}
 
-		public int GetZ()
+		public double GetAvgZ()
 		{
-			return Convert.ToInt32(Math.Round(Z_Queue.Average(), 0));
+			return Math.Round(Z_Queue.Average(), 0);
 		}
-
-		public void NewNum() {
-			lock (_hzLock) {
+		#endregion
+		#region HzCalculation
+		public void NewNum()
+		{
+			lock (_hzLock)
+			{
 				_hz++;
-            }
+			}
 		}
-
-		private void CalculateHz() {
+		private void CalculateHz()
+		{
 			Thread.Sleep(1000);
 			_hz_Rate = _hz;
-            lock (_hzLock)
-            {
+			lock (_hzLock)
+			{
 				_hz = 0;
 			}
 			CalculateHz();
 		}
 
-		public double GetHz() {
+		public double GetHz()
+		{
 			return _hz_Rate;
 		}
+		#endregion
 
-
-		public void WriteToCSV() {
-			if (File.Exists("output.csv")) {
+		public void WriteToCSV()
+		{
+			if (File.Exists("output.csv"))
+			{
 				File.Delete("output.csv");
 			}
-			File.Create("output.csv");
-			using (StreamWriter streamWriter = new StreamWriter("output.csv")) {
-				streamWriter.WriteLine("Timer,X,Y,Z");
+			using (StreamWriter FileWriter = File.AppendText("output.csv"))
+			{
+				FileWriter.WriteLine("Timer,X,Y,Z");
 				int i = 0;
-                while (X_Log.Count > 0 && Y_Log.Count > 0 && Z_Log.Count > 0)
+				while (X_Log.Count > 0 && Y_Log.Count > 0 && Z_Log.Count > 0)
 				{
 					i++;
-					int X_local = X_Log.Dequeue();
-					int Y_local = Y_Log.Dequeue();
-                    int Z_local = Z_Log.Dequeue();
-					streamWriter.WriteLine($"{i},{X_local},{Y_local},{Z_local}");
+					double X_local = X_Log.Dequeue();
+					double Y_local = Y_Log.Dequeue();
+					double Z_local = Z_Log.Dequeue();
+					FileWriter.WriteLine($"\"{i}\",\"{X_local}\",\"{Y_local}\",\"{Z_local}\"");
 				}
+				FileWriter.Close();
 			}
 		}
+
+
+		#region PrintStuff
+
+		public void PrintXYZ()
+		{
+			if (_useCalibration)
+			{
+				Console.WriteLine($"X: {Math.Round(X_Calibrated(), 5)}");
+				Console.WriteLine($"Y: {Math.Round(Y_Calibrated(), 5)}");
+				Console.WriteLine($"Z: {Math.Round(Z_Calibrated(), 5)}");
+			}
+			else
+			{
+				Console.WriteLine($"X: {X}");
+				Console.WriteLine($"Y: {Y}");
+				Console.WriteLine($"Z: {Z}");
+			}
+		}
+
+		public void PrintHz()
+		{
+
+			Console.WriteLine($"Hz: {GetHz()}");
+		}
+		#endregion
+
+
+
+		public void Calibrate()
+		{
+			if (!_useCalibration)
+			{
+				Console.WriteLine("Skipping calibration");
+
+				return;
+			}
+			_calibrating = true;
+			Console.Clear();
+			Console.WriteLine("Calibrating... (10 sec)");
+			Console.WriteLine("LEAVE SENSOR LEVEL");
+
+			// Start calibrate thread
+			Thread CalibrateThread = new Thread(CalibrateInput);
+			CalibrateThread.Start();
+			CalibrateTimer.Start();
+			CalibrateThread.Join();
+			// var CalibrateThread = Task.Factory.StartNew(() => CalibrateInput());
+			// CalibrateThread.Wait();
+
+		}
+
+		public void HandleRawData(string data)
+		{
+			try
+			{
+				if (data.Contains("AC") && data.Contains(":"))
+				{
+					data = data.Substring(2, data.Length - 3);
+
+					var message_split = data.Split(':');
+					double Xx = Convert.ToDouble(message_split[0]) / 100;
+					double Yy = Convert.ToDouble(message_split[1]) / 100;
+					double Zz = Convert.ToDouble(message_split[2]) / 100;
+
+					UpdateXYZ(Xx, Yy, Zz);
+				}
+
+			}
+			catch (TimeoutException) { }
+			catch (FormatException)
+			{
+
+			}
+		}
+
+		public double X_KalmanVal()
+		{
+			if (_useCalibration)
+            {
+				return X_Kalman.Output(X_Calibrated());
+
+            }
+			return X_Kalman.Output(X);
+
+		}
+
+		public double Y_KalmanVal()
+		{
+			if (_useCalibration)
+            {
+				return Y_Kalman.Output(Y_Calibrated());
+
+            }
+			return Y_Kalman.Output(Y);
+
+		}
+
+		public double Z_KalmanVal()
+		{
+			if (_useCalibration) {
+				return Z_Kalman.Output(Z_Calibrated());
+
+			}
+			return Z_Kalman.Output(Z);
+		}
+
+		public void PrintXYZKalman()
+		{
+			Console.WriteLine("Kalman");
+			Console.WriteLine($"X: {Math.Round(X_KalmanVal(), 5)}");
+			Console.WriteLine($"Y: {Math.Round(Y_KalmanVal(), 5)}");
+			Console.WriteLine($"Z: {Math.Round(Z_KalmanVal(), 5)}");
+		}
+
+		public double X_Calibrated()
+		{
+			return X - X_calibration;
+		}
+
+		public double Y_Calibrated()
+		{
+			return Y - Y_calibration;
+		}
+
+		public double Z_Calibrated()
+		{
+			return Z - Z_calibration;
+		}
+
+
+		public void SetInput(SerialPort port)
+		{
+			_serialPort = port;
+
+		}
+
+		public void CalibrateInput()
+		{
+			while (_calibrating)
+			{
+				if (CalibrateTimer.ElapsedMilliseconds >= CalibrateTimerMs)
+				{
+					_calibrating = false;
+					_calibrated = true;
+					X_calibration = X_Calibrate.Average();
+					Y_calibration = Y_Calibrate.Average();
+					Z_calibration = Z_Calibrate.Average();
+					return;
+				}
+				try
+				{
+					var input = _serialPort.ReadLine();
+					HandleRawData(input);
+				}
+				catch (TimeoutException) { }
+			}
+		}
+
+
 	}
 }
