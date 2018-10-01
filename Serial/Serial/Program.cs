@@ -15,6 +15,8 @@ namespace Serial
         
 		public static void Main()
 		{
+			RawSerialRead Test = new RawSerialRead();
+			/*
 			StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
 
 			ConnectToCom();
@@ -28,6 +30,7 @@ namespace Serial
 			DataTimer.Stop();
 			_continue = false;
 			_serialPort.Close();
+			*/
 		}
 
 		public static void ConnectToCom()

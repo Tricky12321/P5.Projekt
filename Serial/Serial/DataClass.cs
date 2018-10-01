@@ -227,7 +227,7 @@ namespace Serial
 			}
 			_calibrating = true;
 			Console.Clear();
-			Console.WriteLine("Calibrating... (10 sec)");
+			Console.WriteLine($"Calibrating... ({CalibrateTimerMs/1000} sec)");
 			Console.WriteLine("LEAVE SENSOR LEVEL");
 
 			// Start calibrate thread
