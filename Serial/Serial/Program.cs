@@ -12,7 +12,9 @@ namespace Serial
 		static Thread readThread = new Thread(Read);
 		static Stopwatch DataTimer = new Stopwatch();
 		static DataClass Accelerometer = new DataClass();
-        
+
+		static PositionCalculator positionCalculator = new PositionCalculator();
+                
 		public static void Main()
 		{
 			RawSerialRead Test = new RawSerialRead();
@@ -38,7 +40,7 @@ namespace Serial
 
 
 			// Create a new SerialPort object with default settings.
-			_serialPort = new SerialPort("/dev/cu.usbmodem1421", 115200);
+			_serialPort = new SerialPort("/dev/cu.usbmodem14401", 115200);
 
 			// Allow the user to set the appropriate properties.
 
@@ -61,18 +63,43 @@ namespace Serial
 
 		public static void Read()
 		{
+			double xAcc = 0, yAcc = 0, zAcc = 0;
+
+
+
+			Stopwatch HzTimer = new Stopwatch();
 			DataTimer.Start();
+			HzTimer.Start();
+			double timer2 = 0;
 			while (_continue && DataTimer.ElapsedMilliseconds < 999999999)
 			{
 				try
 				{
 					Accelerometer.HandleRawData(_serialPort.ReadLine());
 					Console.Clear();
-					Accelerometer.PrintXYZ();
 					Accelerometer.PrintXYZKalman();
-					Accelerometer.PrintHz();
-					var TimerString = Math.Round((double)(DataTimer.ElapsedMilliseconds / 1000), 0).ToString();
-					Console.WriteLine($"Timer: {TimerString}");
+                    
+					timer2 = (double)HzTimer.ElapsedMilliseconds / 1000;
+					HzTimer.Reset();
+                    HzTimer.Start();
+
+					xAcc += Accelerometer.X / 1000f * 9.82;
+					yAcc += Accelerometer.Y / 1000f * 9.82;
+					zAcc += Accelerometer.Z / 1000f * 9.82;
+                    
+
+
+					Console.WriteLine(xAcc);
+					Console.WriteLine(yAcc);
+					Console.WriteLine(zAcc);
+
+
+					positionCalculator.CalculatePositionFromAccelerometer(new DataPoint(new XYZ(xAcc, yAcc, zAcc), timer2));
+					Console.WriteLine($"Timer: {timer2.ToString()}");
+                    
+					Console.WriteLine($"X: {positionCalculator.CurrentPosition.X}");
+					Console.WriteLine($"Y: {positionCalculator.CurrentPosition.Y}");
+					Console.WriteLine($"Z: {positionCalculator.CurrentPosition.Z}");	
 				}
 				catch (TimeoutException) { }
 				catch (FormatException)

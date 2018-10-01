@@ -35,7 +35,7 @@ namespace Serial
 		private Queue<double> X_Log = new Queue<double>();
 		private Queue<double> Y_Log = new Queue<double>();
 		private Queue<double> Z_Log = new Queue<double>();
-
+        
 		private Queue<double> X_Calibrate = new Queue<double>();
 		private Queue<double> Y_Calibrate = new Queue<double>();
 		private Queue<double> Z_Calibrate = new Queue<double>();
@@ -46,7 +46,7 @@ namespace Serial
 
 		private bool _calibrating = false;
 		private bool _calibrated = false;
-		private bool _useCalibration = true;
+		private bool _useCalibration = false;
 		private SerialPort _serialPort;
 
 		// Used to calculate Hz Rate
@@ -249,9 +249,9 @@ namespace Serial
 					data = data.Substring(2, data.Length - 3);
 
 					var message_split = data.Split(':');
-					double Xx = Convert.ToDouble(message_split[0]) / 100;
-					double Yy = Convert.ToDouble(message_split[1]) / 100;
-					double Zz = Convert.ToDouble(message_split[2]) / 100;
+					double Xx = Convert.ToDouble(message_split[0]);
+					double Yy = Convert.ToDouble(message_split[1]);
+					double Zz = Convert.ToDouble(message_split[2]);
 
 					UpdateXYZ(Xx, Yy, Zz);
 				}
