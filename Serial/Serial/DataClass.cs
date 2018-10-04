@@ -12,13 +12,20 @@ namespace Serial
 	public class DataClass
 	{
 		private const int StackSize = 100;
-		private const int CalibrateTimerMs = 10000; // ms of calibrating time
+		private const int CalibrateTimerMs = 1000; // ms of calibrating time
 		private const int Margin = 5;
 		private const bool UseMargin = true;
 		private const int DecimalCount = 1;
+
+		private const int StillStandRequirements = 150;
+
 		public double X;
 		public double Y;
 		public double Z;
+
+		public double X_Speed => KalmanLowPass_log.Sum(item => item.X);
+		public double Y_Speed => KalmanLowPass_log.Sum(item => item.Y);
+		public double Z_Speed => KalmanLowPass_log.Sum(item => item.Z);
 
 		public double X_last = 0;
 		public double Y_last = 0;
@@ -35,18 +42,41 @@ namespace Serial
 		private Queue<double> X_Log = new Queue<double>();
 		private Queue<double> Y_Log = new Queue<double>();
 		private Queue<double> Z_Log = new Queue<double>();
-        
+
+		private Queue<XYZ> Raw_Log = new Queue<XYZ>();
+		private Queue<XYZ> Kalman_Log = new Queue<XYZ>();
+		private Queue<XYZ> Highpass_log = new Queue<XYZ>();
+		private Queue<XYZ> Lowpass_log = new Queue<XYZ>();
+		private Queue<XYZ> KalmanLowPass_log = new Queue<XYZ>();
+		private Queue<XYZ> RawCalibrated_log = new Queue<XYZ>();
+
 		private Queue<double> X_Calibrate = new Queue<double>();
 		private Queue<double> Y_Calibrate = new Queue<double>();
 		private Queue<double> Z_Calibrate = new Queue<double>();
 
-		private KalmanFilter X_Kalman = new KalmanFilter(2, 2, 0.525, 2, 0.5, 0);
-		private KalmanFilter Y_Kalman = new KalmanFilter(2, 2, 0.525, 2, 0.5, 0);
-		private KalmanFilter Z_Kalman = new KalmanFilter(2, 2, 0.525, 2, 0.5, 0);
+		private KalmanFilter X_Kalman = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
+		private KalmanFilter Y_Kalman = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
+		private KalmanFilter Z_Kalman = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
+
+		private FilterButterworth X_HighPass = new FilterButterworth(0.5, 5, FilterButterworth.PassType.Highpass, 0.25);
+		private FilterButterworth Y_HighPass = new FilterButterworth(0.5, 5, FilterButterworth.PassType.Highpass, 0.25);
+		private FilterButterworth Z_HighPass = new FilterButterworth(0.5, 5, FilterButterworth.PassType.Highpass, 0.25);
+
+		private FilterButterworth X_LowPass = new FilterButterworth(0.5, 120, FilterButterworth.PassType.Lowpass, 0.25);
+		private FilterButterworth Y_LowPass = new FilterButterworth(0.5, 120, FilterButterworth.PassType.Lowpass, 0.25);
+		private FilterButterworth Z_LowPass = new FilterButterworth(0.5, 120, FilterButterworth.PassType.Lowpass, 0.25);
+
+		private KalmanFilter X_KalmanLowpass = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
+		private KalmanFilter Y_KalmanLowpass = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
+		private KalmanFilter Z_KalmanLowpass = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
+
+		private FilterButterworth X_Kalman_LowPass = new FilterButterworth(0.8, 3, FilterButterworth.PassType.Lowpass, 0.25);
+		private FilterButterworth Y_Kalman_LowPass = new FilterButterworth(0.8, 3, FilterButterworth.PassType.Lowpass, 0.25);
+		private FilterButterworth Z_Kalman_LowPass = new FilterButterworth(0.8, 3, FilterButterworth.PassType.Lowpass, 0.25);
+
 
 		private bool _calibrating = false;
-		private bool _calibrated = false;
-		private bool _useCalibration = false;
+		private bool _useCalibration = true;
 		private SerialPort _serialPort;
 
 		// Used to calculate Hz Rate
@@ -63,9 +93,6 @@ namespace Serial
 				Y_Queue.Enqueue(0);
 				Z_Queue.Enqueue(0);
 			}
-			Thread HzThread = new Thread(CalculateHz);
-			HzThread.Start();
-
 		}
 		#region Updating stuff
 		public void UpdateXYZ(double XVal, double YVal, double ZVal)
@@ -73,6 +100,24 @@ namespace Serial
 			UpdateX(XVal);
 			UpdateY(YVal);
 			UpdateZ(ZVal);
+
+			X_Kalman_LowPass.Update(X_Calibrated());
+			Y_Kalman_LowPass.Update(Y_Calibrated());
+			Z_Kalman_LowPass.Update(Z_Calibrated());
+
+			X_HighPass.Update(X_Calibrated());
+			Y_HighPass.Update(Y_Calibrated());
+			Z_HighPass.Update(Z_Calibrated());
+
+			X_LowPass.Update(X_Calibrated());
+			Y_LowPass.Update(Y_Calibrated());
+			Z_LowPass.Update(Z_Calibrated());
+
+			if (_useCalibration)
+			{
+				CheckStandStill();
+			}
+
 			NewNum();
 		}
 
@@ -160,30 +205,104 @@ namespace Serial
 		}
 		#endregion
 
-		public void WriteToCSV()
+		public void WriteToCSV(string fileName, Queue<XYZ> Data, bool NewFiles = false)
 		{
-			if (File.Exists("output.csv"))
-			{
-				File.Delete("output.csv");
+			string NewFileName = fileName+".csv";
+			if (NewFiles) {
+				int fileInt = 0;
+                while (File.Exists(fileName + fileInt+".csv"))
+                {
+                    fileInt++;
+                }
+				NewFileName = fileName + fileInt+".csv";
+			} else {
+				if (File.Exists(NewFileName)) {
+					File.Delete(NewFileName);
+				}
 			}
-			using (StreamWriter FileWriter = File.AppendText("output.csv"))
+
+			using (StreamWriter FileWriter = File.AppendText(NewFileName))
 			{
-				FileWriter.WriteLine("Timer,X,Y,Z");
+				FileWriter.WriteLine($"Timer,X,Y,Z,Timer,XI1,YI1,ZI1,Timer,XI2,YI2,ZI2");
 				int i = 0;
-				while (X_Log.Count > 0 && Y_Log.Count > 0 && Z_Log.Count > 0)
+				double X_I1 = 0;
+				double Y_I1 = 0;
+				double Z_I1 = 0;
+				double X_I2 = 0;
+				double Y_I2 = 0;
+				double Z_I2 = 0;
+				while (Data.Count > 0)
 				{
 					i++;
-					double X_local = X_Log.Dequeue();
-					double Y_local = Y_Log.Dequeue();
-					double Z_local = Z_Log.Dequeue();
-					FileWriter.WriteLine($"\"{i}\",\"{X_local}\",\"{Y_local}\",\"{Z_local}\"");
+					XYZ SingleElement = Data.Dequeue();
+					double X_local = SingleElement.X;
+					double Y_local = SingleElement.Y;
+					double Z_local = SingleElement.Z;
+                    // Single Integral
+					X_I1 += X_local;
+					Y_I1 += Y_local;
+					Z_I1 += Z_local;
+                    // Double Integral
+					X_I2 += X_I1;
+					Y_I2 += Y_I1;
+					Z_I2 += Z_I1;
+					FileWriter.WriteLine($"\"{i}\",\"{X_local}\",\"{Y_local}\",\"{Z_local}\"" +
+					                     $",\"{i}\",\"{X_I1}\",\"{Y_I1}\",\"{Z_I1}\"" +
+					                     $",\"{i}\",\"{X_I2}\",\"{Y_I2}\",\"{Z_I2}\"");
 				}
 				FileWriter.Close();
 			}
 		}
 
-
 		#region PrintStuff
+
+		public void PrintXYZKalman()
+		{
+			Console.WriteLine("Kalman");
+			PrintXYZ_true(X_KalmanVal(), Y_KalmanVal(), Z_KalmanVal());
+		}
+
+		public void PrintXYZSpeed()
+        {
+            Console.WriteLine("Speed m/s");
+            PrintXYZ_true(X_Speed, Y_Speed, Z_Speed);
+        }
+
+		public void PrintXYZHighpass()
+		{
+			Console.WriteLine("Highpass");
+			PrintXYZ_true(X_HighPassVal(), Y_HighPassVal(), Z_HighPassVal());
+		}
+
+		public void PrintXYZLowpass()
+		{
+			Console.WriteLine("Lowpass");
+			PrintXYZ_true(X_LowPass.Value, Y_LowPass.Value, Z_LowPass.Value);
+		}
+
+		public void PrintXYZKalmanLowpass()
+		{
+			Console.WriteLine("Kalman Lowpass");
+
+			double X = X_KalmanLowpass.Output(X_Kalman_LowPass.Value);
+			double Y = Y_KalmanLowpass.Output(Y_Kalman_LowPass.Value);
+			double Z = Z_KalmanLowpass.Output(Z_Kalman_LowPass.Value);
+			XYZ Data = new XYZ(X, Y, Z);
+			KalmanLowPass_log.Enqueue(Data);
+			PrintXYZ_true(X, Y, Z);
+		}
+
+		public void PrintXYZRawCalibrated()
+		{
+			Console.WriteLine("Raw Calibrated");
+
+			double X = X_Calibrated();
+			double Y = Y_Calibrated();
+			double Z = Z_Calibrated();
+			XYZ Data = new XYZ(X, Y, Z);
+			RawCalibrated_log.Enqueue(Data);
+			PrintXYZ_true(X, Y, Z);
+		}
 
 		public void PrintXYZ()
 		{
@@ -211,23 +330,19 @@ namespace Serial
 			Console.WriteLine($"X: {X.PadLeft(5)}");
 			Console.WriteLine($"Y: {Y.PadLeft(5)}");
 			Console.WriteLine($"Z: {Z.PadLeft(5)}");
-
 		}
 		#endregion
-
-
 
 		public void Calibrate()
 		{
 			if (!_useCalibration)
 			{
 				Console.WriteLine("Skipping calibration");
-
 				return;
 			}
 			_calibrating = true;
 			Console.Clear();
-			Console.WriteLine($"Calibrating... ({CalibrateTimerMs/1000} sec)");
+			Console.WriteLine($"Calibrating... ({CalibrateTimerMs / 1000} sec)");
 			Console.WriteLine("LEAVE SENSOR LEVEL");
 
 			// Start calibrate thread
@@ -258,10 +373,24 @@ namespace Serial
 
 			}
 			catch (TimeoutException) { }
-			catch (FormatException)
-			{
+			catch (FormatException) { }
+			catch (IndexOutOfRangeException) {}
+		}
 
-			}
+		#region Values
+		public double X_HighPassVal()
+		{
+			return X_HighPass.Value;
+		}
+
+		public double Y_HighPassVal()
+		{
+			return Y_HighPass.Value;
+		}
+
+		public double Z_HighPassVal()
+		{
+			return Z_HighPass.Value;
 		}
 
 		public double X_KalmanVal()
@@ -272,7 +401,6 @@ namespace Serial
 
 			}
 			return X_Kalman.Output(X);
-
 		}
 
 		public double Y_KalmanVal()
@@ -296,11 +424,6 @@ namespace Serial
 			return Z_Kalman.Output(Z);
 		}
 
-		public void PrintXYZKalman()
-		{
-			Console.WriteLine("Kalman");
-			PrintXYZ_true(X_KalmanVal(), Y_KalmanVal(), Z_KalmanVal());
-		}
 
 		public double X_Calibrated()
 		{
@@ -316,12 +439,37 @@ namespace Serial
 		{
 			return Z - Z_calibration;
 		}
+		#endregion
 
 
 		public void SetInput(SerialPort port)
 		{
 			_serialPort = port;
 
+		}
+
+		public void SnapData()
+		{
+			XYZ Raw = new XYZ(X_Calibrated(), Y_Calibrated(), Z_Calibrated());
+			XYZ Kalman = new XYZ(X_KalmanVal(), Y_KalmanVal(), Z_KalmanVal());
+			XYZ HighPass = new XYZ(X_HighPassVal(), Y_HighPassVal(), Z_HighPassVal());
+			XYZ LowPass = new XYZ(X_LowPass.Value, Y_LowPass.Value, Z_LowPass.Value);
+
+			Raw_Log.Enqueue(Raw);
+			Kalman_Log.Enqueue(Kalman);
+			Highpass_log.Enqueue(HighPass);
+			Lowpass_log.Enqueue(LowPass);
+		}
+
+		public void WriteData()
+		{
+			// WriteToCSV("Raw", Raw_Log);
+			// WriteToCSV("Kalman", Kalman_Log);
+			// WriteToCSV("Highpass", Highpass_log);
+			// WriteToCSV("Lowpass", Lowpass_log);
+			// WriteToCSV("KalmanLowpass", KalmanLowPass_log);
+			// WriteToCSV("RawCalibrated", RawCalibrated_log);
+			WriteToCSV("Kalman-50cm", Kalman_Log,true );
 		}
 
 		public void CalibrateInput()
@@ -331,7 +479,6 @@ namespace Serial
 				if (CalibrateTimer.ElapsedMilliseconds >= CalibrateTimerMs)
 				{
 					_calibrating = false;
-					_calibrated = true;
 					X_calibration = X_Calibrate.Average();
 					Y_calibration = Y_Calibrate.Average();
 					Z_calibration = Z_Calibrate.Average();
@@ -343,6 +490,25 @@ namespace Serial
 					HandleRawData(input);
 				}
 				catch (TimeoutException) { }
+			}
+		}
+
+		public void CheckStandStill()
+		{
+			if (X_Queue.Average() < 1)
+			{
+				X_calibration = X_Queue.Average();
+
+			}
+			if (Y_Queue.Average() < 1)
+			{
+				Y_calibration = Y_Queue.Average();
+
+			}
+			if (Z_Queue.Average() < 1)
+			{
+				Z_calibration = Z_Queue.Average();
+
 			}
 		}
 
