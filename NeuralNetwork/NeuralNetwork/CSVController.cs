@@ -10,20 +10,31 @@ namespace NeuralNetwork
         int _accelerationLimit = 5;
         public List<double> AccelerationDataX = new List<double>();
         public List<double> NormalizedAccelerationDataX = new List<double>();
-
-        private string _filePath;
+        public List<CSVData> CSVDataList = new List<CSVData>();
 
 
         public CSVController()
         {
         }
 
+        public void GetFiles(){
 
+            List<CSVData> CSVData = new List<CSVData>();
 
-        public void CSVReader()
+            string path = Directory.GetCurrentDirectory();
+            string newPath = Path.GetFullPath(Path.Combine(path, @"..\"));
+
+            foreach (string filePath in Directory.EnumerateFiles(newPath, "*.csv"))
+            {
+                CSVData data = new CSVData();
+                CSVReader(filePath, data);
+            }
+        }
+
+        public void CSVReader(string filePath, CSVData csvData)
         {
 
-            string[] Result = File.ReadAllLines(_filePath);
+            string[] Result = File.ReadAllLines(filePath);
             bool first = true;
             foreach (var item in Result)
             {
@@ -43,12 +54,11 @@ namespace NeuralNetwork
                         }
                     }
                     double time = Convert.ToDouble(FinalElements[0]);
-                    double X = Convert.ToDouble(FinalElements[1]);
-                    double Y = Convert.ToDouble(FinalElements[2]);
-                    double Z = Convert.ToDouble(FinalElements[3]);
+                    //csvData.X = Convert.ToDouble(FinalElements[1]);
+                    //csvData.Y = Convert.ToDouble(FinalElements[2]);
+                    //csvData.Z = Convert.ToDouble(FinalElements[3]);
 
-
-                    AccelerationDataX.Add(X);
+                    CSVDataList.Add(csvData);
                 }
             }
         }

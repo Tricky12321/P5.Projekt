@@ -16,7 +16,7 @@ namespace NeuralNetwork
         private static void StartNN(){
             insOuts = new List<InputOutputData>();
 
-
+            GenerateRandom();
 
             UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(100000, 0.2, new int[] { 2, 4, 4, 1 }, insOuts);
         }
