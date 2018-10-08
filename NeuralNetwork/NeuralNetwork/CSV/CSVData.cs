@@ -4,15 +4,27 @@ namespace NeuralNetwork
 {
     public class CSVData
     {
+        public Pattern Pattern;
+        public List<XYZ> AccelerationData = new List<XYZ>();
+        public List<XYZ> NormalizedAccelerationData = new List<XYZ>();
 
-
-
-        public List<double> AccelerationDataX = new List<double>();
-        public List<double> NormalizedAccelerationDataX = new List<double>();
-
-        public CSVData()
+        public CSVData(PatternEnum patternEnum)
         {
-
+            Pattern pattern = new Pattern(patternEnum);
+            Pattern = pattern;
         }
+
+
+        public void AddToRawAccelerationData(double x, double y, double z)
+        {
+            XYZ xyz = new XYZ(x, y, z);
+        }
+
+        public void AddNormalizedAccerlerationData(double x, double y, double z)
+        {
+            XYZ xyz = new XYZ(x, y, z);
+        }
+
+
     }
 }
