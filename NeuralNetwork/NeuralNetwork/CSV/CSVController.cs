@@ -6,12 +6,8 @@ namespace NeuralNetwork
 {
     public class CSVController
     {
-
         int _accelerationLimit = 5;
-        public List<double> AccelerationDataX = new List<double>();
-        public List<double> NormalizedAccelerationDataX = new List<double>();
         public List<CSVData> CSVDataList = new List<CSVData>();
-
 
         public CSVController()
         {
@@ -53,31 +49,33 @@ namespace NeuralNetwork
                             FinalElements.Add(Element.Replace(',', '.'));
                         }
                     }
+
                     double time = Convert.ToDouble(FinalElements[0]);
-                    //csvData.X = Convert.ToDouble(FinalElements[1]);
-                    //csvData.Y = Convert.ToDouble(FinalElements[2]);
-                    //csvData.Z = Convert.ToDouble(FinalElements[3]);
+                    
+
 
                     CSVDataList.Add(csvData);
+                    csvData.AddToRawAccelerationData(double.Parse(FinalElements[1]), double.Parse(FinalElements[2]), double.Parse(FinalElements[3]));
+
+                    NormalizeData(csvData);
                 }
             }
         }
 
-        public void NormalizeData()
+        public void NormalizeData(CSVData csvData)
         {
-
             double avgPoints = 0;
 
-            for (int i = 0; i < AccelerationDataX.Count; i++)
+            for (int i = 0; i < csvData.AccelerationData.Count; i++)
             {
-                avgPoints = avgPoints + AccelerationDataX[i];
+                avgPoints = avgPoints + csvData.AccelerationData[i].X;
 
                 if (i > 0 && i % 5 == 0)
                 {
                     avgPoints = avgPoints / 5;
                     avgPoints = 0.5 + ((0.5 / _accelerationLimit) * (avgPoints));
 
-                    NormalizedAccelerationDataX.Add(avgPoints);
+                    csvData.AddNormalizedAccerlerationData(avgPoints, 0, 0);
                     avgPoints = 0;
                 }
             }
