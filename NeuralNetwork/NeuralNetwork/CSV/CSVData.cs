@@ -4,13 +4,14 @@ namespace NeuralNetwork
 {
     public class CSVData
     {
+        public Pattern Pattern;
         public List<XYZ> AccelerationData = new List<XYZ>();
-
         public List<XYZ> NormalizedAccelerationData = new List<XYZ>();
 
-        public CSVData()
+        public CSVData(PatternEnum patternEnum)
         {
-
+            Pattern pattern = new Pattern(patternEnum);
+            Pattern = pattern;
         }
 
 

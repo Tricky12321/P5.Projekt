@@ -22,7 +22,7 @@ namespace NeuralNetwork
 
             foreach (string filePath in Directory.EnumerateFiles(newPath, "*.csv"))
             {
-                CSVData data = new CSVData();
+                CSVData data = new CSVData(PatternEnum.forward05m);
                 CSVReader(filePath, data);
             }
         }
@@ -49,10 +49,7 @@ namespace NeuralNetwork
                             FinalElements.Add(Element.Replace(',', '.'));
                         }
                     }
-
                     double time = Convert.ToDouble(FinalElements[0]);
-                    
-
 
                     CSVDataList.Add(csvData);
                     csvData.AddToRawAccelerationData(double.Parse(FinalElements[1]), double.Parse(FinalElements[2]), double.Parse(FinalElements[3]));
