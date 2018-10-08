@@ -2,6 +2,7 @@
 using System.IO.Ports;
 using System.Threading;
 using System.Diagnostics;
+using System.Collections.Generic;
 namespace Serial
 {
 	class MainClass
@@ -11,23 +12,25 @@ namespace Serial
 		static SerialPort _serialPort;
 		static Thread readThread = new Thread(Read);
 		static Stopwatch DataTimer = new Stopwatch();
-		static DataClass Accelerometer = new DataClass();
+		static DataClass Accelerometer = new DataClass("AC");
+		static DataClass Gyroscope = new DataClass("GY");
+		static int Timer = 1000000;
 
 		static PositionCalculator positionCalculator = new PositionCalculator();
                 
+
+
+
 		public static void Main()
 		{
-			StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
 
 			ConnectToCom();
 			Console.WriteLine("Type QUIT to exit");
 
-
-			while (DataTimer.ElapsedMilliseconds < 99999999999)
+			while (DataTimer.ElapsedMilliseconds < Timer)
 			{
 
 			}
-			DataTimer.Stop();
 			_continue = false;
 			_serialPort.Close();
 		}
@@ -36,9 +39,17 @@ namespace Serial
 		{
 
 
-			// Create a new SerialPort object with default settings.
-			_serialPort = new SerialPort("/dev/cu.usbmodem14401", 115200);
-
+            // Detects USB modem ports, to find arduino sheilds
+			List<string> allPorts = new List<string>(SerialPort.GetPortNames());
+			string Port = allPorts.Find(PortName => PortName.Contains("usbmodem"));
+			if (Port == "") {
+				Console.WriteLine("No Serial ports found!");
+				throw new Exception("No Serial ports found");
+			} else{
+				_serialPort = new SerialPort(Port, 115200);
+				Console.WriteLine($"Found serial port: {Port}");
+            }
+			Thread.Sleep(2000);
 			// Allow the user to set the appropriate properties.
 
 			// Set the read/write timeouts
@@ -48,7 +59,9 @@ namespace Serial
 			_serialPort.Open();
 			_continue = true;
 			Accelerometer.SetInput(_serialPort);
+			Gyroscope.SetInput(_serialPort);
 			Accelerometer.Calibrate();
+			Gyroscope.Calibrate();
 			StartReading();
 
 		}
@@ -60,58 +73,54 @@ namespace Serial
 
 		public static void Read()
 		{
-			double xAcc = 0, yAcc = 0, zAcc = 0;
-
-
-
-			Stopwatch HzTimer = new Stopwatch();
+			DataTimer.Reset();
 			DataTimer.Start();
-			HzTimer.Start();
-			double timer2 = 0;
-			while (_continue && DataTimer.ElapsedMilliseconds < 999999999)
+			while (_continue && DataTimer.ElapsedMilliseconds < Timer)
 			{
 				try
 				{
-					Accelerometer.HandleRawData(_serialPort.ReadLine());
+					string Data = _serialPort.ReadLine();
+					Accelerometer.HandleRawData(Data);
+					Gyroscope.HandleRawData(Data);
 					Console.Clear();
-					Accelerometer.PrintXYZKalman();
-                    
-					timer2 = (double)HzTimer.ElapsedMilliseconds / 1000;
-					HzTimer.Reset();
-                    HzTimer.Start();
-
-					xAcc += Accelerometer.X / 1000f * 9.82;
-					yAcc += Accelerometer.Y / 1000f * 9.82;
-					zAcc += Accelerometer.Z / 1000f * 9.82;
-                    
-
-
-					Console.WriteLine(xAcc);
-					Console.WriteLine(yAcc);
-					Console.WriteLine(zAcc);
-
-
-					positionCalculator.CalculatePositionFromAccelerometer(new DataPoint(new XYZ(xAcc, yAcc, zAcc), timer2));
-					Console.WriteLine($"Timer: {timer2.ToString()}");
-                    
-					Console.WriteLine($"X: {positionCalculator.CurrentPosition.X}");
-					Console.WriteLine($"Y: {positionCalculator.CurrentPosition.Y}");
-					Console.WriteLine($"Z: {positionCalculator.CurrentPosition.Z}");	
+					Accelerometer.PrintXYZ();
+					//Accelerometer.SnapData();
+					Gyroscope.PrintXYZ();
+					CalculateKalman(Gyroscope.GetXYZ(), Accelerometer.GetXYZ());
+					//Gyroscope.SnapData();
+					Console.WriteLine($"Timer: {DataTimer.ElapsedMilliseconds}");
 				}
 				catch (TimeoutException) { }
 				catch (FormatException)
 				{
 					Console.Clear();
 					Console.WriteLine("Data error");
-
 				}
 			}
+			DataTimer.Stop();
 			_continue = false;
-			Accelerometer.WriteToCSV();
+			Accelerometer.WriteData();
 			Console.Clear();
 			Console.WriteLine("Wrote Data to CSV");
 		}
 
+		public static void CalculateKalman(XYZ Gyro, XYZ Accelerometer) {
 
+			double Accelval1 = Math.Sqrt(Math.Pow(Accelerometer.X, 2) + Math.Pow(Accelerometer.Z, 2));
+			double Accelval2 = Math.Sqrt(Math.Pow(Accelerometer.Y, 2) + Math.Pow(Accelerometer.Z, 2));
+			double Accelval3 = Math.Sqrt(Math.Pow(Accelerometer.X, 2) + Math.Pow(Accelerometer.Z, 2));
+			double Pitch = Math.Atan((Accelerometer.Y) / (Accelval1)) * (180 / Math.PI);
+			double Roll = Math.Atan((Accelerometer.X) / (Accelval2)) * (180 / Math.PI);
+			double Yaw = Math.Atan((Accelerometer.Z) / (Accelval3)) * (180 / Math.PI);
+				/*
+			double Gyroval = Math.Sqrt(Math.Pow(Gyro.X, 2) + Math.Pow(Gyro.Z, 2));
+			double Gyroval2 = Math.Sqrt(Math.Pow(Gyro.Y, 2) + Math.Pow(Gyro.Z, 2));
+			double Pitch = Math.Atan((Gyro.Y) / (Gyroval)) * (180 / Math.PI);
+			double GyroO = Math.Atan((Gyro.X) / (Gyroval2)) * (180 / Math.PI);
+*/
+
+            
+		}
 	}
+
 }
