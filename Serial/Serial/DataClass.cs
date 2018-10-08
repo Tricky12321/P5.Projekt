@@ -12,7 +12,7 @@ namespace Serial
 	public class DataClass
 	{
 		private const int StackSize = 100;
-		private const int CalibrateTimerMs = 1000; // ms of calibrating time
+		private const int CalibrateTimerMs = 5000; // ms of calibrating time
 		private const int Margin = 5;
 		private const bool UseMargin = true;
 		private const int DecimalCount = 1;
@@ -83,10 +83,11 @@ namespace Serial
 		private double _hz_Rate = 0;
 		private double _hz = 0;
 		private object _hzLock = new object();
-
+		private string _acceptedPrefix;
 		private Stopwatch CalibrateTimer = new Stopwatch();
-		public DataClass()
+		public DataClass(string AcceptedPrefix)
 		{
+			_acceptedPrefix = AcceptedPrefix;
 			for (int i = 0; i < StackSize; i++)
 			{
 				X_Queue.Enqueue(0);
@@ -359,7 +360,7 @@ namespace Serial
 		{
 			try
 			{
-				if (data.Contains("AC") && data.Contains(":"))
+				if (data.Contains(_acceptedPrefix) && data.Contains(":"))
 				{
 					data = data.Substring(2, data.Length - 3);
 
@@ -370,7 +371,6 @@ namespace Serial
 
 					UpdateXYZ(Xx, Yy, Zz);
 				}
-
 			}
 			catch (TimeoutException) { }
 			catch (FormatException) { }
@@ -469,7 +469,7 @@ namespace Serial
 			// WriteToCSV("Lowpass", Lowpass_log);
 			// WriteToCSV("KalmanLowpass", KalmanLowPass_log);
 			// WriteToCSV("RawCalibrated", RawCalibrated_log);
-			WriteToCSV("Kalman-50cm", Kalman_Log,true );
+			// WriteToCSV("Kalman-50cm-frem_og_tilbage", Kalman_Log,true );
 		}
 
 		public void CalibrateInput()
@@ -512,6 +512,10 @@ namespace Serial
 			}
 		}
 
+
+		public XYZ GetXYZ() {
+			return new XYZ(X, Y, Z);
+		}
 
 	}
 }
