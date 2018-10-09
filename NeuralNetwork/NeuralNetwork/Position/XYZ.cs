@@ -10,6 +10,7 @@ namespace NeuralNetwork
         public double Y;
         public double Z;
 
+
         public XYZ(double x, double y, double z)
         {
             X = x;
