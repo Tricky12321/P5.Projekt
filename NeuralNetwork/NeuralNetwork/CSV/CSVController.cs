@@ -6,6 +6,11 @@ namespace NeuralNetwork
 {
     public class CSVController
     {
+        public enum Point
+        {
+            X, Y, Z
+        }
+
         int _accelerationLimit = 5;
         public List<CSVData> CSVDataList = new List<CSVData>();
 
@@ -54,12 +59,12 @@ namespace NeuralNetwork
                     CSVDataList.Add(csvData);
                     csvData.AddToRawAccelerationData(double.Parse(FinalElements[1]), double.Parse(FinalElements[2]), double.Parse(FinalElements[3]));
 
-                    NormalizeData(csvData);
+                    NormalizeData(csvData, Point.X);
                 }
             }
         }
 
-        public void NormalizeData(CSVData csvData)
+        public void NormalizeData(CSVData csvData, Point pointToNormalize)
         {
             double avgPoints = 0;
 
