@@ -18,7 +18,7 @@ namespace NeuralNetwork
             List<CSVData> CSVData = new List<CSVData>();
 
             string path = Directory.GetCurrentDirectory();
-            string newPath = Path.GetFullPath(Path.Combine(path, @"..\"));
+            string newPath = path + "/bin";
 
             foreach (string filePath in Directory.EnumerateFiles(newPath, "*.csv"))
             {

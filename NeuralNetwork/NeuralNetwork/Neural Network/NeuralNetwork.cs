@@ -56,7 +56,7 @@ namespace NeuralNetwork
         {
         }
 
-        public double[] Run(List<double> input)
+        public double[] Run(List<XYZ> input)
         {
             if (input.Count != Layers[0].NeuronCount) { return null; }
 
@@ -70,7 +70,7 @@ namespace NeuralNetwork
 
                     if (l == 0)
                     {
-                        neuron.Value = input[n];
+                        neuron.Value = input[n].X;
                     }
                     else
                     {
@@ -102,7 +102,7 @@ namespace NeuralNetwork
             return 1 / (1 + Math.Exp(-x));
         }
 
-        public bool Train(List<double> input, List<double> output)
+        public bool Train(List<XYZ> input, List<double> output)
         {
             if ((input.Count != Layers[0].Neurons.Count) || (output.Count != Layers[LayerCount - 1].NeuronCount)) return false;
 

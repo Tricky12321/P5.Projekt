@@ -27,9 +27,9 @@ namespace NeuralNetwork
             Count = Enum.GetValues(typeof(PatternEnum)).Cast<int>().Max();
         }
 
-        public List<int> GetArray()
+        public List<double> GetArray()
         {
-            int[] outList = new int[Count];
+            double[] outList = new double[Count];
             for (int i = 0; i < Count; i++)
             {
                 if ((int)Value == i)
