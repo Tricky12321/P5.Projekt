@@ -29,7 +29,7 @@ namespace NeuralNetwork
             foreach (string filePath in Directory.EnumerateFiles(newPath, "*.csv"))
             {
                 CSVData data = new CSVData(PatternEnum.forward05m);
-                CSVDataList.Add(csvData);
+                CSVDataList.Add(data);
                 CSVReader(filePath, data);
             }
         }
