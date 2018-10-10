@@ -27,7 +27,7 @@ namespace Serial
 			Console.WriteLine($"Serialport found: {Test.PortName}");
 			Console.ReadLine();
             */
-			ConnectToCom();
+            /*ConnectToCom();
 			Console.WriteLine("Type QUIT to exit");
 
 			while (DataTimer.ElapsedMilliseconds < Timer)
@@ -35,7 +35,12 @@ namespace Serial
 
 			}
 			_continue = false;
-			_serialPort.Close();
+			_serialPort.Close();*/
+            INS_reader reader = new INS_reader();
+            while (true)
+            {
+                reader.Read();
+            }
 		}
 
         public static void ConnectToCom()

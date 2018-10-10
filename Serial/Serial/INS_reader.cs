@@ -13,11 +13,16 @@ namespace Serial
 
         public INS_reader()
         {
-
+            Console.WriteLine($"Getting INS Serial Port");
+            _serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
+            Console.WriteLine($"Opening INS Serial Port");
+            _serialPort.Open();
+            Console.WriteLine($"INS Serial Port Opened");
         }
 
         public INSDATA Read()
         {
+            Console.WriteLine(_serialPort.ReadLine());
             return new INSDATA();
         }
     }

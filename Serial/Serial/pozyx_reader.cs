@@ -12,11 +12,11 @@ namespace Serial
         private static SerialPort _serialPort;
         public PozyxReader()
         {
-            Console.WriteLine($"Getting INS Serial Port");
+            Console.WriteLine($"Getting POZYX Serial Port");
             _serialPort = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
-            Console.WriteLine($"Opening INS Serial Port");
+            Console.WriteLine($"Opening POZYX Serial Port");
             _serialPort.Open();
-            Console.WriteLine($"INS Serial Port Opened");
+            Console.WriteLine($"POZYX Serial Port Opened");
         }
 
         public XYZ Read()
