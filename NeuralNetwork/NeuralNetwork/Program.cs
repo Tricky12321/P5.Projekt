@@ -19,7 +19,18 @@ namespace NeuralNetwork
             CSVController data = new CSVController();
             data.GetFiles();
 
-            UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(100000, 0.2, new int[] { 3, 4, 4, 4, 1 }, data.CSVDataList);
+            List<Tuple<List<double>, List<double>>> inputOutputlist = new List<Tuple<List<double>, List<double>>>();
+            foreach(CSVData inout in data.CSVDataList){
+
+                List<double> xValues = new List<double>();
+                foreach(XYZ xval in inout.NormalizedAccelerationData){
+                    xValues.Add(xval.X);
+                }
+
+                inputOutputlist.Add(Tuple.Create(xValues, inout.Pattern.GetArray()));
+            }
+
+            UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(1000000, 100, new int[] { 27, 50, 50, 50, 2 }, inputOutputlist);
         }
 
         private static void GenerateRandom(){

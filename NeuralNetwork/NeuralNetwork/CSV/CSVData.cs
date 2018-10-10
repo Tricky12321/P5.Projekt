@@ -18,11 +18,13 @@ namespace NeuralNetwork
         public void AddToRawAccelerationData(double x, double y, double z)
         {
             XYZ xyz = new XYZ(x, y, z);
+            AccelerationData.Add(xyz);
         }
 
         public void AddNormalizedAccerlerationData(double x, double y, double z)
         {
             XYZ xyz = new XYZ(x, y, z);
+            NormalizedAccelerationData.Add(xyz);
         }
 
 

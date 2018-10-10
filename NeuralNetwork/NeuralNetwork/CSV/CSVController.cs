@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace NeuralNetwork
@@ -19,8 +20,6 @@ namespace NeuralNetwork
         }
 
         public void GetFiles(){
-
-            List<CSVData> CSVData = new List<CSVData>();
 
             string path = Directory.GetCurrentDirectory();
 
@@ -52,15 +51,16 @@ namespace NeuralNetwork
                     {
                         if (Element != "" && Element != ",")
                         {
-                            FinalElements.Add(Element.Replace(',', '.'));
+                            FinalElements.Add(Element);
                         }
                     }
                     double time = Convert.ToDouble(FinalElements[0]);
-                    csvData.AddToRawAccelerationData(double.Parse(FinalElements[1]), double.Parse(FinalElements[2]), double.Parse(FinalElements[3]));
+                    csvData.AddToRawAccelerationData(double.Parse(FinalElements[1], new NumberFormatInfo() {NumberDecimalSeparator = ","}), double.Parse(FinalElements[2], new NumberFormatInfo() { NumberDecimalSeparator = "," }), double.Parse(FinalElements[3], new NumberFormatInfo() { NumberDecimalSeparator = "," }));
 
-                    NormalizeData(csvData, Point.X);
                 }
             }
+
+            NormalizeData(csvData, Point.X);
         }
 
         public void NormalizeData(CSVData csvData, Point pointToNormalize)
