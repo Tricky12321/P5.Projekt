@@ -10,5 +10,12 @@ namespace Serial
     {
         XYZ XYZacc;
         XYZ XYZgyro;
+
+        public INSDATA() { }
+        public INSDATA(XYZ acc, XYZ gyro)
+        {
+            XYZacc = acc;
+            XYZgyro = gyro;
+        }
     }
 }
