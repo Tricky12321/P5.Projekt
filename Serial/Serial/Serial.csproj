@@ -37,6 +37,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="INSDATA.cs" />
+    <Compile Include="INS_reader.cs" />
     <Compile Include="IReadable.cs" />
     <Compile Include="Pozyx_reader.cs" />
     <Compile Include="Program.cs" />
