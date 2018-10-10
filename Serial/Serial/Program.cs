@@ -19,11 +19,14 @@ namespace Serial
 		static PositionCalculator positionCalculator = new PositionCalculator();
                 
 
-
+        
 
 		public static void Main()
 		{
 
+			string test = ArduinoTypes.INS.ToString();
+            SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.INS);
+            /*
 			ConnectToCom();
 			Console.WriteLine("Type QUIT to exit");
 
@@ -33,6 +36,7 @@ namespace Serial
 			}
 			_continue = false;
 			_serialPort.Close();
+			*/
 		}
 
 		public static void ConnectToCom()
@@ -109,9 +113,15 @@ namespace Serial
 			double Accelval1 = Math.Sqrt(Math.Pow(Accelerometer.X, 2) + Math.Pow(Accelerometer.Z, 2));
 			double Accelval2 = Math.Sqrt(Math.Pow(Accelerometer.Y, 2) + Math.Pow(Accelerometer.Z, 2));
 			double Accelval3 = Math.Sqrt(Math.Pow(Accelerometer.X, 2) + Math.Pow(Accelerometer.Z, 2));
+            // Angles
 			double Pitch = Math.Atan((Accelerometer.Y) / (Accelval1)) * (180 / Math.PI);
 			double Roll = Math.Atan((Accelerometer.X) / (Accelval2)) * (180 / Math.PI);
 			double Yaw = Math.Atan((Accelerometer.Z) / (Accelval3)) * (180 / Math.PI);
+
+
+			// 0,0625
+
+
 				/*
 			double Gyroval = Math.Sqrt(Math.Pow(Gyro.X, 2) + Math.Pow(Gyro.Z, 2));
 			double Gyroval2 = Math.Sqrt(Math.Pow(Gyro.Y, 2) + Math.Pow(Gyro.Z, 2));

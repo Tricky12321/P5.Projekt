@@ -44,6 +44,8 @@
     <Compile Include="XYZ.cs" />
     <Compile Include="DataPoint.cs" />
     <Compile Include="Filter.cs" />
+    <Compile Include="SerialReader.cs" />
+    <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
