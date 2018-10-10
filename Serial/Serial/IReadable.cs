@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Serial
 {
-    interface IReadable
+    interface IReadable <T>
     {
+        T Read();
     }
 }
