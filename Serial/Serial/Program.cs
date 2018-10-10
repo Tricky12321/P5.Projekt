@@ -23,7 +23,8 @@ namespace Serial
 		public static void Main()
 		{
 
-            /*SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
+            /*
+             * SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
 			Console.WriteLine($"Serialport found: {Test.PortName}");
 			Console.ReadLine();
             */
