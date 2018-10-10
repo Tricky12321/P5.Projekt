@@ -18,7 +18,7 @@
 ////////////////////////////////////////////////
 
 uint16_t remote_id = 0x602e;                            // set this to the ID of the remote device
-bool remote = true;                                    // set this to true to use the remote ID
+bool remote = false;                                    // set this to true to use the remote ID
 
 boolean use_processing = false;                         // set this to true to output data for the processing sketch
 
@@ -29,7 +29,7 @@ int32_t anchors_y[num_anchors] = {3446, 0, 3446, 0};                  // anchor 
 int32_t heights[num_anchors] = {1463, 0, 0, 890}; 
 
 uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm to use. try POZYX_POS_ALG_TRACKING for fast moving objects.
-uint8_t dimension = POZYX_2D;                           // positioning dimension
+uint8_t dimension = POZYX_3D;                           // positioning dimension
 int32_t height = 0;                                  // height of device, required in 2.5D positioning
 
 
@@ -63,8 +63,8 @@ void setup(){
 }
 
 void loop(){
-    if(establish_COM) {
-    delay(500);
+  if(establish_COM) {
+    delay(400);
     Serial.println("POZYX");
     if(Serial.available() > 0){  
       String c = Serial.readString();
@@ -79,21 +79,21 @@ void loop(){
        Serial.println("Done");
        first = false;
     }
-  coordinates_t position;
-  int status;
-  if(remote){
-    status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
-  }else{
-    status = Pozyx.doPositioning(&position, dimension, height, algorithm);
-  }
+    coordinates_t position;
+    int status;
+    if(remote){
+      status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
+    }else{
+      status = Pozyx.doPositioning(&position, dimension, height, algorithm);
+    }
 
-  if (status == POZYX_SUCCESS){
-    // prints out the result
-    printCoordinates(position);
-  }else{
-    // prints out the error code
-    printErrorCode("positioning");
-  }
+    if (status == POZYX_SUCCESS){
+      // prints out the result
+      printCoordinates(position);
+    }else{
+      // prints out the error code
+      printErrorCode("positioning");
+    }
   }
 }
 

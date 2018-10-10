@@ -19,8 +19,6 @@ namespace Serial
 
 		public static void Main()
 		{
-            
-
             Console.WriteLine($"Creating POZYX.");
             PozyxReader Pozyx = new PozyxReader();
             Console.WriteLine($"Reading POZYX.");
