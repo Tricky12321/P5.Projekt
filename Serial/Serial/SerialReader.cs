@@ -22,13 +22,21 @@ namespace Serial
 			List<SerialPort> serialPorts = new List<SerialPort>();
 
 			foreach (var Port in SerialPortNames)
-			{
-				// Opening all serialPorts
-				SerialPort serialPort = new SerialPort(Port, 115200);
-				serialPort.ReadTimeout = 500;
-				serialPort.WriteTimeout = 500;
-				serialPort.Open();
-				serialPorts.Add(serialPort);
+            {
+                try
+                {
+                    // Opening all serialPorts
+                    SerialPort serialPort = new SerialPort(Port, 115200);
+                    serialPort.ReadTimeout = 500;
+                    serialPort.WriteTimeout = 500;
+                    serialPort.Open();
+                    serialPorts.Add(serialPort);
+                }
+                catch (IOException ex)
+                {
+
+                }
+				
 			}
 
 			SerialPort FoundSerialPort = null;
