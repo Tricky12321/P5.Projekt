@@ -17,5 +17,11 @@ namespace Serial
             XYZacc = acc;
             XYZgyro = gyro;
         }
+
+        public override string ToString()
+        {
+            return "ACC: " + XYZacc.ToString() + "\n" + 
+                   "GYRO: " + XYZgyro.ToString();
+        }
     }
 }

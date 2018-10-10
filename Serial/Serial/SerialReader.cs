@@ -36,6 +36,7 @@ namespace Serial
                 {
 
                 }
+                catch (UnauthorizedAccessException ex) { }
 				
 			}
 

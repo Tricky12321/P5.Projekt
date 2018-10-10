@@ -10,7 +10,6 @@ namespace Serial
     class INS_reader : IReadable<INSDATA>
     {
         private SerialPort _serialPort;
-        private string _dataSet;
         private double XGY;
         private double YGY;
         private double ZGY;
@@ -23,38 +22,38 @@ namespace Serial
             Console.WriteLine($"Getting INS Serial Port");
             _serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
             Console.WriteLine($"Opening INS Serial Port");
-            _serialPort.Open();
             Console.WriteLine($"INS Serial Port Opened");
         }
 
         public INSDATA Read()
         {
-            _dataSet = _serialPort.ReadLine();
+            string data1 = _serialPort.ReadLine();
             string data2 = _serialPort.ReadLine();
+            CheckData(data1);
+            CheckData(data2);
+
+            return new INSDATA(new XYZ(XAC, YAC, ZAC), new XYZ(XGY, YGY, ZGY));
+        }
+
+        private void CheckData(string data)
+        {
             try
             {
-                if (_dataSet.Contains("GY") && _dataSet.Contains(":"))
+                if (data.Contains("GY") && data.Contains(":"))
                 {
-                    _dataSet = _dataSet.Substring(2, _dataSet.Length - 3);
+                    data = data.Substring(2, data.Length - 3);
 
-                    var message_split = _dataSet.Split(':');
+                    var message_split = data.Split(':');
                     XGY = Convert.ToDouble(message_split[0]);
                     YGY = Convert.ToDouble(message_split[1]);
                     ZGY = Convert.ToDouble(message_split[2]);
 
                 }
-            }
-            catch (TimeoutException) { }
-            catch (FormatException) { }
-            catch (IndexOutOfRangeException) { }
-
-            try
-            {
-                if (_dataSet.Contains("AC") && _dataSet.Contains(":"))
+                else if (data.Contains("AC") && data.Contains(":"))
                 {
-                    _dataSet = _dataSet.Substring(2, _dataSet.Length - 3);
+                    data = data.Substring(2, data.Length - 3);
 
-                    var message_split = _dataSet.Split(':');
+                    var message_split = data.Split(':');
                     XAC = Convert.ToDouble(message_split[0]);
                     YAC = Convert.ToDouble(message_split[1]);
                     ZAC = Convert.ToDouble(message_split[2]);
@@ -64,10 +63,6 @@ namespace Serial
             catch (TimeoutException) { }
             catch (FormatException) { }
             catch (IndexOutOfRangeException) { }
-
-            _dataSet += "test" + _serialPort.ReadLine();
-            Console.WriteLine(_dataSet);
-            return new INSDATA();
         }
     }
 }
