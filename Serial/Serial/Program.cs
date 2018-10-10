@@ -37,7 +37,7 @@ namespace Serial
 			}
 			_continue = false;
 			_serialPort.Close();*/
-            INS_reader reader = new INS_reader();
+            INSReader reader = new INSReader();
             while (true)
             {
                 reader.Read();

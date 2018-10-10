@@ -7,11 +7,11 @@ using System.IO.Ports;
 
 namespace Serial
 {
-    class INS_reader : IReadable<INSDATA>
+    class INSReader : IReadable<INSDATA>
     {
         private SerialPort _serialPort;
 
-        public INS_reader()
+        public INSReader()
         {
             Console.WriteLine($"Getting INS Serial Port");
             _serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
