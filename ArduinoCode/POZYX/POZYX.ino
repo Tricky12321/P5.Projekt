@@ -32,12 +32,12 @@ uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm
 uint8_t dimension = POZYX_3D;                           // positioning dimension
 int32_t height = 1000;                                  // height of device, required in 2.5D positioning
 
-bool COM_connection = true;      // set this true to communicate to a device using multible COM channels
+bool establish_COM = true;      // set this true to communicate to a device using multible COM channels
 ////////////////////////////////////////////////
 
 void setup(){
   Serial.begin(115200);
-
+      
   if(Pozyx.begin() == POZYX_FAILURE){
     Serial.println(F("ERROR: Unable to connect to POZYX shield"));
     Serial.println(F("Reset required"));
@@ -71,31 +71,37 @@ void setup(){
 
   Serial.println(F("Starting positioning: "));
   }
-  
-  // establish connection through COM port
-  int incomingByte = 0;
-  if(COM_connection) {
-    while(true) {
-      Serial.println("POZYX");
-    }
-  }
 }
 
 void loop(){
-  coordinates_t position;
-  int status;
-  if(remote){
-    status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
-  }else{
-    status = Pozyx.doPositioning(&position, dimension, height, algorithm);
-  }
+  // establish connection through COM port
+  if(establish_COM) {
+    Serial.println("POZYX");
+    if(Serial.available() > 0){  
+      String c = Serial.readString();
+      if(c == "OK\n"){
+        Serial.println("Connection established.");
+        establish_COM = false;   
+      }
+    }
+  } 
+  else {  
+    coordinates_t position;
+    int status;
+    if(remote){
+      status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
+    }
+    else{
+      status = Pozyx.doPositioning(&position, dimension, height, algorithm);
+    }
 
-  if (status == POZYX_SUCCESS){
-    // prints out the result
-    printCoordinates(position);
-  }else{
-    // prints out the error code
-    printErrorCode("positioning");
+    if (status == POZYX_SUCCESS){
+      // prints out the result
+      printCoordinates(position);
+    }else{
+      // prints out the error code
+      printErrorCode("positioning");
+    }
   }
 }
 

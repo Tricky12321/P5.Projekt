@@ -72,7 +72,7 @@ namespace Serial
                 Console.WriteLine($"Checking {serialPort.PortName}...");
                 if (Data == SerialType.ToString()+"\r")
                 {
-                    serialPort.WriteLine("OK");
+                    serialPort.Write("OK\r");
                     return serialPort;
                 }
                 else
