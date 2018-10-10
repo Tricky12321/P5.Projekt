@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace NeuralNetwork
 {
@@ -18,13 +20,20 @@ namespace NeuralNetwork
         {
         }
 
-        public void GetFiles(){
+        public void GetFiles()
+        {
 
-            List<CSVData> CSVData = new List<CSVData>();
+            string currentPath = Directory.GetCurrentDirectory();
+            string newPath = null;
 
-            string path = Directory.GetCurrentDirectory();
-
-            string newPath = path + "/bin";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                newPath = Path.GetFullPath(Path.Combine(currentPath, @"..\"));
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                newPath = currentPath + "/bin";
+            }
 
             foreach (string filePath in Directory.EnumerateFiles(newPath, "*.csv"))
             {
@@ -52,35 +61,43 @@ namespace NeuralNetwork
                     {
                         if (Element != "" && Element != ",")
                         {
-                            FinalElements.Add(Element.Replace(',', '.'));
+                            FinalElements.Add(Element);
                         }
                     }
                     double time = Convert.ToDouble(FinalElements[0]);
-                    csvData.AddToRawAccelerationData(double.Parse(FinalElements[1]), double.Parse(FinalElements[2]), double.Parse(FinalElements[3]));
+                    csvData.AddToRawAccelerationData(double.Parse(FinalElements[1], new NumberFormatInfo() { NumberDecimalSeparator = "," }), double.Parse(FinalElements[2], new NumberFormatInfo() { NumberDecimalSeparator = "," }), double.Parse(FinalElements[3], new NumberFormatInfo() { NumberDecimalSeparator = "," }));
 
-                    NormalizeData(csvData, Point.X);
                 }
             }
+            NormalizeData(csvData, Point.X);
         }
 
         public void NormalizeData(CSVData csvData, Point pointToNormalize)
         {
-            double avgPoints = 0;
+            double avgPointsX = 0;
+            double avgPointsY = 0;
+            double avgPointsZ = 0;
 
             for (int i = 0; i < csvData.AccelerationData.Count; i++)
             {
-                avgPoints = avgPoints + csvData.AccelerationData[i].X;
+                avgPointsX = avgPointsX + csvData.AccelerationData[i].X;
+                avgPointsY = avgPointsY + csvData.AccelerationData[i].Y;
+                avgPointsZ = avgPointsZ + csvData.AccelerationData[i].Z;
 
                 if (i > 0 && i % 5 == 0)
                 {
-                    avgPoints = avgPoints / 5;
-                    avgPoints = 0.5 + ((0.5 / _accelerationLimit) * (avgPoints));
+                    avgPointsX = avgPointsX / 5;
+                    avgPointsY = avgPointsY / 5;
+                    avgPointsZ = avgPointsZ / 5;
 
-                    csvData.AddNormalizedAccerlerationData(avgPoints, 0, 0);
-                    avgPoints = 0;
+                    avgPointsX = 0.5 + ((0.5 / _accelerationLimit) * (avgPointsX));
+                    avgPointsY = 0.5 + ((0.5 / _accelerationLimit) * (avgPointsY));
+                    avgPointsZ = 0.5 + ((0.5 / _accelerationLimit) * (avgPointsZ));
+
+                    csvData.AddNormalizedAccerlerationData(avgPointsX, avgPointsY, avgPointsZ);
+                    avgPointsX = avgPointsY = avgPointsZ = 0;
                 }
             }
-
         }
     }
 }

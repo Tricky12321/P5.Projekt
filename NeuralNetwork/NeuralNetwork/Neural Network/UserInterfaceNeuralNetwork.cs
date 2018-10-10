@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace NeuralNetwork
 {
@@ -9,9 +10,9 @@ namespace NeuralNetwork
         public int TrainingIterations;
         public double TrainingRate;
         public NeuralNetwork nn;
-        public List<CSVData> InputOutputsList;
+        public List<Tuple<List<double>,List<double>>> InputOutputsList;
 
-        public UserInterfaceNeuralNetwork(int trainingIterations, double trainingRate, int[] layerArray, List<CSVData> inputOutputsList)
+        public UserInterfaceNeuralNetwork(int trainingIterations, double trainingRate, int[] layerArray, List<Tuple<List<double>, List<double>>> inputOutputsList)
         {
             TrainingIterations = trainingIterations;
             TrainingRate = trainingRate;
@@ -33,8 +34,9 @@ namespace NeuralNetwork
                     case "try":
                         bool DoneInput = true;
                         String readLine;
-                        List<XYZ> inputsList = new List<XYZ>();
-                        while (DoneInput)
+                        List<double> inputsList = new List<double>();
+                        inputsList = InputOutputsList[9].Item1;
+                        /*while (DoneInput)
                         {
                             Console.WriteLine("WRITE A DOUBLE!");
                             readLine = Console.ReadLine();
@@ -45,9 +47,10 @@ namespace NeuralNetwork
                             double lineValue = 0.0;
                             if (double.TryParse(readLine, out lineValue) && DoneInput)
                             {
-                                inputsList.Add(new XYZ(lineValue, 0, 0));
+                                inputsList.Add(lineValue);
                             }
-                        }
+                        }*/
+
                         Try(inputsList);
                         break;
                     case "Train":
@@ -73,7 +76,7 @@ namespace NeuralNetwork
             }
         }
 
-        private void Try(List<XYZ> input)
+        private void Try(List<double> input)
         {
             input.ForEach(x => Console.WriteLine(x));
 
@@ -102,9 +105,10 @@ namespace NeuralNetwork
                 }
 
                 int count = InputOutputsList.Count;
+
                 for (int j = 0; j < count; j++)
                 {
-                    nn.Train(InputOutputsList[j].AccelerationData, InputOutputsList[j].Pattern.GetArray());
+                    nn.Train(InputOutputsList[j].Item1, InputOutputsList[j].Item2);
                 }
             }
             Console.WriteLine("TRAINING DONE!");
