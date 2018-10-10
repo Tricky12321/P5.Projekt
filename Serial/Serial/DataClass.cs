@@ -12,7 +12,7 @@ namespace Serial
 	public class DataClass
 	{
 		private const int StackSize = 100;
-		private const int CalibrateTimerMs = 5000; // ms of calibrating time
+		private const int CalibrateTimerMs = 1000; // ms of calibrating time
 		private const int Margin = 5;
 		private const bool UseMargin = true;
 		private const int DecimalCount = 1;
@@ -464,12 +464,12 @@ namespace Serial
 		public void WriteData()
 		{
 			// WriteToCSV("Raw", Raw_Log);
-			// WriteToCSV("Kalman", Kalman_Log);
+			//WriteToCSV("Kalman", Kalman_Log);
 			// WriteToCSV("Highpass", Highpass_log);
 			// WriteToCSV("Lowpass", Lowpass_log);
 			// WriteToCSV("KalmanLowpass", KalmanLowPass_log);
 			// WriteToCSV("RawCalibrated", RawCalibrated_log);
-			// WriteToCSV("Kalman-50cm-frem_og_tilbage", Kalman_Log,true );
+			WriteToCSV("Kalman-50cm", Kalman_Log,true );
 		}
 
 		public void CalibrateInput()
