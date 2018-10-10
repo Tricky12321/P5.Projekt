@@ -8,13 +8,10 @@ namespace Serial
     class MainClass
     {
 
-        static bool _continue = true;
-        static SerialPort _serialPort;
         //static Thread readThread = new Thread(Read);
         static Stopwatch DataTimer = new Stopwatch();
         static DataClass Accelerometer = new DataClass("AC");
         static DataClass Gyroscope = new DataClass("GY");
-        static int Timer = 1000000;
 
         static PositionCalculator positionCalculator = new PositionCalculator();
 

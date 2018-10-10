@@ -17,48 +17,38 @@
 ////////////////// PARAMETERS //////////////////
 ////////////////////////////////////////////////
 
-uint16_t remote_id = 0x6763;                            // set this to the ID of the remote device
-bool remote = false;                                    // set this to true to use the remote ID
+uint16_t remote_id = 0x602e;                            // set this to the ID of the remote device
+bool remote = true;                                    // set this to true to use the remote ID
 
-boolean use_processing = true;                         // set this to true to output data for the processing sketch
+boolean use_processing = false;                         // set this to true to output data for the processing sketch
 
 const uint8_t num_anchors = 4;                                    // the number of anchors
 uint16_t anchors[num_anchors] = {0x6e2b, 0x676e, 0x676c, 0x6738};     // the network id of the anchors: change these to the network ids of your anchors.
 int32_t anchors_x[num_anchors] = {4720, 4720, 0, 0};               // anchor x-coorindates in mm
 int32_t anchors_y[num_anchors] = {3446, 0, 3446, 0};                  // anchor y-coordinates in mm
-int32_t heights[num_anchors] = {1463, 0, 0, 890};              // anchor z-coordinates in mm
+int32_t heights[num_anchors] = {1463, 0, 0, 890}; 
 
 uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm to use. try POZYX_POS_ALG_TRACKING for fast moving objects.
-uint8_t dimension = POZYX_3D;                           // positioning dimension
-int32_t height = 1000;                                  // height of device, required in 2.5D positioning
+uint8_t dimension = POZYX_2D;                           // positioning dimension
+int32_t height = 0;                                  // height of device, required in 2.5D positioning
 
-bool establish_COM = true;      // set this true to communicate to a device using multible COM channels
+
 ////////////////////////////////////////////////
-
+bool establish_COM = true;
+bool first = true;
 void setup(){
   Serial.begin(115200);
-      
+
   if(Pozyx.begin() == POZYX_FAILURE){
     Serial.println(F("ERROR: Unable to connect to POZYX shield"));
     Serial.println(F("Reset required"));
     delay(100);
     abort();
-    
+  }
+
   if(!remote){
     remote_id = NULL;
   }
-
-  Serial.println(F("----------POZYX POSITIONING V1.1----------"));
-  Serial.println(F("NOTES:"));
-  Serial.println(F("- No parameters required."));
-  Serial.println();
-  Serial.println(F("- System will auto start anchor configuration"));
-  Serial.println();
-  Serial.println(F("- System will auto start positioning"));
-  Serial.println(F("----------POZYX POSITIONING V1.1----------"));
-  Serial.println();
-  Serial.println(F("Performing manual anchor configuration:"));
-
   // clear all previous devices in the device list
   Pozyx.clearDevices(remote_id);
   // sets the anchor manually
@@ -66,42 +56,44 @@ void setup(){
   // sets the positioning algorithm
   Pozyx.setPositionAlgorithm(algorithm, dimension, remote_id);
 
-  printCalibrationResult();
-  delay(2000);
+  //printCalibrationResult();
+  //delay(2000);
 
-  Serial.println(F("Starting positioning: "));
-  }
+  //Serial.println(F("Starting positioning: "));
 }
 
 void loop(){
-  // establish connection through COM port
-  if(establish_COM) {
+    if(establish_COM) {
+    delay(500);
     Serial.println("POZYX");
     if(Serial.available() > 0){  
       String c = Serial.readString();
-      if(c == "OK\n"){
+      if(c.indexOf("OK") > 0){
         Serial.println("Connection established.");
         establish_COM = false;   
       }
     }
   } 
-  else {  
-    coordinates_t position;
-    int status;
-    if(remote){
-      status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
+  else {
+    if (first) {
+       Serial.println("Done");
+       first = false;
     }
-    else{
-      status = Pozyx.doPositioning(&position, dimension, height, algorithm);
-    }
+  coordinates_t position;
+  int status;
+  if(remote){
+    status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
+  }else{
+    status = Pozyx.doPositioning(&position, dimension, height, algorithm);
+  }
 
-    if (status == POZYX_SUCCESS){
-      // prints out the result
-      printCoordinates(position);
-    }else{
-      // prints out the error code
-      printErrorCode("positioning");
-    }
+  if (status == POZYX_SUCCESS){
+    // prints out the result
+    printCoordinates(position);
+  }else{
+    // prints out the error code
+    printErrorCode("positioning");
+  }
   }
 }
 

@@ -57,7 +57,9 @@ namespace Serial
 			// Close all opened Serialports
 			foreach (var Port in serialPorts)
 			{
-				Port.Close();
+				if (Port != FoundSerialPort) {
+					Port.Close();
+                }
 
 			}
 			return FoundSerialPort;
@@ -70,11 +72,15 @@ namespace Serial
 			{
 				string Data = serialPort.ReadLine();
                 Console.WriteLine($"Checking {serialPort.PortName}...");
-                if (Data == SerialType.ToString()+"\r")
-                {
-                    serialPort.Write("OK\r");
-                    return serialPort;
-                }
+				if (Data == (SerialType.ToString() + "\r")) {
+					while (Data == (SerialType.ToString() + "\r") || Data == "\r")
+                    {
+                        serialPort.WriteLine("DATA OK");
+                        Thread.Sleep(1000);
+						Data = serialPort.ReadLine();
+                    }
+					return serialPort;
+				}
                 else
                 {
                     return null;
