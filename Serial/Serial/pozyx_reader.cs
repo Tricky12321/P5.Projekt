@@ -17,6 +17,9 @@ namespace Serial
 
         public XYZ Read()
         {
+            _serialPort.Open();
+
+            _serialPort.Close();
             return new XYZ();
         }
     }
