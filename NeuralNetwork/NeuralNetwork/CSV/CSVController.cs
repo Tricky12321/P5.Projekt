@@ -29,6 +29,7 @@ namespace NeuralNetwork
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 newPath = Path.GetFullPath(Path.Combine(currentPath, @"..\"));
+                newPath = Path.GetFullPath(Path.Combine(newPath, @"..\"));
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
