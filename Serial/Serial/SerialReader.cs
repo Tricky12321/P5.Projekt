@@ -8,7 +8,7 @@ namespace Serial
 {
 	public enum ArduinoTypes
 	{
-		POXYZ,
+		POZYX,
 		INS
 	}
 
@@ -28,20 +28,21 @@ namespace Serial
 				serialPort.ReadTimeout = 500;
 				serialPort.WriteTimeout = 500;
 				serialPort.Open();
-
+				serialPorts.Add(serialPort);
 			}
 
-			bool FoundPort = false;
-
-			while (!FoundPort)
+			SerialPort FoundSerialPort = null;
+			while (FoundSerialPort == null)
 			{
 				foreach (var currentSerialPort in serialPorts)
 				{
 					SerialPort serialPort = serialHandler(SerialType, currentSerialPort);
 					if (serialPort != null)
 					{
-						FoundPort = true;
-					}
+						Console.Clear();
+						Console.WriteLine($"Found valid serial port on {serialPort.PortName}");
+						FoundSerialPort = serialPort;
+                    }
 				}
 			}
 
@@ -51,22 +52,32 @@ namespace Serial
 				Port.Close();
 
 			}
-			return null;
+			return FoundSerialPort;
 
 		}
 
 		private static SerialPort serialHandler(ArduinoTypes SerialType, SerialPort serialPort)
 		{
-			string Data = serialPort.ReadLine();
-			Console.WriteLine($"Checking {serialPort.PortName}...");
-			if (Data == SerialType.ToString())
+			try
 			{
-				serialPort.WriteLine("OK");
-
-				return serialPort;
-			} else {
+				string Data = serialPort.ReadLine();
+                Console.WriteLine($"Checking {serialPort.PortName}...");
+                if (Data == SerialType.ToString()+"\r")
+                {
+                    serialPort.WriteLine("OK");
+                    return serialPort;
+                }
+                else
+                {
+                    return null;
+                }
+			}
+			catch (TimeoutException ex)
+			{
+				Console.WriteLine("Timeout... Skipping");
 				return null;
-            }
+			}
+
 		}
 
 
@@ -81,7 +92,7 @@ namespace Serial
 			if (Utilities.IsLinux || Utilities.IsMacOS)
 			{
 				// UNIX TTY.USBMODEM PORTS
-				return "USBMODEM";
+				return "usbmodem";
 
 			}
 			else if (Utilities.IsWindows)

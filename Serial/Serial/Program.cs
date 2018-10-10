@@ -24,8 +24,9 @@ namespace Serial
 		public static void Main()
 		{
 
-			string test = ArduinoTypes.INS.ToString();
-            SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.INS);
+            SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
+			Console.WriteLine($"Serialport found: {Test.PortName}");
+			Console.ReadLine();
             /*
 			ConnectToCom();
 			Console.WriteLine("Type QUIT to exit");
@@ -37,6 +38,7 @@ namespace Serial
 			_continue = false;
 			_serialPort.Close();
 			*/
+
 		}
 
 		public static void ConnectToCom()
