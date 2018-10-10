@@ -5,4 +5,12 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Neural Network\" />
+    <Folder Include="CSV\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="test.nn" />
+    <None Remove="testse.nn" />
+  </ItemGroup>
 </Project>

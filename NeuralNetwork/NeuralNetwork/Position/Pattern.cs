@@ -18,27 +18,27 @@ namespace NeuralNetwork
         public Pattern(PatternEnum pattern)
         {
             Value = pattern;
-            Count = Enum.GetValues(typeof(PatternEnum)).Cast<int>().Max();
+            Count = Enum.GetValues(typeof(PatternEnum)).Cast<int>().Max() + 1;
         }
 
         public Pattern(List<int> outPuts)
         {
             Value = (PatternEnum)outPuts.IndexOf(1);
-            Count = Enum.GetValues(typeof(PatternEnum)).Cast<int>().Max();
+            Count = Enum.GetValues(typeof(PatternEnum)).Cast<int>().Max() + 1;
         }
 
-        public List<int> GetArray()
+        public List<double> GetArray()
         {
-            int[] outList = new int[Count];
+            double[] outList = new double[Count];
             for (int i = 0; i < Count; i++)
             {
                 if ((int)Value == i)
                 {
-                    outList[i] = 1;
+                    outList[i] = 1.0;
                 }
                 else
                 {
-                    outList[i] = 0;
+                    outList[i] = 0.0;
                 }
             }
             return outList.ToList();
