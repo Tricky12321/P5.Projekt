@@ -6,6 +6,11 @@ namespace NeuralNetwork
 {
     public class CSVController
     {
+        public enum Point
+        {
+            X, Y, Z
+        }
+
         int _accelerationLimit = 5;
         public List<CSVData> CSVDataList = new List<CSVData>();
 
@@ -18,18 +23,19 @@ namespace NeuralNetwork
             List<CSVData> CSVData = new List<CSVData>();
 
             string path = Directory.GetCurrentDirectory();
-            string newPath = Path.GetFullPath(Path.Combine(path, @"..\"));
+
+            string newPath = path + "/bin";
 
             foreach (string filePath in Directory.EnumerateFiles(newPath, "*.csv"))
             {
                 CSVData data = new CSVData(PatternEnum.forward05m);
+                CSVDataList.Add(data);
                 CSVReader(filePath, data);
             }
         }
 
         public void CSVReader(string filePath, CSVData csvData)
         {
-
             string[] Result = File.ReadAllLines(filePath);
             bool first = true;
             foreach (var item in Result)
@@ -50,16 +56,14 @@ namespace NeuralNetwork
                         }
                     }
                     double time = Convert.ToDouble(FinalElements[0]);
-
-                    CSVDataList.Add(csvData);
                     csvData.AddToRawAccelerationData(double.Parse(FinalElements[1]), double.Parse(FinalElements[2]), double.Parse(FinalElements[3]));
 
-                    NormalizeData(csvData);
+                    NormalizeData(csvData, Point.X);
                 }
             }
         }
 
-        public void NormalizeData(CSVData csvData)
+        public void NormalizeData(CSVData csvData, Point pointToNormalize)
         {
             double avgPoints = 0;
 

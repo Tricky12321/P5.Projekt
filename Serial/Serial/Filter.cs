@@ -1,4 +1,5 @@
 ﻿using System;
+
 public class FilterButterworth
 {
     /// <summary>

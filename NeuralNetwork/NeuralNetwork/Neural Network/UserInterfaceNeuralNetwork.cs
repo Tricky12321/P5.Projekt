@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace NeuralNetwork
 {
@@ -8,9 +9,9 @@ namespace NeuralNetwork
         public int TrainingIterations;
         public double TrainingRate;
         public NeuralNetwork nn;
-        public List<InputOutputData> InputOutputsList;
+        public List<CSVData> InputOutputsList;
 
-        public UserInterfaceNeuralNetwork(int trainingIterations, double trainingRate, int[] layerArray, List<InputOutputData> inputOutputsList)
+        public UserInterfaceNeuralNetwork(int trainingIterations, double trainingRate, int[] layerArray, List<CSVData> inputOutputsList)
         {
             TrainingIterations = trainingIterations;
             TrainingRate = trainingRate;
@@ -32,9 +33,10 @@ namespace NeuralNetwork
                     case "try":
                         bool DoneInput = true;
                         String readLine;
-                        List<double> inputsList = new List<double>();
+                        List<XYZ> inputsList = new List<XYZ>();
                         while (DoneInput)
                         {
+                            Console.WriteLine("WRITE A DOUBLE!");
                             readLine = Console.ReadLine();
                             if (readLine == "done" || readLine == "Done")
                             {
@@ -43,7 +45,7 @@ namespace NeuralNetwork
                             double lineValue = 0.0;
                             if (double.TryParse(readLine, out lineValue) && DoneInput)
                             {
-                                inputsList.Add(lineValue);
+                                inputsList.Add(new XYZ(lineValue, 0, 0));
                             }
                         }
                         Try(inputsList);
@@ -54,11 +56,13 @@ namespace NeuralNetwork
                         break;
                     case "Save":
                     case "save":
+                        Console.WriteLine("FILENAME:");
                         string FileNameS = Console.ReadLine();
                         Save(FileNameS);
                         break;
                     case "Load":
                     case "load":
+                        Console.WriteLine("FILENAME:");
                         string FileNameL = Console.ReadLine();
                         Load(FileNameL);
                         break;
@@ -69,7 +73,7 @@ namespace NeuralNetwork
             }
         }
 
-        private void Try(List<double> input)
+        private void Try(List<XYZ> input)
         {
             input.ForEach(x => Console.WriteLine(x));
 
@@ -82,14 +86,25 @@ namespace NeuralNetwork
 
         private void Train()
         {
+            int percent = 0;
+            double timePrPercent = 0;
+            Stopwatch stopWatch = new Stopwatch();
             Console.WriteLine("TRAINING STARTED!");
             for (int i = 0; i < TrainingIterations; i++)
             {
-                Console.WriteLine(i);
+                if (Convert.ToInt32(100.0 / TrainingIterations * i) != percent)
+                {
+                    timePrPercent = stopWatch.ElapsedMilliseconds / 1000.0;
+                    stopWatch.Restart();
+
+                    Console.WriteLine($"{percent + 1}% : {Math.Round((100 - percent) * timePrPercent, 0)} sec left");
+                    percent = Convert.ToInt32(100.0 / TrainingIterations * i);
+                }
+
                 int count = InputOutputsList.Count;
                 for (int j = 0; j < count; j++)
                 {
-                    nn.Train(InputOutputsList[j].Inputs, InputOutputsList[j].Outputs);
+                    nn.Train(InputOutputsList[j].AccelerationData, InputOutputsList[j].Pattern.GetArray());
                 }
             }
             Console.WriteLine("TRAINING DONE!");
