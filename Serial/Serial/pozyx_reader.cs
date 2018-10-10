@@ -5,32 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Serial
+namespace Serial 
 {
-    class PozyxReader
+    class PozyxReader : IReadable<XYZ>
     {
         private static SerialPort _serialPort;
         public PozyxReader()
         {
-            _serialPort = new SerialPort();
-            string[] portNames = SerialPort.GetPortNames();
-            while (true)
-            {
-                foreach (string portName in portNames)
-                {
-                    Console.WriteLine(portName);
-                    _serialPort.PortName = portName;
-                    _serialPort.Open();
-                    _serialPort.Write("69");//error here
-                    _serialPort.Close();
-                }
-            }
+
         }
 
-        public XYZ getPosition()
+        public XYZ Read()
         {
-            XYZ position = new XYZ();
-            return position;
+            return new XYZ();
         }
     }
 }
