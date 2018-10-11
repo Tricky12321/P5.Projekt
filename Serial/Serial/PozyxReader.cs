@@ -14,6 +14,21 @@ namespace Serial
 
 		private XYZ _pozyx_data;
 
+		private const int _hz_log_count = 100;
+        private Queue<double> _hz_rate_log = new Queue<double>();
+        public double HZ_rate
+        {
+            get
+            {
+                return Math.Round(_hz_rate_log.Average(), 0);
+            }
+            set
+            {
+                _hz_rate_log.Enqueue(1000 / value);
+                _hz_rate_log.Dequeue();
+            }
+        }
+
         public PozyxReader()
         {
             Console.WriteLine($"Getting {_description} Serial Port");
@@ -39,7 +54,7 @@ namespace Serial
             catch (TimeoutException) { }
             catch (FormatException) { }
             catch (IndexOutOfRangeException) { }
-			return _pozyx_data);
+			return _pozyx_data;
         }
 
 		private void CheckData(string data)
@@ -55,15 +70,9 @@ namespace Serial
                 double Zz = Convert.ToDouble(message_split[2]);
 				_pozyx_data = new XYZ(Xx, Yy, Zz);
             }
-            else if (data.Contains("AC") && data.Contains(":"))
+			else if (data.Contains("timer"))
             {
-                data = data.Substring(2, data.Length - 3);
-
-                var message_split = data.Split(':');
-                XAC = Convert.ToDouble(message_split[0]);
-                YAC = Convert.ToDouble(message_split[1]);
-                ZAC = Convert.ToDouble(message_split[2]);
-
+                HZ_rate = Convert.ToInt32(data.Replace("timer:", "").Replace("\r", ""));
             }
         }
     }
