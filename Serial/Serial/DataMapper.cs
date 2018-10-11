@@ -49,7 +49,7 @@ namespace Serial
             int i = 0;
             while (i < amount)
             {
-                if(_dataReady)
+                if(_dataReady && PozyxData != null && INSData != null)
                 {
                     DataList.Add(Tuple.Create<XYZ, INSDATA>(PozyxData, INSData));
                     i++;

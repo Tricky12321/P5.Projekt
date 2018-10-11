@@ -47,9 +47,6 @@ namespace Serial
             {
 				string data = _serialPort.ReadLine();
                 string XYZstring = _serialPort.ReadLine();
-                
-
-
             }
             catch (TimeoutException) { }
             catch (FormatException) { }
