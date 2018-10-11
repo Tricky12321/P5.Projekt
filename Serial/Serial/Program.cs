@@ -23,7 +23,7 @@ namespace Serial
 		public static void Main()
 		{
 			/*
-             * Console.WriteLine($"Creating POZYX.");
+            Console.WriteLine($"Creating POZYX.");
             PozyxReader Pozyx = new PozyxReader();
             Console.WriteLine($"Reading POZYX.");
 
@@ -54,4 +54,3 @@ namespace Serial
 		}
 	}
 }
-//static Thread readThread = new Thread(Read);
