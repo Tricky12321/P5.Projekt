@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO.Ports;
@@ -15,11 +15,15 @@ namespace Serial
 	public static class SerialReader
 	{
 
+		static List<SerialPort> OpenSerialPorts = new List<SerialPort>();
+
 		public static SerialPort GetSerialPort(ArduinoTypes SerialType)
 		{
 			List<string> SerialPortNames = getSerialPorts().Where(Item => Item.Contains(getSerialPortNames())).ToList();
 
 			List<SerialPort> serialPorts = new List<SerialPort>();
+
+            
 
 			foreach (var Port in SerialPortNames)
             {
@@ -63,6 +67,7 @@ namespace Serial
                 }
 
 			}
+			OpenSerialPorts.Add(FoundSerialPort);
 			return FoundSerialPort;
 
 		}
@@ -74,7 +79,7 @@ namespace Serial
 				string Data = serialPort.ReadLine();
                 Console.WriteLine($"Checking {serialPort.PortName}...");
 				if (Data == (SerialType.ToString() + "\r")) {
-					while (Data == (SerialType.ToString() + "\r") || Data == "\r")
+					while (Data == (SerialType.ToString() + "\r"))
                     {
                         serialPort.WriteLine("DATA OK");
                         Thread.Sleep(1000);
@@ -118,6 +123,13 @@ namespace Serial
 			else
 			{
 				throw new Exception("Unknown OS!");
+			}
+		}
+
+		public static void CloseOpenPorts() {
+			foreach (var Port in OpenSerialPorts)
+			{
+				Port.Close();
 			}
 		}
 	}
