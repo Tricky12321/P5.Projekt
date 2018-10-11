@@ -10,11 +10,11 @@ namespace Serial
 
         static bool _continue = true;
         static SerialPort _serialPort;
-        static Thread readThread = new Thread(Read);
+        //static Thread readThread = new Thread(Read);
         static Stopwatch DataTimer = new Stopwatch();
         static DataClass Accelerometer = new DataClass("AC");
         static DataClass Gyroscope = new DataClass("GY");
-        static int Timer = 5000;
+        static int Timer = 1000000;
 
         static PositionCalculator positionCalculator = new PositionCalculator();
 
@@ -22,13 +22,15 @@ namespace Serial
 
 		public static void Main()
 		{
+            Console.WriteLine($"Creating POZYX.");
+            PozyxReader Pozyx = new PozyxReader();
+            Console.WriteLine($"Reading POZYX.");
 
-            /*
-             * SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
+            SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
 			Console.WriteLine($"Serialport found: {Test.PortName}");
 			Console.ReadLine();
-            */
-            /*ConnectToCom();
+            /*
+			ConnectToCom();
 			Console.WriteLine("Type QUIT to exit");
 
 			while (DataTimer.ElapsedMilliseconds < Timer)
@@ -36,12 +38,7 @@ namespace Serial
 
 			}
 			_continue = false;
-			_serialPort.Close();*/
-            INS_reader reader = new INS_reader();
-            while (true)
-            {
-                reader.Read();
-            }
+			_serialPort.Close();
 		}
 
         public static void ConnectToCom()
@@ -71,9 +68,9 @@ namespace Serial
             _serialPort.Open();
             _continue = true;
             Accelerometer.SetInput(_serialPort);
-            //Gyroscope.SetInput(_serialPort);
+            Gyroscope.SetInput(_serialPort);
             Accelerometer.Calibrate();
-            //Gyroscope.Calibrate();
+            Gyroscope.Calibrate();
             StartReading();
 
         }
@@ -94,11 +91,11 @@ namespace Serial
                 {
                     string Data = _serialPort.ReadLine();
                     Accelerometer.HandleRawData(Data);
-                    //Gyroscope.HandleRawData(Data);
+                    Gyroscope.HandleRawData(Data);
                     Console.Clear();
                     Accelerometer.PrintXYZ();
-                    Accelerometer.SnapData();
-                    //Gyroscope.PrintXYZ();
+                    //Accelerometer.SnapData();
+                    Gyroscope.PrintXYZ();
                     CalculateKalman(Gyroscope.GetXYZ(), Accelerometer.GetXYZ());
                     //Gyroscope.SnapData();
                     Console.WriteLine($"Timer: {DataTimer.ElapsedMilliseconds}");
@@ -136,5 +133,5 @@ namespace Serial
 
         }
     }
-
 }
+        //static Thread readThread = new Thread(Read);
