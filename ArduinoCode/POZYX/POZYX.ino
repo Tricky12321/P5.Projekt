@@ -31,7 +31,7 @@ int32_t heights[num_anchors] = {1463, 0, 0, 890};
 uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm to use. try POZYX_POS_ALG_TRACKING for fast moving objects.
 uint8_t dimension = POZYX_3D;                           // positioning dimension
 int32_t height = 0;                                  // height of device, required in 2.5D positioning
-
+uint32_t last_millis = 0;
 
 ////////////////////////////////////////////////
 bool establish_COM = true;
@@ -86,23 +86,25 @@ void loop(){
     }else{
       status = Pozyx.doPositioning(&position, dimension, height, algorithm);
     }
-
+    
+    int dt = millis() - last_millis;
+    last_millis += dt; 
+    
     if (status == POZYX_SUCCESS){
-      // prints out the result
-      printCoordinates(position);
-    }else{
-      // prints out the error code
-      //printErrorCode("positioning");//ERROR COMMENT
+      printCoordinates(position, dt);
     }
   }
+  
 }
 
-// prints the coordinates for either humans or for processing
-void printCoordinates(coordinates_t coor){
+void printCoordinates(coordinates_t coor, int dt){
   uint16_t network_id = remote_id;
   if (network_id == NULL){
     network_id = 0;
   }
+  Serial.print("timer:")
+  Serial.println(dt);
+  
   if(!use_processing){
     Serial.print("PO");
     Serial.print(coor.x);
