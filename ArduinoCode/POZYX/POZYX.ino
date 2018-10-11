@@ -92,7 +92,7 @@ void loop(){
       printCoordinates(position);
     }else{
       // prints out the error code
-      printErrorCode("positioning");
+      //printErrorCode("positioning");//ERROR COMMENT
     }
   }
 }
@@ -104,22 +104,18 @@ void printCoordinates(coordinates_t coor){
     network_id = 0;
   }
   if(!use_processing){
-    Serial.print("POS ID 0x");
-    Serial.print(network_id, HEX);
-    Serial.print(", x(mm): ");
+    Serial.print("PO");
     Serial.print(coor.x);
-    Serial.print(", y(mm): ");
+    Serial.print(":");
     Serial.print(coor.y);
-    Serial.print(", z(mm): ");
+    Serial.print(":");
     Serial.println(coor.z);
   }else{
-    Serial.print("POS,0x");
-    Serial.print(network_id,HEX);
-    Serial.print(",");
+    Serial.print("PO");
     Serial.print(coor.x);
-    Serial.print(",");
+    Serial.print(":");
     Serial.print(coor.y);
-    Serial.print(",");
+    Serial.print(":");
     Serial.println(coor.z);
   }
 }

@@ -23,9 +23,9 @@ namespace Serial
             PozyxReader Pozyx = new PozyxReader();
             Console.WriteLine($"Reading POZYX.");
 
-            while (true)
+            while(true)
             {
-                Console.WriteLine(Pozyx.Read().ToString());
+                Pozyx.Read();
             }
         }
     }
