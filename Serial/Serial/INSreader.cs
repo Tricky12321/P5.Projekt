@@ -27,42 +27,43 @@ namespace Serial
 
         public INSDATA Read()
         {
-            string data1 = _serialPort.ReadLine();
-            string data2 = _serialPort.ReadLine();
-            CheckData(data1);
-            CheckData(data2);
-
+            try
+            {
+                string data1 = _serialPort.ReadLine();
+                string data2 = _serialPort.ReadLine();
+                CheckData(data1);
+                CheckData(data2);
+            }
+            catch (TimeoutException) { }
+            catch (FormatException) { }
+            catch (IndexOutOfRangeException) { }
+            
             return new INSDATA(new XYZ(XAC, YAC, ZAC), new XYZ(XGY, YGY, ZGY));
         }
 
         private void CheckData(string data)
         {
-            try
+
+            if (data.Contains("GY") && data.Contains(":"))
             {
-                if (data.Contains("GY") && data.Contains(":"))
-                {
-                    data = data.Substring(2, data.Length - 3);
+                data = data.Substring(2, data.Length - 3);
 
-                    var message_split = data.Split(':');
-                    XGY = Convert.ToDouble(message_split[0]);
-                    YGY = Convert.ToDouble(message_split[1]);
-                    ZGY = Convert.ToDouble(message_split[2]);
+                var message_split = data.Split(':');
+                XGY = Convert.ToDouble(message_split[0]);
+                YGY = Convert.ToDouble(message_split[1]);
+                ZGY = Convert.ToDouble(message_split[2]);
 
-                }
-                else if (data.Contains("AC") && data.Contains(":"))
-                {
-                    data = data.Substring(2, data.Length - 3);
-
-                    var message_split = data.Split(':');
-                    XAC = Convert.ToDouble(message_split[0]);
-                    YAC = Convert.ToDouble(message_split[1]);
-                    ZAC = Convert.ToDouble(message_split[2]);
-
-                }
             }
-            catch (TimeoutException) { }
-            catch (FormatException) { }
-            catch (IndexOutOfRangeException) { }
+            else if (data.Contains("AC") && data.Contains(":"))
+            {
+                data = data.Substring(2, data.Length - 3);
+
+                var message_split = data.Split(':');
+                XAC = Convert.ToDouble(message_split[0]);
+                YAC = Convert.ToDouble(message_split[1]);
+                ZAC = Convert.ToDouble(message_split[2]);
+
+            }
         }
     }
 }

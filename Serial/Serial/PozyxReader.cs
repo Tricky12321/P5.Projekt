@@ -25,9 +25,10 @@ namespace Serial
             double Xx = -1;
             double Yy = -1;
             double Zz = -1;
-            string XYZstring = _serialPort.ReadLine();
+
             try
             {
+                string XYZstring = _serialPort.ReadLine();
                 if (XYZstring.Contains("PO") && XYZstring.Contains(":"))
                 {
                     XYZstring = XYZstring.Substring(2, XYZstring.Length - 3);

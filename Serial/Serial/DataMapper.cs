@@ -12,6 +12,7 @@ namespace Serial
         private INSReader _INS;
 
         private bool _isReading;
+        private bool _dataReady;
 
         private INSDATA INSData;
         private XYZ PozyxData;
@@ -19,6 +20,7 @@ namespace Serial
         {
             _pozyx = Pozyx;
             _INS = INS;
+            _dataReady = false;
         }
 
         public void StartReading()
@@ -32,11 +34,29 @@ namespace Serial
             //Start threads.
             PozyxReaderThread.Start();
             INSReaderThread.Start();
+            Console.WriteLine("Reading Data.");
         }
 
         public void StopReading()
         {
             _isReading = false;
+            Console.WriteLine("Stopped reading data.");
+        }
+
+        public List<Tuple<XYZ, INSDATA>> ReadToList(int amount)
+        {
+            List<Tuple<XYZ, INSDATA>> DataList = new List<Tuple<XYZ, INSDATA>>();
+            int i = 0;
+            while (i < amount)
+            {
+                if(_dataReady)
+                {
+                    DataList.Add(Tuple.Create<XYZ, INSDATA>(PozyxData, INSData));
+                    i++;
+                    _dataReady = false;
+                }
+            }
+            return DataList;
         }
 
         private void ReadPozyx()
@@ -44,6 +64,8 @@ namespace Serial
             while (_isReading)
             {
                 PozyxData = _pozyx.Read();
+                _dataReady = true;
+                
             }
             Console.WriteLine("Pozyx thread has been terminated.");
         }
@@ -53,6 +75,7 @@ namespace Serial
             while (_isReading)
             {
                 INSData = _INS.Read();
+                _dataReady = true;
             }
             Console.WriteLine("INS has been terminated.");
         }
