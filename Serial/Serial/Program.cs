@@ -19,7 +19,7 @@ namespace Serial
 		static PositionCalculator positionCalculator = new PositionCalculator();
 
 
-		static INS_reader iNS_Reader;
+		static INSReader iNS_Reader;
 		public static void Main()
 		{
 			/*
@@ -30,7 +30,7 @@ namespace Serial
             SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
 			Console.WriteLine($"Serialport found: {Test.PortName}");
             */
-			iNS_Reader = new INS_reader();
+			iNS_Reader = new INSReader();
 			Thread PrintThread = new Thread(Print);
 			PrintThread.Start();
 			PrintThread.Join();
