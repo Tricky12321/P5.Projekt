@@ -11,7 +11,24 @@ namespace Serial
     {
         private string _description = "POZYX";
         private SerialPort _serialPort;
-        
+
+		private XYZ _pozyx_data;
+
+		private const int _hz_log_count = 100;
+        private Queue<double> _hz_rate_log = new Queue<double>();
+        public double HZ_rate
+        {
+            get
+            {
+                return Math.Round(_hz_rate_log.Average(), 0);
+            }
+            set
+            {
+                _hz_rate_log.Enqueue(1000 / value);
+                _hz_rate_log.Dequeue();
+            }
+        }
+
         public PozyxReader()
         {
             Console.WriteLine($"Getting {_description} Serial Port");
@@ -28,21 +45,35 @@ namespace Serial
 
             try
             {
+				string data = _serialPort.ReadLine();
                 string XYZstring = _serialPort.ReadLine();
-                if (XYZstring.Contains("PO") && XYZstring.Contains(":"))
-                {
-                    XYZstring = XYZstring.Substring(2, XYZstring.Length - 3);
+                
 
-                    var message_split = XYZstring.Split(':');
-                    Xx = Convert.ToDouble(message_split[0]);
-                    Yy = Convert.ToDouble(message_split[1]);
-                    Zz = Convert.ToDouble(message_split[2]);
-                }
+
             }
             catch (TimeoutException) { }
             catch (FormatException) { }
             catch (IndexOutOfRangeException) { }
-            return new XYZ(Xx, Yy, Zz);
+			return _pozyx_data;
+        }
+
+		private void CheckData(string data)
+        {
+
+			if (data.Contains("PO") && data.Contains(":"))
+            {
+				data = data.Substring(2, data.Length - 3);
+
+				var message_split = data.Split(':');
+                double Xx = Convert.ToDouble(message_split[0]);
+                double Yy = Convert.ToDouble(message_split[1]);
+                double Zz = Convert.ToDouble(message_split[2]);
+				_pozyx_data = new XYZ(Xx, Yy, Zz);
+            }
+			else if (data.Contains("timer"))
+            {
+                HZ_rate = Convert.ToInt32(data.Replace("timer:", "").Replace("\r", ""));
+            }
         }
     }
 }

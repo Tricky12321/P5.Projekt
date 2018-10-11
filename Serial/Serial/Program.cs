@@ -3,28 +3,56 @@ using System.IO.Ports;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
 namespace Serial
 {
-    class MainClass
-    {
-        public static void Main()
+	class MainClass
+	{
+
+		static bool _continue = true;
+		static SerialPort _serialPort;
+		//static Thread readThread = new Thread(Read);
+		static Stopwatch DataTimer = new Stopwatch();
+		static DataClass Accelerometer = new DataClass("AC");
+		static DataClass Gyroscope = new DataClass("GY");
+		static int Timer = 1000000;
+
+		static PositionCalculator positionCalculator = new PositionCalculator();
+
+
+		static INSReader iNS_Reader;
+		public static void Main()
 		{
+			/*
+            Console.WriteLine($"Creating POZYX.");
             PozyxReader Pozyx = new PozyxReader();
-            INSReader INS = new INSReader();
+            Console.WriteLine($"Reading POZYX.");
 
-            DataMapper Mapper = new DataMapper(Pozyx, INS);
+            SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
+			Console.WriteLine($"Serialport found: {Test.PortName}");
+            */
+			iNS_Reader = new INSReader();
+			Thread PrintThread = new Thread(Print);
+			PrintThread.Start();
+			PrintThread.Join();
+			Console.ReadLine();
 
-            Mapper.StartReading();
-            List<Tuple<XYZ, INSDATA>> MappedData = Mapper.ReadToList(100);
-            Mapper.StopReading();
-
-            foreach (var item in MappedData)
-            {
-                Console.WriteLine("POZYX" + "\n" + item.Item1.ToString());
-                Console.WriteLine("INS" + "\n" + item.Item2.ToString());
-            }
-            Console.WriteLine(MappedData.Count);
-            Console.Read();
 		}
-    }
+
+		public static void Print()
+		{
+			while (true)
+			{
+				iNS_Reader.Read();
+				Console.Clear();
+				Console.WriteLine($"INS READER");
+				Console.WriteLine($"Aceelerometer data");
+				Console.WriteLine(iNS_Reader.AcceXYZ);
+				Console.WriteLine($"Gyro data");
+				Console.WriteLine(iNS_Reader.GyroXYZ);
+				Console.WriteLine($"HZ:{iNS_Reader.HZ_rate}");
+			}
+		}
+	}
 }

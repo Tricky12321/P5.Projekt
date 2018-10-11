@@ -12,7 +12,7 @@ namespace Serial
 	public class DataClass
 	{
 		private const int StackSize = 100;
-		private const int CalibrateTimerMs = 1000; // ms of calibrating time
+		private const int CalibrateTimerMs = 5000; // ms of calibrating time
 		private const int Margin = 5;
 		private const bool UseMargin = true;
 		private const int DecimalCount = 1;
@@ -360,7 +360,7 @@ namespace Serial
 		{
 			try
 			{
-				if (data.Contains("GY") && data.Contains(":"))
+				if (data.Contains(_acceptedPrefix) && data.Contains(":"))
 				{
 					data = data.Substring(2, data.Length - 3);
 
@@ -369,12 +369,15 @@ namespace Serial
 					double Yy = Convert.ToDouble(message_split[1]);
 					double Zz = Convert.ToDouble(message_split[2]);
 
+					UpdateXYZ(Xx, Yy, Zz);
 				}
 			}
 			catch (TimeoutException) { }
 			catch (FormatException) { }
 			catch (IndexOutOfRangeException) {}
 		}
+
+
 
 		#region Values
 		public double X_HighPassVal()
@@ -463,12 +466,12 @@ namespace Serial
 		public void WriteData()
 		{
 			// WriteToCSV("Raw", Raw_Log);
-			//WriteToCSV("Kalman", Kalman_Log);
+			// WriteToCSV("Kalman", Kalman_Log);
 			// WriteToCSV("Highpass", Highpass_log);
 			// WriteToCSV("Lowpass", Lowpass_log);
 			// WriteToCSV("KalmanLowpass", KalmanLowPass_log);
 			// WriteToCSV("RawCalibrated", RawCalibrated_log);
-			WriteToCSV("Kalman-50cm", Kalman_Log,true );
+			// WriteToCSV("Kalman-50cm-frem_og_tilbage", Kalman_Log,true );
 		}
 
 		public void CalibrateInput()
