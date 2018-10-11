@@ -377,6 +377,16 @@ namespace Serial
 			catch (IndexOutOfRangeException) {}
 		}
 
+		public int? HandleTimer(string data) {
+			string prefix = "timer";
+			int? output;
+			if (data.Substring(0,prefix.Length) == prefix) {
+				output = Convert.ToInt32(data.Substring(prefix.Length));
+				return output;
+			}
+			return null;
+		}
+
 		#region Values
 		public double X_HighPassVal()
 		{

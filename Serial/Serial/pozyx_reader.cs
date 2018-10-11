@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Serial 
 {
-    class PozyxReader //: IReadable<XYZ>
+    class PozyxReader : IReadable<XYZ>
     {
-        private String _description = "POZYX";
+        private string _description = "POZYX";
         private SerialPort _serialPort;
         
         public PozyxReader()
@@ -20,17 +20,24 @@ namespace Serial
             Console.WriteLine($"{_description} Serial Port Opened");
         }
 
-
-        public string Read()
+        public string Reader()
         {
-			try
-			{
-				return _serialPort.ReadLine();
-            }
-            catch (Exception ex)
-            {
-				return "";
-            }
+            return _serialPort.ReadLine();
+        }
+
+        public XYZ Read()
+        {
+            string XYZstring = _serialPort.ReadLine();
+            string[] XYZstringSplit = XYZstring.Split(',');
+
+            //Seriøst din taber lær at programmere noob
+            string XString = XYZstringSplit[1].Split(' ')[1];
+            string YString = XYZstringSplit[2].Split(' ')[1]; 
+            string ZString = XYZstringSplit[3].Split(' ')[1];
+
+            int.Parse(XString);
+
+            return new XYZ(int.Parse(XString), int.Parse(YString), int.Parse(ZString));
         }
     }
 }
