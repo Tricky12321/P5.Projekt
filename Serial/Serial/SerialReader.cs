@@ -23,8 +23,6 @@ namespace Serial
 
 			List<SerialPort> serialPorts = new List<SerialPort>();
 
-            
-
 			foreach (var Port in SerialPortNames)
             {
                 try
@@ -79,7 +77,7 @@ namespace Serial
 				string Data = serialPort.ReadLine();
                 Console.WriteLine($"Checking {serialPort.PortName}...");
 				if (Data == (SerialType.ToString() + "\r")) {
-					while (Data == (SerialType.ToString() + "\r"))
+					while (Data == (SerialType.ToString() + "\r") || Data == "\r")
                     {
                         serialPort.WriteLine("DATA OK");
                         Thread.Sleep(1000);
