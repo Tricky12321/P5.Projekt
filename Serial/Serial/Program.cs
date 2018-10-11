@@ -3,6 +3,8 @@ using System.IO.Ports;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
 namespace Serial
 {
 	class MainClass
@@ -54,3 +56,4 @@ namespace Serial
 		}
 	}
 }
+==== BASE ====

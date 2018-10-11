@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO.Ports;
@@ -14,6 +14,8 @@ namespace Serial
 
 	public static class SerialReader
 	{
+
+		static List<SerialPort> OpenSerialPorts = new List<SerialPort>();
 
 		public static SerialPort GetSerialPort(ArduinoTypes SerialType)
 		{
@@ -118,6 +120,13 @@ namespace Serial
 			else
 			{
 				throw new Exception("Unknown OS!");
+			}
+		}
+
+		public static void CloseOpenPorts() {
+			foreach (var Port in OpenSerialPorts)
+			{
+				Port.Close();
 			}
 		}
 	}
