@@ -11,7 +11,9 @@ namespace Serial
     {
         private string _description = "POZYX";
         private SerialPort _serialPort;
-        
+
+		private XYZ _pozyx_data;
+
         public PozyxReader()
         {
             Console.WriteLine($"Getting {_description} Serial Port");
@@ -28,21 +30,41 @@ namespace Serial
 
             try
             {
+				string data = _serialPort.ReadLine();
                 string XYZstring = _serialPort.ReadLine();
-                if (XYZstring.Contains("PO") && XYZstring.Contains(":"))
-                {
-                    XYZstring = XYZstring.Substring(2, XYZstring.Length - 3);
+                
 
-                    var message_split = XYZstring.Split(':');
-                    Xx = Convert.ToDouble(message_split[0]);
-                    Yy = Convert.ToDouble(message_split[1]);
-                    Zz = Convert.ToDouble(message_split[2]);
-                }
+
             }
             catch (TimeoutException) { }
             catch (FormatException) { }
             catch (IndexOutOfRangeException) { }
-            return new XYZ(Xx, Yy, Zz);
+			return _pozyx_data);
+        }
+
+		private void CheckData(string data)
+        {
+
+			if (data.Contains("PO") && data.Contains(":"))
+            {
+				data = data.Substring(2, data.Length - 3);
+
+				var message_split = data.Split(':');
+                double Xx = Convert.ToDouble(message_split[0]);
+                double Yy = Convert.ToDouble(message_split[1]);
+                double Zz = Convert.ToDouble(message_split[2]);
+				_pozyx_data = new XYZ(Xx, Yy, Zz);
+            }
+            else if (data.Contains("AC") && data.Contains(":"))
+            {
+                data = data.Substring(2, data.Length - 3);
+
+                var message_split = data.Split(':');
+                XAC = Convert.ToDouble(message_split[0]);
+                YAC = Convert.ToDouble(message_split[1]);
+                ZAC = Convert.ToDouble(message_split[2]);
+
+            }
         }
     }
 }
