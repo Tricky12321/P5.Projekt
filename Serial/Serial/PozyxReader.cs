@@ -9,22 +9,39 @@ namespace Serial
 {
     class PozyxReader : IReadable<XYZ>
     {
-        private static SerialPort _serialPort;
+        private string _description = "POZYX";
+        private SerialPort _serialPort;
+        
         public PozyxReader()
         {
-            Console.WriteLine($"Getting POZYX Serial Port");
+            Console.WriteLine($"Getting {_description} Serial Port");
             _serialPort = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
-            Console.WriteLine($"Opening POZYX Serial Port");
-            _serialPort.Open();
-            Console.WriteLine($"POZYX Serial Port Opened");
+            Console.WriteLine($"Opening {_description} Serial Port");
+            Console.WriteLine($"{_description} Serial Port Opened");
         }
 
         public XYZ Read()
         {
-            _serialPort.Open();
+            double Xx = -1;
+            double Yy = -1;
+            double Zz = -1;
+            string XYZstring = _serialPort.ReadLine();
+            try
+            {
+                if (XYZstring.Contains("PO") && XYZstring.Contains(":"))
+                {
+                    XYZstring = XYZstring.Substring(2, XYZstring.Length - 3);
 
-            _serialPort.Close();
-            return new XYZ();
+                    var message_split = XYZstring.Split(':');
+                    Xx = Convert.ToDouble(message_split[0]);
+                    Yy = Convert.ToDouble(message_split[1]);
+                    Zz = Convert.ToDouble(message_split[2]);
+                }
+            }
+            catch (TimeoutException) { }
+            catch (FormatException) { }
+            catch (IndexOutOfRangeException) { }
+            return new XYZ(Xx, Yy, Zz);
         }
     }
 }

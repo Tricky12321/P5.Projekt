@@ -360,7 +360,7 @@ namespace Serial
 		{
 			try
 			{
-				if (data.Contains(_acceptedPrefix) && data.Contains(":"))
+				if (data.Contains("GY") && data.Contains(":"))
 				{
 					data = data.Substring(2, data.Length - 3);
 
@@ -369,7 +369,6 @@ namespace Serial
 					double Yy = Convert.ToDouble(message_split[1]);
 					double Zz = Convert.ToDouble(message_split[2]);
 
-					UpdateXYZ(Xx, Yy, Zz);
 				}
 			}
 			catch (TimeoutException) { }
