@@ -12,6 +12,5 @@ namespace Serial
         #region METHODS
         T Read();
         #endregion
-
     }
 }

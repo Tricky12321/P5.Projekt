@@ -18,9 +18,8 @@ namespace Serial
 		static int Timer = 1000000;
 
 		static PositionCalculator positionCalculator = new PositionCalculator();
-
-
         static INSReader insReader = new INSReader();
+
 		public static void Main()
 		{
             insReader = new INSReader();
