@@ -18,18 +18,6 @@ namespace Serial
 
 		private const int _hz_log_count = 100;
         private Queue<double> _hz_rate_log = new Queue<double>();
-        public double HZ_rate
-        {
-            get
-            {
-                return Math.Round(_hz_rate_log.Average(), 0);
-            }
-            set
-            {
-                _hz_rate_log.Enqueue(1000 / value);
-                _hz_rate_log.Dequeue();
-            }
-        }
 
         public PozyxReader()
         {
