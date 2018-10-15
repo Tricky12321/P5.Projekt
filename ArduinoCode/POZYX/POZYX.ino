@@ -64,7 +64,6 @@ void setup(){
 
 void loop(){
   if(establish_COM) {
-    delay(400);
     Serial.println("POZYX");
     if(Serial.available() > 0){  
       String c = Serial.readString();
@@ -86,11 +85,9 @@ void loop(){
     }else{
       status = Pozyx.doPositioning(&position, dimension, height, algorithm);
     }
-    
-    int dt = millis() - last_millis;
-    last_millis += dt; 
-    
     if (status == POZYX_SUCCESS){
+      int dt = millis() - last_millis;
+      last_millis += dt; 
       printCoordinates(position, dt);
     }
   }
@@ -98,11 +95,8 @@ void loop(){
 }
 
 void printCoordinates(coordinates_t coor, int dt){
-  uint16_t network_id = remote_id;
-  if (network_id == NULL){
-    network_id = 0;
-  }
-  Serial.print("timer:")
+
+  Serial.print("timer:");
   Serial.println(dt);
   
   if(!use_processing){

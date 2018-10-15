@@ -11,7 +11,7 @@ using System.Collections.Concurrent;
 
 namespace Serial
 {
-    class INSReader : IReadable<INSDATA>
+    class INSReader : HzCalculator, IReadable<INSDATA>
     {
         private SerialPort _serialPort;
         public XYZ AcceXYZ
@@ -36,35 +36,11 @@ namespace Serial
 
         private double XAC;
         private double YAC;
-        private double ZAC;
-        private const int _hz_log_count = 100;
-        private Queue<double> _hz_rate_log = new Queue<double>();
-        public double HZ_rate
-        {
-            get
-            {
-                return Math.Round(_hz_rate_log.Average(), 0);
-            }
-            set
-            {
-                _hz_rate_log.Enqueue(1000 / value);
-                _hz_rate_log.Dequeue();
-            }
-        }
-
+        private double ZAC;      
 
         public INSReader()
-        {
-            for (int i = 0; i < _hz_log_count; i++)
-            {
-                _hz_rate_log.Enqueue(0);
-            }
-
-
-            Console.WriteLine($"Getting INS Serial Port");
+        {         
             _serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
-            Console.WriteLine($"Opening INS Serial Port");
-            Console.WriteLine($"INS Serial Port Opened");
         }
 
         public INSDATA Read()
@@ -83,7 +59,6 @@ namespace Serial
         {
             try
             {
-
                 if (data.Contains("GY") && data.Contains(":"))
                 {
                     data = data.Substring(2, data.Length - 3);
