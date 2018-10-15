@@ -10,9 +10,9 @@ namespace NeuralNetwork
         public int TrainingIterations;
         public double TrainingRate;
         public NeuralNetwork nn;
-        public List<Tuple<List<double>,List<double>>> InputOutputsList;
+        public List<InputOutputData> InputOutputsList;
 
-        public UserInterfaceNeuralNetwork(int trainingIterations, double trainingRate, int[] layerArray, List<Tuple<List<double>, List<double>>> inputOutputsList)
+        public UserInterfaceNeuralNetwork(int trainingIterations, double trainingRate, int[] layerArray, List<InputOutputData> inputOutputsList)
         {
             TrainingIterations = trainingIterations;
             TrainingRate = trainingRate;
@@ -35,8 +35,8 @@ namespace NeuralNetwork
                         bool DoneInput = true;
                         String readLine;
                         List<double> inputsList = new List<double>();
-                        inputsList = InputOutputsList[9].Item1;
-                        /*while (DoneInput)
+                        //inputsList = InputOutputsList[9].Inputs;
+                        while (DoneInput)
                         {
                             Console.WriteLine("WRITE A DOUBLE!");
                             readLine = Console.ReadLine();
@@ -49,7 +49,7 @@ namespace NeuralNetwork
                             {
                                 inputsList.Add(lineValue);
                             }
-                        }*/
+                        }
 
                         Try(inputsList);
                         break;
@@ -108,7 +108,7 @@ namespace NeuralNetwork
 
                 for (int j = 0; j < count; j++)
                 {
-                    nn.Train(InputOutputsList[j].Item1, InputOutputsList[j].Item2);
+                    nn.Train(InputOutputsList[j].Inputs, InputOutputsList[j].Outputs);
                 }
             }
             Console.WriteLine("TRAINING DONE!");
@@ -122,8 +122,15 @@ namespace NeuralNetwork
 
         private void Load(String fileName)
         {
-            nn = nn.Load($"{fileName}.nn");
-            Console.WriteLine("NEURAL NETWORK LOADED!");
+            try
+            {
+                nn = nn.Load($"{fileName}.nn");
+                Console.WriteLine("NEURAL NETWORK LOADED!");
+            } 
+            catch(System.IO.FileNotFoundException)
+            {
+                Console.WriteLine($"FILE WITH NAME {fileName} NOT FOUND!");
+            }
         }
     }
 }

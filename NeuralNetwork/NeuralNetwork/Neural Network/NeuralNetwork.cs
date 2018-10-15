@@ -18,6 +18,8 @@ namespace NeuralNetwork
             }
         }
 
+        public NeuralNetwork() { }
+
         public NeuralNetwork(double learningRate, int[] layers)
         {
             if (layers.Length < 2) { return; }
@@ -50,10 +52,6 @@ namespace NeuralNetwork
                     }
                 });
             }
-        }
-
-        public NeuralNetwork()
-        {
         }
 
         public double[] Run(List<double> input)
@@ -104,6 +102,7 @@ namespace NeuralNetwork
 
         public bool Train(List<double> input, List<double> output)
         {
+
             if ((input.Count != Layers[0].Neurons.Count) || (output.Count != Layers[LayerCount - 1].NeuronCount)) return false;
 
             Run(input);
