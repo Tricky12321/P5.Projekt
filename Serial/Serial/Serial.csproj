@@ -37,21 +37,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataMapper.cs" />
-    <Compile Include="INSDATA.cs" />
-    <Compile Include="INSReader.cs" />
-    <Compile Include="IReadable.cs" />
-    <Compile Include="PozyxReader.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DataClass.cs" />
-    <Compile Include="KalmanFilter.cs" />
-    <Compile Include="PositionCalculator.cs" />
-    <Compile Include="XYZ.cs" />
-    <Compile Include="DataPoint.cs" />
-    <Compile Include="Filter.cs" />
-    <Compile Include="SerialReader.cs" />
-    <Compile Include="Utilities.cs" />
     <Compile Include="Neural Network\CryptoRandom.cs" />
     <Compile Include="Neural Network\Dendrite.cs" />
     <Compile Include="Neural Network\InputOutputData.cs" />
@@ -60,13 +46,28 @@
     <Compile Include="Neural Network\Neuron.cs" />
     <Compile Include="Neural Network\SaveLoadableObject.cs" />
     <Compile Include="Neural Network\UserInterfaceNeuralNetwork.cs" />
+    <Compile Include="Data Mapper\DataClass.cs" />
+    <Compile Include="Data Mapper\DataMapper.cs" />
+    <Compile Include="Data Mapper\DataPoint.cs" />
+    <Compile Include="Data Mapper\Filter.cs" />
+    <Compile Include="Data Mapper\INSDATA.cs" />
+    <Compile Include="Data Mapper\INSReader.cs" />
+    <Compile Include="Data Mapper\IReadable.cs" />
+    <Compile Include="Data Mapper\KalmanFilter.cs" />
+    <Compile Include="Data Mapper\PositionCalculator.cs" />
+    <Compile Include="Data Mapper\PozyxReader.cs" />
+    <Compile Include="Data Mapper\SerialReader.cs" />
+    <Compile Include="Data Mapper\Utilities.cs" />
+    <Compile Include="Data Mapper\XYZ.cs" />
+    <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="Data Mapper\packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Neural Network\" />
+    <Folder Include="Data Mapper\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
