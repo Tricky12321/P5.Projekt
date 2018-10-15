@@ -14,36 +14,51 @@ namespace Serial
 
 		private XYZ _pozyx_data;
 
-		public XYZ Pozyx_data => _pozyx_data;
+		private const int _hz_log_count = 100;
+        private Queue<double> _hz_rate_log = new Queue<double>();
+        public double HZ_rate
+        {
+            get
+            {
+                return Math.Round(_hz_rate_log.Average(), 0);
+            }
+            set
+            {
+                _hz_rate_log.Enqueue(1000 / value);
+                _hz_rate_log.Dequeue();
+            }
+        }
 
+        public PozyxReader()
+        {
+            Console.WriteLine($"Getting {_description} Serial Port");
+            _serialPort = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
+            Console.WriteLine($"Opening {_description} Serial Port");
+            Console.WriteLine($"{_description} Serial Port Opened");
+        }
 
+        public XYZ Read()
+        {
+            double Xx = -1;
+            double Yy = -1;
+            double Zz = -1;
 
-		public PozyxReader()
-		{
-			_serialPort = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
-			Console.WriteLine($"{_serialPort} Serial Port Opened");
-		}
-
-		public XYZ Read()
-		{
-			try
-			{
-				string TimerData = _serialPort.ReadLine();
-				string XYZstring = _serialPort.ReadLine();
-				CheckData(TimerData);
-				CheckData(XYZstring);
-			}
-			catch (TimeoutException) { }
-			catch (FormatException) { }
-			catch (IndexOutOfRangeException) { }
+            try
+            {
+				string data = _serialPort.ReadLine();
+                string XYZstring = _serialPort.ReadLine();
+            }
+            catch (TimeoutException) { }
+            catch (FormatException) { }
+            catch (IndexOutOfRangeException) { }
 			return _pozyx_data;
-		}
+        }
 
 		private void CheckData(string data)
-		{
+        {
 
 			if (data.Contains("PO") && data.Contains(":"))
-			{
+            {
 				data = data.Substring(2, data.Length - 3);
 
 				var message_split = data.Split(':');
