@@ -30,7 +30,7 @@ namespace NeuralNetwork
             }*/
             RandomData();
 
-            UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(10000, 0.2, new int[] { 1, 3, 3, 3, 1 }, insOuts);
+            UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(10000, 0.2, new int[] { 1, 3, 3, 1 }, insOuts);
         }
 
         private static void RandomData()

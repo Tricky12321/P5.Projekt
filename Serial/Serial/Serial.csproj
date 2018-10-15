@@ -52,10 +52,21 @@
     <Compile Include="Filter.cs" />
     <Compile Include="SerialReader.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="Neural Network\CryptoRandom.cs" />
+    <Compile Include="Neural Network\Dendrite.cs" />
+    <Compile Include="Neural Network\InputOutputData.cs" />
+    <Compile Include="Neural Network\Layer.cs" />
+    <Compile Include="Neural Network\NeuralNetwork.cs" />
+    <Compile Include="Neural Network\Neuron.cs" />
+    <Compile Include="Neural Network\SaveLoadableObject.cs" />
+    <Compile Include="Neural Network\UserInterfaceNeuralNetwork.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Neural Network\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
