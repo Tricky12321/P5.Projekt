@@ -17,24 +17,25 @@
 ////////////////// PARAMETERS //////////////////
 ////////////////////////////////////////////////
 
-uint16_t remote_id = 0x6763;                            // set this to the ID of the remote device
+uint16_t remote_id = 0x602e;                            // set this to the ID of the remote device
 bool remote = false;                                    // set this to true to use the remote ID
 
-boolean use_processing = true;                         // set this to true to output data for the processing sketch
+boolean use_processing = false;                         // set this to true to output data for the processing sketch
 
 const uint8_t num_anchors = 4;                                    // the number of anchors
 uint16_t anchors[num_anchors] = {0x6e2b, 0x676e, 0x676c, 0x6738};     // the network id of the anchors: change these to the network ids of your anchors.
 int32_t anchors_x[num_anchors] = {4720, 4720, 0, 0};               // anchor x-coorindates in mm
 int32_t anchors_y[num_anchors] = {3446, 0, 3446, 0};                  // anchor y-coordinates in mm
-int32_t heights[num_anchors] = {1463, 0, 0, 890};              // anchor z-coordinates in mm
+int32_t heights[num_anchors] = {1463, 0, 0, 890}; 
 
 uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm to use. try POZYX_POS_ALG_TRACKING for fast moving objects.
 uint8_t dimension = POZYX_3D;                           // positioning dimension
-int32_t height = 1000;                                  // height of device, required in 2.5D positioning
+int32_t height = 0;                                  // height of device, required in 2.5D positioning
+uint32_t last_millis = 0;
 
-bool COM_connection = true;      // set this true to communicate to a device using multible COM channels
 ////////////////////////////////////////////////
-
+bool establish_COM = true;
+bool first = true;
 void setup(){
   Serial.begin(115200);
 
@@ -43,22 +44,11 @@ void setup(){
     Serial.println(F("Reset required"));
     delay(100);
     abort();
-    
+  }
+
   if(!remote){
     remote_id = NULL;
   }
-
-  Serial.println(F("----------POZYX POSITIONING V1.1----------"));
-  Serial.println(F("NOTES:"));
-  Serial.println(F("- No parameters required."));
-  Serial.println();
-  Serial.println(F("- System will auto start anchor configuration"));
-  Serial.println();
-  Serial.println(F("- System will auto start positioning"));
-  Serial.println(F("----------POZYX POSITIONING V1.1----------"));
-  Serial.println();
-  Serial.println(F("Performing manual anchor configuration:"));
-
   // clear all previous devices in the device list
   Pozyx.clearDevices(remote_id);
   // sets the anchor manually
@@ -66,62 +56,68 @@ void setup(){
   // sets the positioning algorithm
   Pozyx.setPositionAlgorithm(algorithm, dimension, remote_id);
 
-  printCalibrationResult();
-  delay(2000);
+  //printCalibrationResult();
+  //delay(2000);
 
-  Serial.println(F("Starting positioning: "));
-  }
-  
-  // establish connection through COM port
-  int incomingByte = 0;
-  if(COM_connection) {
-    while(true) {
-      Serial.println("POZYX");
-    }
-  }
+  //Serial.println(F("Starting positioning: "));
 }
 
 void loop(){
-  coordinates_t position;
-  int status;
-  if(remote){
-    status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
-  }else{
-    status = Pozyx.doPositioning(&position, dimension, height, algorithm);
+  if(establish_COM) {
+    delay(400);
+    Serial.println("POZYX");
+    if(Serial.available() > 0){  
+      String c = Serial.readString();
+      if(c.indexOf("OK") > 0){
+        Serial.println("Connection established.");
+        establish_COM = false;   
+      }
+    }
+  } 
+  else {
+    if (first) {
+       Serial.println("Done");
+       first = false;
+    }
+    coordinates_t position;
+    int status;
+    if(remote){
+      status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
+    }else{
+      status = Pozyx.doPositioning(&position, dimension, height, algorithm);
+    }
+    
+    int dt = millis() - last_millis;
+    last_millis += dt; 
+    
+    if (status == POZYX_SUCCESS){
+      printCoordinates(position, dt);
+    }
   }
-
-  if (status == POZYX_SUCCESS){
-    // prints out the result
-    printCoordinates(position);
-  }else{
-    // prints out the error code
-    printErrorCode("positioning");
-  }
+  
 }
 
-// prints the coordinates for either humans or for processing
-void printCoordinates(coordinates_t coor){
+void printCoordinates(coordinates_t coor, int dt){
   uint16_t network_id = remote_id;
   if (network_id == NULL){
     network_id = 0;
   }
+  Serial.print("timer:")
+  Serial.println(dt);
+  
   if(!use_processing){
-    Serial.print("POS ID 0x");
-    Serial.print(network_id, HEX);
-    Serial.print(", x(mm): ");
+    Serial.print("PO");
     Serial.print(coor.x);
-    Serial.print(", y(mm): ");
+    Serial.print(":");
     Serial.print(coor.y);
-    Serial.print(", z(mm): ");
+    Serial.print(":");
     Serial.println(coor.z);
   }else{
-    Serial.print("POS,0x");
-    Serial.print(network_id,HEX);
-    Serial.print(",");
+    Serial.print("PO");
     Serial.print(coor.x);
-    Serial.print(",");
+    Serial.print(":");
     Serial.print(coor.y);
-    Serial.print(",");
+    Serial.print(":");
     Serial.println(coor.z);
   }
 }
