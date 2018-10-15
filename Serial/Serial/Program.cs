@@ -10,29 +10,20 @@ namespace Serial
 	class MainClass
 	{
 
-		static bool _continue = true;
-		static SerialPort _serialPort;
 		//static Thread readThread = new Thread(Read);
-		static Stopwatch DataTimer = new Stopwatch();
-		static DataClass Accelerometer = new DataClass("AC");
-		static DataClass Gyroscope = new DataClass("GY");
-		static int Timer = 1000000;
-
-		static PositionCalculator positionCalculator = new PositionCalculator();
-
-
-		static INSReader iNS_Reader;
+		static INSReader InsReader;
+		static PozyxReader PozyxReader;
 		public static void Main()
 		{
-			/*
-            Console.WriteLine($"Creating POZYX.");
-            PozyxReader Pozyx = new PozyxReader();
-            Console.WriteLine($"Reading POZYX.");
+			Thread.Sleep(1000);
+			InsReader = new INSReader();
+			PozyxReader = new PozyxReader();
 
-            SerialPort Test = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
-			Console.WriteLine($"Serialport found: {Test.PortName}");
-            */
-			iNS_Reader = new INSReader();
+			Thread ReadThreadINS = new Thread(ReadINS);
+			Thread ReadThreadPOZYX = new Thread(ReadPozyx);
+			ReadThreadINS.Start();
+			ReadThreadPOZYX.Start();
+
 			Thread PrintThread = new Thread(Print);
 			PrintThread.Start();
 			PrintThread.Join();
@@ -40,18 +31,39 @@ namespace Serial
 
 		}
 
+		public static void ReadPozyx() {
+			while (true)
+			{
+				PozyxReader.Read();
+			}
+		}
+
+		public static void ReadINS() {
+			while (true)
+			{
+				InsReader.Read();
+			}
+		}
+
 		public static void Print()
 		{
 			while (true)
 			{
-				iNS_Reader.Read();
+                
 				Console.Clear();
+                // INS
 				Console.WriteLine($"INS READER");
-				Console.WriteLine($"Aceelerometer data");
-				Console.WriteLine(iNS_Reader.AcceXYZ);
-				Console.WriteLine($"Gyro data");
-				Console.WriteLine(iNS_Reader.GyroXYZ);
-				Console.WriteLine($"HZ:{iNS_Reader.HZ_rate}");
+                Console.WriteLine($"Aceelerometer data");
+                Console.WriteLine(InsReader.AcceXYZ);
+                Console.WriteLine($"Gyro data");
+                Console.WriteLine(InsReader.GyroXYZ);
+				Console.WriteLine($"INS HZ:{InsReader.HZ_rate}");
+
+                // POZYX
+				Console.WriteLine($"POZYX READER");
+				Console.WriteLine($"{PozyxReader.Pozyx_data}");
+                Console.WriteLine($"POZYX HZ:{PozyxReader.HZ_rate}");
+				Thread.Sleep(10);
 			}
 		}
 	}
