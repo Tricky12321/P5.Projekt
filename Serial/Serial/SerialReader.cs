@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO.Ports;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 namespace Serial
 {
 	public enum ArduinoTypes
@@ -15,8 +16,14 @@ namespace Serial
 	public static class SerialReader
 	{
 
+		const int _timeoutMS = 20000;
+
+		static List<SerialPort> OpenSerialPorts = new List<SerialPort>();
+
 		public static SerialPort GetSerialPort(ArduinoTypes SerialType)
 		{
+			Stopwatch Timeout = new Stopwatch();
+
 			List<string> SerialPortNames = getSerialPorts().Where(Item => Item.Contains(getSerialPortNames())).ToList();
 
 			List<SerialPort> serialPorts = new List<SerialPort>();
@@ -25,12 +32,23 @@ namespace Serial
             {
                 try
                 {
-                    // Opening all serialPorts
-                    SerialPort serialPort = new SerialPort(Port, 115200);
-                    serialPort.ReadTimeout = 500;
-                    serialPort.WriteTimeout = 500;
-                    serialPort.Open();
-                    serialPorts.Add(serialPort);
+					// Check if the port is already opened
+					bool AlreadyOpen = false;
+					foreach (var OpenPort in OpenSerialPorts)
+					{
+						if (OpenPort.PortName == Port) {
+							AlreadyOpen = true;
+						}
+					}
+					// Opening all serialPorts
+					if (!AlreadyOpen) {
+						SerialPort serialPort = new SerialPort(Port, 115200);
+						serialPort.ReadTimeout = 1000;
+						serialPort.WriteTimeout = 1000;
+						serialPort.Open();
+						serialPorts.Add(serialPort);
+						Thread.Sleep(100);
+                    }
                 }
                 catch (IOException ex)
                 {
@@ -41,6 +59,7 @@ namespace Serial
 			}
 
 			SerialPort FoundSerialPort = null;
+			Timeout.Start();
 			while (FoundSerialPort == null)
 			{
 				foreach (var currentSerialPort in serialPorts)
@@ -49,7 +68,6 @@ namespace Serial
 					if (serialPort != null)
 					{
 						Console.Clear();
-						Console.WriteLine($"Found valid serial port on {serialPort.PortName}");
 						FoundSerialPort = serialPort;
                     }
 				}
@@ -63,6 +81,9 @@ namespace Serial
                 }
 
 			}
+			OpenSerialPorts.Add(FoundSerialPort);
+
+
 			return FoundSerialPort;
 
 		}
@@ -72,14 +93,12 @@ namespace Serial
 			try
 			{
 				string Data = serialPort.ReadLine();
-                Console.WriteLine($"Checking {serialPort.PortName}...");
-				if (Data == (SerialType.ToString() + "\r")) {
-					while (Data == (SerialType.ToString() + "\r") || Data == "\r")
-                    {
-                        serialPort.WriteLine("DATA OK");
-                        Thread.Sleep(1000);
-						Data = serialPort.ReadLine();
-                    }
+				Console.WriteLine($"[{serialPort.PortName}] Checking... ({SerialType.ToString()})");
+				Console.WriteLine($"DATA: {Data}");
+				if (Data.Contains(SerialType.ToString())) {
+					Console.WriteLine($"[{serialPort.PortName}] Matched! ({Data})");
+					Console.WriteLine($"[{serialPort.PortName}] Starting...!");
+					serialPort.WriteLine("DATA OK");
 					return serialPort;
 				}
                 else
@@ -89,7 +108,7 @@ namespace Serial
 			}
 			catch (TimeoutException ex)
 			{
-				Console.WriteLine("Timeout... Skipping");
+				Console.WriteLine($"[{serialPort.PortName}] Timeout... Skipping");
 				return null;
 			}
 
@@ -118,6 +137,13 @@ namespace Serial
 			else
 			{
 				throw new Exception("Unknown OS!");
+			}
+		}
+
+		public static void CloseOpenPorts() {
+			foreach (var Port in OpenSerialPorts)
+			{
+				Port.Close();
 			}
 		}
 	}
