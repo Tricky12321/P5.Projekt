@@ -61,7 +61,7 @@ namespace Serial
 
                 // POZYX
 				Console.WriteLine($"POZYX READER");
-				Console.WriteLine($"{PozyxReader.Pozyx_data}");
+				Console.WriteLine($"{PozyxReader.PozyxData}");
                 Console.WriteLine($"POZYX HZ:{PozyxReader.HZ_rate}");
 				Thread.Sleep(10);
 			}

@@ -12,6 +12,8 @@ namespace Serial
 		private string _description = "POZYX";
 		private SerialPort _serialPort;
 
+		public XYZ PozyxData => _pozyx_data;
+
 		private XYZ _pozyx_data;
 
 		private const int _hz_log_count = 100;
