@@ -61,6 +61,17 @@
     <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Neural Network\INS_POSZYX_NeuralNetworkTester.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DataClass.cs" />
+    <Compile Include="KalmanFilter.cs" />
+    <Compile Include="PositionCalculator.cs" />
+    <Compile Include="XYZ.cs" />
+    <Compile Include="DataPoint.cs" />
+    <Compile Include="Filter.cs" />
+    <Compile Include="SerialReader.cs" />
+    <Compile Include="Utilities.cs" />
+    <Compile Include="HzCalculator.cs" />
+    <Compile Include="CustomSerialPort.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

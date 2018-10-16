@@ -4,6 +4,7 @@ using System.Threading;
 using System.IO.Ports;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 namespace Serial
 {
 	public enum ArduinoTypes
@@ -15,84 +16,105 @@ namespace Serial
 	public static class SerialReader
 	{
 
-		static List<SerialPort> OpenSerialPorts = new List<SerialPort>();
 
-		public static SerialPort GetSerialPort(ArduinoTypes SerialType)
-		{
-			List<string> SerialPortNames = getSerialPorts().Where(Item => Item.Contains(getSerialPortNames())).ToList();
-
-			List<SerialPort> serialPorts = new List<SerialPort>();
-
-			foreach (var Port in SerialPortNames)
+		static List<CustomSerialPort> OpenSerialPorts = new List<CustomSerialPort>();
+		static List<CustomSerialPort> serialPorts = new List<CustomSerialPort>();
+        
+		private static void FindSerialPorts() {
+            if (serialPorts.Count == 0)
             {
-                try
+				List<string> SerialPortNames = getSerialPorts().Where(Item => Item.Contains(getSerialPortNames())).ToList();
+                foreach (var Port in SerialPortNames)
                 {
-                    // Opening all serialPorts
-                    SerialPort serialPort = new SerialPort(Port, 115200);
-                    serialPort.ReadTimeout = 500;
-                    serialPort.WriteTimeout = 500;
-                    serialPort.Open();
-                    serialPorts.Add(serialPort);
-                }
-                catch (IOException ex)
-                {
+                    try
+                    {
+                        CustomSerialPort serialPort = new CustomSerialPort(Port, 115200, Parity.None, 8, StopBits.One); ;
+                        serialPort.ReadTimeout = 500;
+                        serialPort.WriteTimeout = 500;
+                        serialPorts.Add(serialPort);
+                    }
+                    catch (IOException) {
+						Console.WriteLine($"[{Port}] Invalid Serialport");
 
+					}
+                    catch (UnauthorizedAccessException) {
+						Console.WriteLine($"[{Port}] Unauthorized Access");
+					}
                 }
-                catch (UnauthorizedAccessException ex) { }
-				
+            }
+
+		}
+
+		public static CustomSerialPort GetSerialPort(ArduinoTypes SerialType)
+		{
+			FindSerialPorts();
+			List<CustomSerialPort> WorkingPorts = serialPorts.Where(x => x.PortOpen == false && x.IsMatched == false).ToList();
+			foreach (var ClosedPort in WorkingPorts)
+			{
+				ClosedPort.Open();
+				ClosedPort.PortOpen = true;
 			}
 
-			SerialPort FoundSerialPort = null;
-			while (FoundSerialPort == null)
+			CustomSerialPort FoundSerialPort = SearchForSerialPorts(SerialType);
+
+			// Close all opened Serialports
+			WorkingPorts = serialPorts.Where(x => x.PortOpen == false && x.IsMatched == false).ToList();
+			foreach (var Port in WorkingPorts)
 			{
-				foreach (var currentSerialPort in serialPorts)
+				if (Port != FoundSerialPort)
 				{
-					SerialPort serialPort = serialHandler(SerialType, currentSerialPort);
-					if (serialPort != null)
-					{
-						Console.Clear();
-						Console.WriteLine($"Found valid serial port on {serialPort.PortName}");
-						FoundSerialPort = serialPort;
-                    }
+					Port.PortOpen = false;
+					Port.Close();
 				}
 			}
 
-			// Close all opened Serialports
-			foreach (var Port in serialPorts)
-			{
-				if (Port != FoundSerialPort) {
-					Port.Close();
-                }
-
-			}
-			OpenSerialPorts.Add(FoundSerialPort);
 			return FoundSerialPort;
 
 		}
 
-		private static SerialPort serialHandler(ArduinoTypes SerialType, SerialPort serialPort)
+		private static CustomSerialPort SearchForSerialPorts(ArduinoTypes SerialType ) {
+			CustomSerialPort FoundSerialPort = null;
+            while (FoundSerialPort == null)
+            {
+                foreach (var currentSerialPort in serialPorts)
+                {
+                    if (FoundSerialPort == null)
+                    {
+                        CustomSerialPort serialPort = serialHandler(SerialType, currentSerialPort);
+                        if (serialPort != null)
+                        {
+                            FoundSerialPort = serialPort;
+                            OpenSerialPorts.Add(FoundSerialPort);
+
+                        }
+                    }
+                }
+            }
+			FoundSerialPort.IsMatched = true;
+			return FoundSerialPort;
+		}
+
+
+		private static CustomSerialPort serialHandler(ArduinoTypes SerialType, CustomSerialPort serialPort)
 		{
 			try
 			{
 				string Data = serialPort.ReadLine();
-                Console.WriteLine($"Checking {serialPort.PortName}...");
-				if (Data == (SerialType.ToString() + "\r")) {
-					while (Data == (SerialType.ToString() + "\r") || Data == "\r")
-                    {
-                        serialPort.WriteLine("DATA OK");
-                        Thread.Sleep(1000);
-						Data = serialPort.ReadLine();
-                    }
+				Console.WriteLine($"[{serialPort.PortName}] Checking... ({SerialType.ToString()})");
+				Console.WriteLine($"DATA: {Data}");
+				if (Data.Contains(SerialType.ToString()))
+				{
+					Console.WriteLine($"[{serialPort.PortName}] Matched!");
 					return serialPort;
 				}
-                else
-                {
-                    return null;
-                }
+				else
+				{
+					return null;
+				}
 			}
-			catch (TimeoutException ex)
+			catch (TimeoutException)
 			{
-				Console.WriteLine("Timeout... Skipping");
+				Console.WriteLine($"[{serialPort.PortName}] Timeout... Skipping");
 				return null;
 			}
 
@@ -124,7 +146,8 @@ namespace Serial
 			}
 		}
 
-		public static void CloseOpenPorts() {
+		public static void CloseOpenPorts()
+		{
 			foreach (var Port in OpenSerialPorts)
 			{
 				Port.Close();

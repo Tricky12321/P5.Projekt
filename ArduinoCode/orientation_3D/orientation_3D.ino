@@ -4,10 +4,9 @@
 
 boolean remote = false;               // boolean to indicate if we want to read sensor data from the attached pozyx shield (value 0) or from a remote pozyx device (value 1)
 uint16_t remote_id = 0x602e;          // the network id of the other pozyx device: fill in the network id of the other device
-uint32_t last_millis;                 // used to compute the measurement interval in milliseconds 
-
+uint32_t last_millis = 0;                 // used to compute the measurement interval in milliseconds 
+uint32_t start_millis = 0;
 bool establish_COM = true;
-bool first = true;
 void setup()
 {  
   Serial.begin(115200);
@@ -22,25 +21,17 @@ void setup()
     remote_id = NULL;
   last_millis = millis();
   delay(10);  
+  start_millis = millis();
 }
 
 void loop(){
-  if(establish_COM) {
-    delay(500);
-    Serial.println("INS");
-    if(Serial.available() > 0){  
-      String c = Serial.readString();
-      if(c.indexOf("OK") > 0){
-        Serial.println("Connection established.");
-        establish_COM = false;   
-      }
+if(establish_COM) {
+    if (millis() - start_millis < 5000) {
+      Serial.println("INS");
+    } else {
+      establish_COM = false;
     }
-  } 
-  else {
-    if (first) {
-       Serial.println("Done");
-       first = false;
-    }
+  } else {
     sensor_raw_t sensor_raw;
     uint8_t calibration_status = 0;
     int dt;
