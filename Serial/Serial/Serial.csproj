@@ -53,6 +53,7 @@
     <Compile Include="SerialReader.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="HzCalculator.cs" />
+    <Compile Include="CustomSerialPort.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

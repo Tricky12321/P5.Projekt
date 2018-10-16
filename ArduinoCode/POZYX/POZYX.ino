@@ -32,7 +32,7 @@ uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm
 uint8_t dimension = POZYX_3D;                           // positioning dimension
 int32_t height = 0;                                  // height of device, required in 2.5D positioning
 uint32_t last_millis = 0;
-
+uint32_t start_millis = 0;
 ////////////////////////////////////////////////
 bool establish_COM = true;
 bool first = true;
@@ -60,29 +60,23 @@ void setup(){
   //delay(2000);
 
   //Serial.println(F("Starting positioning: "));
+  start_millis = millis();
 }
 
 void loop(){
   if(establish_COM) {
-    Serial.println("POZYX");
-    if(Serial.available() > 0){  
-      String c = Serial.readString();
-      if(c.indexOf("OK") > 0){
-        Serial.println("Connection established.");
-        establish_COM = false;   
-      }
+    if (millis() - start_millis < 5000) {
+      Serial.println("POZYX");
+    } else {
+      establish_COM = false;
     }
   } 
   else {
-    if (first) {
-       Serial.println("Done");
-       first = false;
-    }
     coordinates_t position;
     int status;
-    if(remote){
+    if(remote) {
       status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
-    }else{
+    } else{
       status = Pozyx.doPositioning(&position, dimension, height, algorithm);
     }
     if (status == POZYX_SUCCESS){

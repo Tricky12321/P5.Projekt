@@ -17,6 +17,7 @@ namespace Serial
 		{
 			Thread.Sleep(1000);
 			InsReader = new INSReader();
+			Thread.Sleep(1000);
 			PozyxReader = new PozyxReader();
 
 			Thread ReadThreadINS = new Thread(ReadINS);

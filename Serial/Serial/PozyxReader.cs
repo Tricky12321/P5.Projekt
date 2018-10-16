@@ -11,12 +11,10 @@ namespace Serial
 	{
 		private string _description = "POZYX";
 		private SerialPort _serialPort;
-
 		private XYZ _pozyx_data;
-
 		public XYZ Pozyx_data => _pozyx_data;
-
-
+		public UInt32 Tid = 0;
+        
 
 		public PozyxReader()
 		{
@@ -54,7 +52,10 @@ namespace Serial
 			}
 			else if (data.Contains("timer"))
 			{
-				HZ_rate = Convert.ToInt32(data.Replace("timer:", "").Replace("\r", ""));
+				UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", ""));
+                Tid += TimerSinceLast;
+                HZ_rate = TimerSinceLast;
+
 			}
 		}
 	}
