@@ -37,15 +37,8 @@ namespace NeuralNetwork
             while (running)
             {
                 _dataMapper.StartReading();
-                Thread.Sleep(1000);
-
                 _serialList = _dataMapper.ReadToList(1000);
                 _dataMapper.StopReading();
-
-                Thread PrintThread = new Thread(Print);
-                PrintThread.Start();
-                PrintThread.Join();
-                Console.ReadLine();
 
                 XYZ deltaXYZ = new XYZ(_serialList.Last().Item1.X - _serialList.First().Item1.X, _serialList.Last().Item1.Y - _serialList.First().Item1.Y, _serialList.Last().Item1.Z - _serialList.First().Item1.Z);
 
@@ -67,21 +60,6 @@ namespace NeuralNetwork
         {
             running = false;
             trainThread.Abort();
-        }
-
-        private void Print()
-        {
-            while (true)
-            {
-                _insReader.Read();
-                Console.Clear();
-                Console.WriteLine($"INS READER");
-                Console.WriteLine($"Aceelerometer data");
-                Console.WriteLine(_insReader.AcceXYZ);
-                Console.WriteLine($"Gyro data");
-                Console.WriteLine(_insReader.GyroXYZ);
-                Console.WriteLine($"HZ:{_insReader.HZ_rate}");
-            }
         }
     }
 }

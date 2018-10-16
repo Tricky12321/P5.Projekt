@@ -10,7 +10,6 @@ namespace Serial
 {
 	class MainClass
 	{
-
 		//static Thread readThread = new Thread(Read);
 		static INSReader InsReader;
 		static PozyxReader PozyxReader;
@@ -30,7 +29,6 @@ namespace Serial
 			PrintThread.Start();
 			PrintThread.Join();
 			Console.ReadLine();
-
 		}
 
 		public static void ReadPozyx() {
