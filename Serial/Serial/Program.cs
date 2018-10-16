@@ -15,10 +15,8 @@ namespace Serial
 		static PozyxReader PozyxReader;
 		public static void Main()
 		{
-			Thread PrintThread = new Thread(Print);
-			PrintThread.Start();
-			PrintThread.Join();
-			Console.ReadLine();
+			INS_POSZYX_NeuralNetworkTester nn = new INS_POSZYX_NeuralNetworkTester(InsReader, PozyxReader);
+            		nn.Start();
 		}
 
 

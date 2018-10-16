@@ -6,56 +6,60 @@ using System.Linq;
 using Serial.DataMapper;
 namespace NeuralNetwork
 {
-	public class INS_POSZYX_NeuralNetworkTester
-	{
-		//private INSReader _insReader; // Skal ikke bruges mere, bare lav en instans af DataMapper, og så finder den selv ud af det
-		//private PozyxReader _posReader; // Skal ikke bruges mere, bare lav en instans af DataMapper, og så finder den selv ud af det
-		private DataMapper _dataMapper;
-		//private List<Tuple<XYZ, INSDATA>> _serialList;
-		private NeuralNetwork nn;
+    class INS_POSZYX_NeuralNetworkTester
+    {
+        private INSReader _insReader;
+        private PozyxReader _posReader;
+        private DataMapper _dataMapper;
+        private List<Tuple<XYZ, INSDATA>> _serialList;
+        private NeuralNetwork nn;
 
-		private Thread trainThread;
-		private bool running = true;
+        private Thread trainThread;
+        private bool running = true;
 
-		public INS_POSZYX_NeuralNetworkTester()
-		{
-			nn = new NeuralNetwork(0.2, new int[] { 100, 50, 50, 3 });
-			_dataMapper = new DataMapper();
-			_dataMapper.StartReading();
-		}
+        public INS_POSZYX_NeuralNetworkTester(INSReader insReader, PozyxReader posReader)
+        {
+            _insReader = insReader;
+            _posReader = posReader;
+            _dataMapper = new DataMapper(_posReader, _insReader);
+            nn = new NeuralNetwork(0.2, new int[] { 100, 50, 50, 3 });
+        }
 
-		public void Start()
-		{
-			running = true;
-			trainThread = new Thread(Train);
-			trainThread.Start();
-		}
+        public void Start()
+        {
+            running = true;
+            trainThread = new Thread(Train);
+            trainThread.Start();
+        }
 
-		private void Train()
-		{
-			while (running)
-			{
-				var Test = _dataMapper.GetDataEntries().OrderBy(X=>X.entryNum);
-				XYZ deltaXYZ = new XYZ(Test.Last().PoZYX.X - Test.First().PoZYX.X, Test.Last().PoZYX.Y - Test.First().PoZYX.Y, Test.Last().PoZYX.Z - Test.First().PoZYX.Z);
+        private void Train()
+        {
+            while (running)
+            {
+                _dataMapper.StartReading();
+                _serialList = _dataMapper.ReadToList(1000);
+                _dataMapper.StopReading();
 
-				List<double> inputList = new List<double>();
-				foreach (DataEntry data in Test)
-				{
-					inputList.AddRange(data.INS_Accellerometer.ToList());
-				}
+                XYZ deltaXYZ = new XYZ(_serialList.Last().Item1.X - _serialList.First().Item1.X, _serialList.Last().Item1.Y - _serialList.First().Item1.Y, _serialList.Last().Item1.Z - _serialList.First().Item1.Z);
 
-				for (int i = 0; i < 100; i++)
-				{
-					nn.Train(inputList, deltaXYZ.ToList());
-					Console.WriteLine("TRAIN!!");
-				}
-			}
-		}
+                List<double> inputList = new List<double>();
+                foreach (Tuple<XYZ,INSDATA> data in _serialList)
+                {
+                    inputList.AddRange(data.Item2.XYZacc.ToList());
+                }
 
-		public void Stop()
-		{
-			running = false;
-			trainThread.Abort();
-		}
-	}
+                for (int i = 0; i < 100; i++)
+                {
+                    nn.Train(inputList, deltaXYZ.ToList());
+                    Console.WriteLine("TRAIN!!");
+                }
+            }
+        }
+
+        public void Stop()
+        {
+            running = false;
+            trainThread.Abort();
+        }
+    }
 }
