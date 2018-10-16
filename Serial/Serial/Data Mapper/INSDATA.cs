@@ -8,8 +8,8 @@ namespace Serial
 {
     class INSDATA
     {
-        XYZ XYZacc;
-        XYZ XYZgyro;
+        public XYZ XYZacc;
+        public XYZ XYZgyro;
 
         public INSDATA() { }
         public INSDATA(XYZ acc, XYZ gyro)

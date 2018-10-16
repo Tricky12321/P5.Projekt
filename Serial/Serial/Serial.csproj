@@ -60,6 +60,7 @@
     <Compile Include="Data Mapper\Utilities.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Neural Network\INS_POSZYX_NeuralNetworkTester.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
