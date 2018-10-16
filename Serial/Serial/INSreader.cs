@@ -19,7 +19,7 @@ namespace Serial
 		{
 			get
 			{
-				return new XYZ(XAC, YAC, ZAC);
+				return new XYZ(XAC, YAC, ZAC, Tid);
 			}
 		}
 
@@ -27,7 +27,7 @@ namespace Serial
 		{
 			get
 			{
-				return new XYZ(XGY, YGY, ZGY);
+				return new XYZ(XGY, YGY, ZGY, Tid);;
 			}
 		}
 
@@ -61,7 +61,7 @@ namespace Serial
 			CheckData(data2);
 			CheckData(data3);
 
-			return new INSDATA(new XYZ(XAC, YAC, ZAC), new XYZ(XGY, YGY, ZGY));
+			return new INSDATA(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
 
 		}
 

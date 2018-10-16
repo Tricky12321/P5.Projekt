@@ -34,6 +34,7 @@ namespace Serial
 			catch (TimeoutException) { }
 			catch (FormatException) { }
 			catch (IndexOutOfRangeException) { }
+
 			return _pozyx_data;
 		}
 
@@ -48,7 +49,7 @@ namespace Serial
 				double Xx = Convert.ToDouble(message_split[0]);
 				double Yy = Convert.ToDouble(message_split[1]);
 				double Zz = Convert.ToDouble(message_split[2]);
-				_pozyx_data = new XYZ(Xx, Yy, Zz);
+				_pozyx_data = new XYZ(Xx, Yy, Zz,Tid);
 			}
 			else if (data.Contains("timer"))
 			{
