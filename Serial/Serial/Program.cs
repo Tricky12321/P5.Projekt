@@ -15,35 +15,13 @@ namespace Serial
 		static PozyxReader PozyxReader;
 		public static void Main()
 		{
-			InsReader = new INSReader();
-			PozyxReader = new PozyxReader();
-			Console.Clear();
-			Console.WriteLine("Waiting for Sensors to start Writing!");
-			Thread.Sleep(5000);
-			Thread ReadThreadINS = new Thread(ReadINS);
-			Thread ReadThreadPOZYX = new Thread(ReadPozyx);
-			ReadThreadINS.Start();
-			ReadThreadPOZYX.Start();
-
 			Thread PrintThread = new Thread(Print);
 			PrintThread.Start();
 			PrintThread.Join();
 			Console.ReadLine();
 		}
 
-		public static void ReadPozyx() {
-			while (true)
-			{
-				PozyxReader.Read();
-			}
-		}
 
-		public static void ReadINS() {
-			while (true)
-			{
-				InsReader.Read();
-			}
-		}
 
 		public static void Print()
 		{

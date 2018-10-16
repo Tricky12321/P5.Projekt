@@ -9,7 +9,7 @@ using System.IO.Ports;
 
 namespace Serial
 {
-	class INSReader : HzCalculator, IReadable<INSDATA>
+	class INSReader : HzCalculator
 	{
 		private SerialPort _serialPort;
 		public UInt32 Tid = 0;
@@ -49,7 +49,7 @@ namespace Serial
 			_serialPort.WriteLine("DATA OK");
 		}
 
-		public INSDATA Read()
+		public Tuple<XYZ, XYZ> Read()
 		{
 
 			string data1 = _serialPort.ReadLine();
@@ -59,7 +59,7 @@ namespace Serial
 			CheckData(data2);
 			CheckData(data3);
 
-			return new INSDATA(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
+			return new Tuple<XYZ,XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
 
 		}
 
@@ -97,6 +97,10 @@ namespace Serial
 			catch (TimeoutException) { }
 			catch (FormatException) { }
 			catch (IndexOutOfRangeException) { }
+		}
+
+		public void ResetTid() {
+			Tid = 0;
 		}
 	}
 }

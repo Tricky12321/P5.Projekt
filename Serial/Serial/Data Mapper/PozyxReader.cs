@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 namespace Serial
 {
-	class PozyxReader : HzCalculator, IReadable<XYZ>
+	class PozyxReader : HzCalculator
 	{
 		private string _description = "POZYX";
 		private SerialPort _serialPort;
