@@ -25,7 +25,10 @@ namespace Serial
 			ReadThreadINS.Start();
 			ReadThreadPOZYX.Start();
 
-			Thread PrintThread = new Thread(Print);
+            INS_POSZYX_NeuralNetworkTester nn = new INS_POSZYX_NeuralNetworkTester(InsReader, PozyxReader);
+            nn.Start();
+
+            Thread PrintThread = new Thread(Print);
 			PrintThread.Start();
 			PrintThread.Join();
 			Console.ReadLine();

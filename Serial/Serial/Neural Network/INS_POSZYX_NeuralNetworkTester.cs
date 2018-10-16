@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace NeuralNetwork
 {
-    public class INS_POSZYX_NeuralNetworkTester
+    class INS_POSZYX_NeuralNetworkTester
     {
         private INSReader _insReader;
         private PozyxReader _posReader;
@@ -17,10 +17,10 @@ namespace NeuralNetwork
         private Thread trainThread;
         private bool running = true;
 
-        public INS_POSZYX_NeuralNetworkTester()
+        public INS_POSZYX_NeuralNetworkTester(INSReader insReader, PozyxReader posReader)
         {
-            _insReader = new INSReader();
-            _posReader = new PozyxReader();
+            _insReader = insReader;
+            _posReader = posReader;
             _dataMapper = new DataMapper(_posReader, _insReader);
             nn = new NeuralNetwork(0.2, new int[] { 100, 50, 50, 3 });
         }
