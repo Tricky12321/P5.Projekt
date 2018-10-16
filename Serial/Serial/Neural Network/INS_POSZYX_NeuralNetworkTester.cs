@@ -4,7 +4,7 @@ using Serial;
 using System.Collections.Generic;
 using System.Linq;
 using Serial.DataMapper;
-
+using System.Diagnostics;
 namespace NeuralNetwork
 {
     class INS_POSZYX_NeuralNetworkTester
@@ -19,7 +19,7 @@ namespace NeuralNetwork
         public INS_POSZYX_NeuralNetworkTester()
         {
             _dataMapper = new DataMapper();
-            nn = new NeuralNetwork(0.2, new int[] { 100, 50, 50, 3 });
+            nn = new NeuralNetwork(0.2, new int[] { 3000, 100, 100, 3 });
         }
 
         public void Start()
@@ -27,29 +27,41 @@ namespace NeuralNetwork
             running = true;
             trainThread = new Thread(Train);
             trainThread.Start();
+            trainThread.Join();
         }
 
         private void Train()
         {
             while (running)
             {
-                _dataMapper.StartReading();
-                _serialList = _dataMapper.GetDataEntries(1000);
-                _dataMapper.StopReading();
-
-                XYZ deltaXYZ = new XYZ(_serialList.Last().INS_Acceleration.X - _serialList.First().INS_Acceleration.X, _serialList.Last().INS_Acceleration.Y - _serialList.First().INS_Acceleration.Y, _serialList.Last().INS_Acceleration.Z - _serialList.First().INS_Acceleration.Z);
-
-                List<double> inputList = new List<double>();
-                foreach (DataEntry data in _serialList)
+                try
                 {
-                    inputList.AddRange(data.INS_Acceleration.ToList());
-                }
+                    _serialList = _dataMapper.GetDataEntries(1000);
 
-                for (int i = 0; i < 100; i++)
-                {
-                    nn.Train(inputList, deltaXYZ.ToList());
+                    XYZ deltaXYZ = new XYZ(_serialList.Last().INS_Accelerometer.X - _serialList.First().INS_Accelerometer.X, _serialList.Last().INS_Accelerometer.Y - _serialList.First().INS_Accelerometer.Y, _serialList.Last().INS_Accelerometer.Z - _serialList.First().INS_Accelerometer.Z);
+
+                    List<double> inputList = new List<double>();
+                    foreach (DataEntry data in _serialList)
+                    {
+                        inputList.AddRange(data.INS_Accelerometer.GetNormalizedList());
+                    }
                     Console.WriteLine("TRAIN!!");
+                    Stopwatch Timer = new Stopwatch();
+                    Timer.Start();
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        nn.Train(inputList, deltaXYZ.GetNormalizedList(1000));
+                    }
+                    Timer.Stop();
+                    Console.WriteLine($"DONE TRAINING!!{Timer.ElapsedMilliseconds}MS");
+
                 }
+                catch (TooManyDataEntriesRequestedException)
+                {
+                    Console.WriteLine("No data!");
+                    Thread.Sleep(1000);
+                }
+
             }
         }
 

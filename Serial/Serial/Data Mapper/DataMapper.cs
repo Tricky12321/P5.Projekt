@@ -13,7 +13,7 @@ namespace Serial.DataMapper
 
 		private ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
 
-		private ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
+        private ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
 		public ConcurrentQueue<DataEntry> AllDataEntries => dataEntries;
 
 		private bool Reading = false;
@@ -82,8 +82,8 @@ namespace Serial.DataMapper
         
 		public IEnumerable<DataEntry> GetDataEntries(int amount = 1000) {
 			if (amount <= avalibleDataEntries.Count()) {
-				avalibleDataEntries.ToList().ForEach(X => X.Used = true);
-				var Output = avalibleDataEntries.Take(amount);
+                var Output = avalibleDataEntries.Take(amount);
+                Output.ToList().ForEach(X => X.Used = true);
 				return Output;
 			} else {
 				throw new TooManyDataEntriesRequestedException($"There is not this many DataEntries that can be requested.\nThere is only {avalibleDataEntries.Count()} avalible!");

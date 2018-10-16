@@ -8,6 +8,7 @@ namespace Serial.DataMapper
 		public XYZ INS_Accelerometer;
 		public XYZ INS_Gyroscope;
 		public int EntryNum = 0;
+        public bool Used = false;
 
         public DataEntry(XYZ PoZYX, XYZ Accelerometer, XYZ Gyroscope)
         {
