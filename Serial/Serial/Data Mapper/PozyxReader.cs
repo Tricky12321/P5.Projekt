@@ -9,7 +9,6 @@ namespace Serial
 {
 	class PozyxReader : HzCalculator
 	{
-		private string _description = "POZYX";
 		private SerialPort _serialPort;
 		private XYZ _pozyx_data;
 		public XYZ Pozyx_data => _pozyx_data;
