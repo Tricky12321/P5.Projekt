@@ -153,5 +153,15 @@ namespace Serial
 				Port.Close();
 			}
 		}
+
+		public static string[] GetOpenPorts() {
+			List<string> Output = new List<string>();
+
+            foreach (var Port in OpenSerialPorts)
+			{
+				Output.Add(Port.PortName);
+			}
+			return Output.ToArray();
+		}
 	}
 }
