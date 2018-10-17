@@ -88,7 +88,6 @@ namespace Serial.DataMapper
 			} else {
 				throw new TooManyDataEntriesRequestedException($"There is not this many DataEntries that can be requested.\nThere is only {avalibleDataEntries.Count()} avalible!");
 			}
-			return null;
 		}
 
     }
