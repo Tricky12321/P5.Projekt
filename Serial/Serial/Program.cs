@@ -5,25 +5,28 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using NeuralNetwork;
+using System.IO;
 
 namespace Serial
 {
-    class MainClass
-    {
 
 
-		INS_POSZYX_NeuralNetworkTester nn = new INS_POSZYX_NeuralNetworkTester();
-        public static void Main()
-        {
-            ShowMenu();
-        }
+	class MainClass
+	{
+		static INS_POSZYX_NeuralNetworkTester nn;
+		static DataMapper.DataMapper dataMapper;
 
+		static int MapperTimer = 0;
+		public static void Main()
+		{
+			ShowMenu();
+		}
 
-
-		public static void ShowMenu() {
+		public static void ShowMenu()
+		{
 
 			bool Exit = false;
-            do
+			do
 			{
 				Console.Write("Command > ");
 				string[] Input = Console.ReadLine().ToLower().Split(' ');
@@ -32,15 +35,22 @@ namespace Serial
 					case "help":
 						PrintCommands();
 						break;
+					case "nn":
+						NeuralNetwork(Input);
+						break;
 					case "exit":
+						Exit = true;
 						Environment.Exit(0);
-                        break;
+						break;
 					case "clear":
-						Console.Clear();;
-                        break;
+						Console.Clear(); ;
+						break;
 					case "devices":
 						PrintDevices();
-                        break;
+						break;
+					case "logdata":
+						LogData(Input);
+						break;
 					default:
 						Console.WriteLine("Unknown command!");
 						break;
@@ -50,51 +60,316 @@ namespace Serial
 
 
 
-		public static void PrintCommands() {
+		public static void PrintCommands()
+		{
 			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("nn - Neural network");
 			Console.WriteLine(" - start - Starts the Neural Network");
 			Console.WriteLine(" - stop - Stops the Neural Network");
-			Console.WriteLine(" - save - Saves the Neural Network to a file");
-			Console.WriteLine(" - load - Loads the Neural Network from a file");
+			Console.WriteLine(" - save <Path> - Saves the Neural Network to a file");
+			Console.WriteLine(" - load <Path> - Loads the Neural Network from a file");
+			Console.WriteLine(" - new - Creates a new CC");
 			Console.WriteLine("-----------------------------------");
+			Console.WriteLine("logdata - logging of test data");
+            Console.WriteLine(" - start [Time in sed]- Start the logger");
+            Console.WriteLine(" - stop - Stops the logger");
+            Console.WriteLine(" - save <Path> - Saves the data to files");
+            Console.WriteLine(" - new - Creates a DataMapper for logging");
+            Console.WriteLine("-----------------------------------");
 			Console.WriteLine("devices - Prints arduino devices");
 			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("help - shows this page");
-            Console.WriteLine("clear - clear this page");
+			Console.WriteLine("clear - clears the console");
 			Console.WriteLine("-----------------------------------");
 		}
 
-		public static void PrintDevices() {
+		public static void PrintDevices()
+		{
 			foreach (var Port in SerialReader.GetOpenPorts())
 			{
 				Console.WriteLine($"Port: {Port}");
 			}
 		}
 
-		public static void NeuralNetwork(string[] Input) {
+		public static void NeuralNetwork(string[] Input)
+		{
 			List<string> InputList = new List<string>(Input);
 
-			if (InputList.Count == 1) {
+			if (InputList.Count == 1)
+			{
 				Console.WriteLine("Invalid input format, use help command!");
 				return;
 			}
 
-			switch (Input[1]) {
+			switch (Input[1])
+			{
 				case "start":
+					if (nn == null)
+					{
+						nn = new INS_POSZYX_NeuralNetworkTester();
+					}
 					nn.Start();
 					break;
 				case "stop":
-                    nn.Stop();
-                    break;
+					if (nn == null)
+					{
+						Console.WriteLine("There is no Neural Network to stop");
+						break;
+					}
+					nn.Stop();
+					break;
+				case "save":
+					if (nn == null)
+					{
+						Console.WriteLine("There is no Neural Network to start");
+						break;
+					}
+					if (InputList.Count == 3)
+					{
+						if (File.Exists(Input[2] + ".nn"))
+						{
+							if (Confirm("This file already exists, Overwrite?", false))
+							{
+								nn.nn.Save(Input[2] + ".nn");
+								Console.WriteLine($"Neural Network is saved as {Input[2]}");
+							}
+						}
+						else
+						{
+							nn.nn.Save(Input[2] + ".nn");
+							Console.WriteLine($"Neural Network is saved as {Input[2]}");
+						}
+					}
+					else
+					{
+						Console.WriteLine("Invalid input format, use help command!");
+					}
+					break;
+				case "load":
+					if (InputList.Count == 3)
+					{
+						if (File.Exists(Input[2] + ".nn"))
+						{
+							nn = new INS_POSZYX_NeuralNetworkTester();
+							nn.nn.Load(Input[2] + ".nn");
+							Console.WriteLine($"Loaded Neural Network {Input[2]}");
+						}
+						else
+						{
+							Console.WriteLine("Neural Network does not exist!");
+						}
+					}
+					else
+					{
+						Console.WriteLine("Invalid input format, use help command!");
+					}
+					break;
+				case "new":
+					nn = new INS_POSZYX_NeuralNetworkTester();
+					Console.WriteLine("Cleared current Neural Network, and created a new one");
+					break;
 				default:
 					Console.WriteLine("Invalid input format, use help command!");
-                    return;
+					return;
 			}
 		}
 
+		public static bool Confirm(string Message, bool? Default = null)
+		{
+			string YN = "[y/n]";
+			if (Default == true)
+			{
+				YN = "[Y/n]";
+			}
+			else if (Default == false)
+			{
+				YN = "[y/N]";
+			}
+
+			Console.Write($"{Message} {YN}:");
+			bool ValidInput = false;
+			do
+			{
+				string Output = Console.ReadLine();
+				switch (Output.ToLower())
+				{
+					case "y":
+						ValidInput = true;
+						return true;
+					case "n":
+						ValidInput = true;
+
+						return false;
+					case "":
+						if (Default != null)
+						{
+							ValidInput = true;
+							return Default.GetValueOrDefault();
+						}
+						break;
+				}
+			} while (!ValidInput);
+			throw new Exception("Something went wrong in Confirm"); // It should never get here
+		}
+
+		public static void LogData(string[] Input)
+		{
+			List<string> InputList = new List<string>(Input);
+
+			switch (Input[1])
+			{
+				case "start":
+					if (dataMapper == null)
+					{
+						Console.WriteLine("No Data Mapper has been created!");
+					}
+					else
+					{
+						if (InputList.Count == 3)
+						{
+							try
+							{
+								MapperTimer = Convert.ToInt32(InputList[2]);
+								Thread TimerThread = new Thread(dataMapperTimer);
+                                dataMapper.StartReading();
+								TimerThread.Start();
+								Console.WriteLine($"Started Datamapper for {MapperTimer} sec");
+                                
+							}
+							catch (Exception)
+							{
+								Console.WriteLine("Invalid format!");
+							}
+						}
+						else
+						{
+							dataMapper.StartReading();
+							Console.WriteLine("Started Datamapper");
+						}
+					}
+					break;
+				case "stop":
+					if (dataMapper == null)
+					{
+						Console.WriteLine("No Data Mapper has been created!");
+					}
+					else
+					{
+						dataMapper.StopReading();
+						Console.WriteLine("Stopped data logging");
+					}
+					break;
+				case "clear":
+					if (dataMapper == null)
+                    {
+                        Console.WriteLine("No Data Mapper has been created!");
+					} else {
+						dataMapper.ClearEntries();
+						Console.WriteLine("Cleared the DataList");
+					}
+					break;
+				case "save":
+					if (dataMapper == null)
+					{
+						Console.WriteLine("No Data Mapper has been created!");
+					}
+					else
+					{
+						if (InputList.Count == 3)
+						{
+							string FileName = InputList[2];
+							if (File.Exists(FileName + "_INS.csv") || File.Exists(FileName + "_POZYX.csv"))
+							{
+								if (Confirm("This file already exists, Overwrite?", false))
+								{
+									WriteToCSV(FileName);
+									Console.WriteLine($"Saved to {FileName}");
+								}
+								else
+								{
+									Console.WriteLine("Cancelled!");
+								}
+							}
+							else
+							{
+								WriteToCSV(FileName);
+								Console.WriteLine($"Saved to {FileName}");
+							}
+						}
+					}
+					break;
+				case "new":
+					dataMapper = new DataMapper.DataMapper();
+					Console.WriteLine("Created new DataMapper!");
+					break;
+				default:
+					Console.WriteLine("Invalid input format, use help command!");
+					break;
+			}
+		}
+       
+		public static void WriteToCSV(string Name)
+		{
+			string INSFile = Name + "_INS.csv";
+			string POZYXFile = Name + "_POZYX.csv";
+			List<DataMapper.DataEntry> DataList = new List<DataMapper.DataEntry>(dataMapper.AllDataEntries.ToArray());
+			List<XYZ> Accelerometer = new List<XYZ>();
+			List<XYZ> GyroScope = new List<XYZ>();
+			List<XYZ> Pozyx = new List<XYZ>();
+
+			foreach (var DataEntryElement in DataList)
+			{
+				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
+				GyroScope.Add(DataEntryElement.INS_Gyroscope);
+				Pozyx.Add(DataEntryElement.PoZYX);
+			}
+
+			// WRITE INS
+			using (StreamWriter FileWriter = File.AppendText(INSFile))
+			{
+				FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
+				int DataCount = GyroScope.Count;
+				for (int i = 0; i < DataCount; i++)
+				{
+					FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
+										 $"\"{Accelerometer[i].X}\"," +
+										 $"\"{Accelerometer[i].Y}\"," +
+										 $"\"{Accelerometer[i].Z}\"," +
+										 $"\"{GyroScope[i].X}\"," +
+										 $"\"{GyroScope[i].Y}\"," +
+										 $"\"{GyroScope[i].Z}\"");
+
+				}
+				FileWriter.Close();
+			}
+			// WRITE POZYX
+			using (StreamWriter FileWriter = File.AppendText(POZYXFile))
+			{
+				FileWriter.WriteLine($"Timer,X,Y,Z");
+
+				foreach (var Data in Pozyx)
+				{
+					FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
+										 $"\"{Data.X}\"," +
+										 $"\"{Data.Y}\"," +
+										 $"\"{Data.Z}\"");
+				}
+				FileWriter.Close();
+			}
+		}
+
+		public static void dataMapperTimer() {
+			Stopwatch timer = new Stopwatch();
+			timer.Start();
+            while (timer.ElapsedMilliseconds < (MapperTimer*1000))
+			{
+				Thread.Sleep(10);
+			}
+			dataMapper.StopReading();
+			Console.WriteLine("Done reading (TIMER)");
+			timer.Stop();
+		}
 
 
-
-    }
+	}
 }

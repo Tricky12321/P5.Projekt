@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.IO;
 namespace Serial
 {
 	class PozyxReader : HzCalculator
@@ -30,9 +31,12 @@ namespace Serial
 				CheckData(TimerData);
 				CheckData(XYZstring);
 			}
-			catch (TimeoutException) { }
+			catch (TimeoutException) { return Read(); }
 			catch (FormatException) { }
 			catch (IndexOutOfRangeException) { }
+			catch (IOException) {
+				return Read();
+			}
 
 			return _pozyx_data;
 		}

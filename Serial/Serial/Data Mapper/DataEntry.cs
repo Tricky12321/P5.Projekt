@@ -17,5 +17,7 @@ namespace Serial.DataMapper
 			INS_Gyroscope = Gyroscope;
 			EntryNum = entryNum_Incrementer++;
         }
+
+        
     }
 }

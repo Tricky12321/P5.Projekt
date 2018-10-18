@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.IO.Ports;
-
+using System.IO;
 namespace Serial
 {
 	class INSReader : HzCalculator
@@ -25,7 +25,7 @@ namespace Serial
 		{
 			get
 			{
-				return new XYZ(XGY, YGY, ZGY, Tid);;
+				return new XYZ(XGY, YGY, ZGY, Tid); ;
 			}
 		}
 
@@ -51,15 +51,23 @@ namespace Serial
 
 		public Tuple<XYZ, XYZ> Read()
 		{
-
-			string data1 = _serialPort.ReadLine();
-			string data2 = _serialPort.ReadLine();
-			string data3 = _serialPort.ReadLine();
-			CheckData(data1);
-			CheckData(data2);
-			CheckData(data3);
-
-			return new Tuple<XYZ,XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
+			try
+			{
+				string data1 = _serialPort.ReadLine();
+                string data2 = _serialPort.ReadLine();
+                string data3 = _serialPort.ReadLine();
+                CheckData(data1);
+                CheckData(data2);
+                CheckData(data3);
+                return new Tuple<XYZ, XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
+			}
+			catch (IOException)
+			{
+				return Read();
+			}
+			catch (TimeoutException) {
+				return Read();
+			}
 
 		}
 
@@ -88,7 +96,7 @@ namespace Serial
 				}
 				else if (data.Contains("timer"))
 				{
-					UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", ""));
+					UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", "").Replace("-",""));
 					Tid += TimerSinceLast;
 					HZ_rate = TimerSinceLast;
 				}
@@ -99,7 +107,8 @@ namespace Serial
 			catch (IndexOutOfRangeException) { }
 		}
 
-		public void ResetTid() {
+		public void ResetTid()
+		{
 			Tid = 0;
 		}
 	}

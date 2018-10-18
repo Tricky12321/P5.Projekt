@@ -3,7 +3,7 @@
 #include <Wire.h>
 
 boolean remote = false;               // boolean to indicate if we want to read sensor data from the attached pozyx shield (value 0) or from a remote pozyx device (value 1)
-uint16_t remote_id = 0x602e;          // the network id of the other pozyx device: fill in the network id of the other device
+uint16_t remote_id = 0x690f;          // the network id of the other pozyx device: fill in the network id of the other device
 uint32_t last_millis = 0;                 // used to compute the measurement interval in milliseconds 
 uint32_t start_millis = 0;
 bool establish_COM = true;
@@ -26,7 +26,7 @@ void setup()
 
 void loop(){
 if(establish_COM) {
-    if (millis() - start_millis < 5000) {
+    if (millis() - start_millis < 5000 ) {
       Serial.println("INS");
     } else {
       establish_COM = false;

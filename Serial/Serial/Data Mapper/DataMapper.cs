@@ -79,6 +79,10 @@ namespace Serial.DataMapper
                 }
             }
         }
+
+		public void ClearEntries() {
+			dataEntries = new ConcurrentQueue<DataEntry>();
+		}
         
 		public IEnumerable<DataEntry> GetDataEntries(int amount = 1000) {
 			if (amount <= avalibleDataEntries.Count()) {
