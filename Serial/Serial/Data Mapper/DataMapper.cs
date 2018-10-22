@@ -29,9 +29,6 @@ namespace Serial.DataMapper
 		{
 			_INS = new INSReader();
 			_pozyx = new PozyxReader();
-			Console.Clear();
-			Console.WriteLine("Waiting for Sensors to start Writing!");
-			Thread.Sleep(5000);
 			Thread ReaderThread = new Thread(StartReading);
 			ReaderThread.Start();
 		}
@@ -40,27 +37,22 @@ namespace Serial.DataMapper
 		{
 			Kalman = true;
 			KalmanData = new ConcurrentQueue<Tuple<XYZ, XYZ>>();
-			KalmanFilter X_accel = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
-			KalmanFilter Y_accel = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
-			KalmanFilter Z_accel = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
 
-			KalmanFilter X_gyro = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
-            KalmanFilter Y_gyro = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
-            KalmanFilter Z_gyro = new KalmanFilter(1, 75, 1.425, 0, 0.2, 0);
-            
+			List<XYZ> Accel = new List<XYZ>();
+            List<XYZ> Gyro = new List<XYZ>();
             foreach (var Entry in dataEntries)
 			{
-				double x_accel_kalman = X_accel.Output(Entry.INS_Accelerometer.X);
-				double y_accel_kalman = Y_accel.Output(Entry.INS_Accelerometer.Y);
-				double z_accel_kalman = Z_accel.Output(Entry.INS_Accelerometer.Z);
+				Accel.Add(Entry.INS_Accelerometer);
+				Gyro.Add(Entry.INS_Gyroscope);
+			}
 
-				double x_gyro_kalman = X_gyro.Output(Entry.INS_Gyroscope.X);
-				double y_gyro_kalman = Y_gyro.Output(Entry.INS_Gyroscope.Y);
-				double z_gyro_kalman = Z_gyro.Output(Entry.INS_Gyroscope.Z);
+			Accel = KalmanFilter.KalmanData(Accel);
+			Gyro = KalmanFilter.KalmanData(Gyro);
 
-				XYZ Gyro = new XYZ(x_gyro_kalman, y_gyro_kalman, z_gyro_kalman);
-				XYZ Accel = new XYZ(x_accel_kalman, y_accel_kalman, z_accel_kalman);
-				KalmanData.Enqueue(new Tuple<XYZ, XYZ>(Accel, Gyro));
+			int count = Accel.Count();
+			for (int i = 0; i < count; i++)
+			{
+				KalmanData.Enqueue(new Tuple<XYZ, XYZ>(Accel[i], Gyro[i]));
 			}
 
 		}
@@ -94,6 +86,7 @@ namespace Serial.DataMapper
 
 		private void ReadINS()
 		{
+			_INS.ResetTid();
 			while (Reading)
 			{
 				var Output = _INS.Read();

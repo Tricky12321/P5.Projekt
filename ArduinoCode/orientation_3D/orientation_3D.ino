@@ -25,13 +25,6 @@ void setup()
 }
 
 void loop(){
-if(establish_COM) {
-    if (millis() - start_millis < 5000 ) {
-      Serial.println("INS");
-    } else {
-      establish_COM = false;
-    }
-  } else {
     sensor_raw_t sensor_raw;
     uint8_t calibration_status = 0;
     int dt;
@@ -59,7 +52,6 @@ if(establish_COM) {
     printRawSensorData(sensor_raw, dt);
     // will be zeros for remote devices as unavailable remotely.
     // printCalibrationStatus(calibration_status);
-    }
 }
 
 void printRawSensorData(sensor_raw_t sensor_raw, int dt) {
