@@ -37,14 +37,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Neural Network\CryptoRandom.cs" />
-    <Compile Include="Neural Network\Dendrite.cs" />
-    <Compile Include="Neural Network\InputOutputData.cs" />
-    <Compile Include="Neural Network\Layer.cs" />
-    <Compile Include="Neural Network\NeuralNetwork.cs" />
-    <Compile Include="Neural Network\Neuron.cs" />
-    <Compile Include="Neural Network\SaveLoadableObject.cs" />
-    <Compile Include="Neural Network\UserInterfaceNeuralNetwork.cs" />
     <Compile Include="Data Mapper\DataClass.cs" />
     <Compile Include="Data Mapper\DataMapper.cs" />
     <Compile Include="Data Mapper\Filter.cs" />
@@ -61,6 +53,14 @@
     <Compile Include="Data Mapper\HzCalculator.cs" />
     <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
     <Compile Include="Data Mapper\DataEntry.cs" />
+    <Compile Include="Neural Network\Interfaces\INeuralNetwork.cs" />
+    <Compile Include="Neural Network\Interfaces\ISaveLoadableObject.cs" />
+    <Compile Include="Neural Network\Version 1\Layer.cs" />
+    <Compile Include="Neural Network\Version 1\NeuralNetwork.cs" />
+    <Compile Include="Neural Network\Version 1\Neuron.cs" />
+    <Compile Include="Neural Network\Version 1\CryptoRandom.cs" />
+    <Compile Include="Neural Network\Version 1\Dendrite.cs" />
+    <Compile Include="Neural Network\Version 1\InputOutputData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -70,6 +70,8 @@
     <Folder Include="Neural Network\" />
     <Folder Include="Data Mapper\" />
     <Folder Include="Data Mapper\Exception\" />
+    <Folder Include="Neural Network\Interfaces\" />
+    <Folder Include="Neural Network\Version 1\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

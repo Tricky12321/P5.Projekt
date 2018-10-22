@@ -11,7 +11,7 @@ namespace NeuralNetwork
     {
         private DataMapper _dataMapper;
         private IEnumerable<DataEntry> _serialList;
-        public NeuralNetwork nn;
+        public INeuralNetwork nn;
 
         private Thread trainThread;
         private bool running = true;
