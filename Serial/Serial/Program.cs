@@ -74,7 +74,8 @@ namespace Serial
             Console.WriteLine(" - start [Time in sed]- Start the logger");
             Console.WriteLine(" - stop - Stops the logger");
             Console.WriteLine(" - save <Path> - Saves the data to files");
-            Console.WriteLine(" - new - Creates a DataMapper for logging");
+			Console.WriteLine(" - new - Creates a DataMapper for logging");
+            Console.WriteLine(" - kalman - Generates Kalman values for INS");
             Console.WriteLine("-----------------------------------");
 			Console.WriteLine("devices - Prints arduino devices");
 			Console.WriteLine("-----------------------------------");
@@ -302,6 +303,10 @@ namespace Serial
 					dataMapper = new DataMapper.DataMapper();
 					Console.WriteLine("Created new DataMapper!");
 					break;
+				case "kalman":
+					dataMapper.GenerateKalman();
+					Console.WriteLine("Generated data kalman filtered data of INS data.");
+					break;
 				default:
 					Console.WriteLine("Invalid input format, use help command!");
 					break;
@@ -312,16 +317,27 @@ namespace Serial
 		{
 			string INSFile = Name + "_INS.csv";
 			string POZYXFile = Name + "_POZYX.csv";
+			string INSKalmanFile = Name + "_INS_KALMAN.csv";
 			List<DataMapper.DataEntry> DataList = new List<DataMapper.DataEntry>(dataMapper.AllDataEntries.ToArray());
 			List<XYZ> Accelerometer = new List<XYZ>();
 			List<XYZ> GyroScope = new List<XYZ>();
 			List<XYZ> Pozyx = new List<XYZ>();
+			List<XYZ> Kalman_Accelerometer = new List<XYZ>();
+			List<XYZ> Kalman_Gyroscope = new List<XYZ>();
 
 			foreach (var DataEntryElement in DataList)
 			{
 				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
 				GyroScope.Add(DataEntryElement.INS_Gyroscope);
 				Pozyx.Add(DataEntryElement.PoZYX);
+			}
+
+			if (dataMapper.Kalman) {
+				foreach (var Kalman in dataMapper.KalmanData)
+                {
+					Kalman_Accelerometer.Add(Kalman.Item1);
+					Kalman_Gyroscope.Add(Kalman.Item2);
+                }
 			}
 
 			// WRITE INS
@@ -342,6 +358,26 @@ namespace Serial
 				}
 				FileWriter.Close();
 			}
+            // Write INS KALMAN
+			if (dataMapper.Kalman) {
+				using (StreamWriter FileWriter = File.AppendText(INSKalmanFile))
+				{
+					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
+					int DataCount = Kalman_Gyroscope.Count;
+					for (int i = 0; i < DataCount; i++)
+					{
+						FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
+											 $"\"{Accelerometer[i].X}\"," +
+											 $"\"{Accelerometer[i].Y}\"," +
+											 $"\"{Accelerometer[i].Z}\"," +
+											 $"\"{GyroScope[i].X}\"," +
+											 $"\"{GyroScope[i].Y}\"," +
+											 $"\"{GyroScope[i].Z}\"");
+
+					}
+					FileWriter.Close();
+				}
+            }
 			// WRITE POZYX
 			using (StreamWriter FileWriter = File.AppendText(POZYXFile))
 			{
