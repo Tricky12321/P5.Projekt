@@ -54,8 +54,15 @@ namespace Serial
 			List<CustomSerialPort> WorkingPorts = serialPorts.Where(x => x.PortOpen == false && x.IsMatched == false).ToList();
 			foreach (var ClosedPort in WorkingPorts)
 			{
-				ClosedPort.Open();
-				ClosedPort.PortOpen = true;
+                try
+                {
+                    ClosedPort.Open();
+                    ClosedPort.PortOpen = true;
+                }
+                catch (IOException)
+                {
+                }
+
 			}
 
 			CustomSerialPort FoundSerialPort = SearchForSerialPorts(SerialType);
@@ -103,7 +110,16 @@ namespace Serial
 		{
 			try
 			{
-				string Data = serialPort.ReadLine();
+                string Data = null;
+                try
+                {
+                    Data = serialPort.ReadLine();
+                }
+                catch (InvalidOperationException)
+                {
+                    return null;
+                }
+
 				Console.WriteLine($"[{serialPort.PortName}] Checking... ({SerialType.ToString()})");
 				Console.WriteLine($"DATA: {Data}");
 				if (SerialType == ArduinoTypes.INS)

@@ -61,14 +61,11 @@ namespace Serial
                 CheckData(data3);
                 return new Tuple<XYZ, XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
 			}
-			catch (IOException)
-			{
-				return Read();
-			}
-			catch (TimeoutException) {
-				return Read();
-			}
-
+            catch (Exception)
+            {
+                return Read();
+            }
+            
 		}
 
 		private void CheckData(string data)
