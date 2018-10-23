@@ -1,5 +1,5 @@
 ﻿using System;
-namespace NeuralNetwork
+namespace NeuralNetwork1
 {
     [Serializable]
     public class Dendrite

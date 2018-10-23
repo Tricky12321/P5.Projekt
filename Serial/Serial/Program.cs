@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using NeuralNetwork;
 using System.IO;
+using NeuralNetwork2;
 
 namespace Serial
 {
@@ -19,7 +20,8 @@ namespace Serial
 		static int MapperTimer = 0;
 		public static void Main()
 		{
-			ShowMenu();
+            var test = new ArtificialNeuralNetwork(new int[]{1,2,3});
+			//ShowMenu();
 		}
 
 		public static void ShowMenu()

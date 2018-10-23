@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using NeuralNetwork;
 
-namespace NeuralNetwork
+namespace NeuralNetwork1
 {
     [Serializable]
     public class Neuron
