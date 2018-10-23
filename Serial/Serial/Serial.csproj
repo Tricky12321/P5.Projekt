@@ -67,12 +67,16 @@
     <Compile Include="Data Mapper\DataEntry.cs" />
     <Compile Include="Neural Network\Interfaces\INeuralNetwork.cs" />
     <Compile Include="Neural Network\Interfaces\ISaveLoadableObject.cs" />
-    <Compile Include="Neural Network\Version 1\Layer.cs" />
-    <Compile Include="Neural Network\Version 1\NeuralNetwork.cs" />
-    <Compile Include="Neural Network\Version 1\Neuron.cs" />
-    <Compile Include="Neural Network\Version 1\CryptoRandom.cs" />
-    <Compile Include="Neural Network\Version 1\Dendrite.cs" />
-    <Compile Include="Neural Network\Version 1\InputOutputData.cs" />
+    <Compile Include="Neural Network\1.0\NeuralNetwork.cs" />
+    <Compile Include="Neural Network\1.0\Dendrite.cs" />
+    <Compile Include="Neural Network\1.0\InputOutputData.cs" />
+    <Compile Include="Neural Network\2.0\ArtificialNeuralNetwork.cs" />
+    <Compile Include="Neural Network\1.0\Neuron.cs" />
+    <Compile Include="Neural Network\1.0\CryptoRandom.cs" />
+    <Compile Include="Neural Network\2.0\Neuron.cs" />
+    <Compile Include="Neural Network\1.0\Layer.cs" />
+    <Compile Include="Neural Network\2.0\Layer.cs" />
+    <Compile Include="Neural Network\2.0\InputOutputData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -84,7 +88,8 @@
     <Folder Include="Data Mapper\" />
     <Folder Include="Data Mapper\Exception\" />
     <Folder Include="Neural Network\Interfaces\" />
-    <Folder Include="Neural Network\Version 1\" />
+    <Folder Include="Neural Network\1.0\" />
+    <Folder Include="Neural Network\2.0\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

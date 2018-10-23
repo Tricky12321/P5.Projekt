@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-namespace NeuralNetwork
+namespace NeuralNetwork1
 {
     [Serializable]
     public class Layer
