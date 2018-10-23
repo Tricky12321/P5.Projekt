@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Serial;
+using NeuralNetwork1;
 
 namespace NeuralNetwork
 {
     [Serializable]
-    public class NeuralNetwork : SaveLoadableObject<NeuralNetwork>
+    public class NeuralNetwork : INeuralNetwork
     {
         public List<Layer> Layers;
         public double LearningRate;
@@ -100,10 +102,10 @@ namespace NeuralNetwork
             return 1 / (1 + Math.Exp(-x));
         }
 
-        public bool Train(List<double> input, List<double> output)
+        public void Train(List<double> input, List<double> output)
         {
 
-            if ((input.Count != Layers[0].Neurons.Count) || (output.Count != Layers[LayerCount - 1].NeuronCount)) return false;
+            if ((input.Count != Layers[0].Neurons.Count) || (output.Count != Layers[LayerCount - 1].NeuronCount)) return;
 
             Run(input);
 
@@ -136,10 +138,10 @@ namespace NeuralNetwork
                 }
             }
 
-            return true;
+            return;
         }
 
-        public override void Save(string filePath, bool append = false)
+        public void Save(string filePath, bool append = false)
         {
             using (Stream stream = File.Open(filePath, append ? FileMode.Append : FileMode.Create))
             {
@@ -148,7 +150,7 @@ namespace NeuralNetwork
             }
         }
 
-        public override NeuralNetwork Load(string filePath)
+        public INeuralNetwork Load(string filePath)
         {
             using (Stream stream = File.Open(filePath, FileMode.Open))
             {

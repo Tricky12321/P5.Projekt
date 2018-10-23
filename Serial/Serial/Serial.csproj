@@ -35,28 +35,61 @@
       <HintPath>..\packages\GlobalHotKey.1.1.0\lib\GlobalHotKey.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
+    <Reference Include="cs-kalman-filters">
+      <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\cs-kalman-filters.dll</HintPath>
+    </Reference>
+    <Reference Include="cs-optimization-continuous-solutions">
+      <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\cs-optimization-continuous-solutions.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics.IO">
+      <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\MathNet.Numerics.IO.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataMapper.cs" />
-    <Compile Include="INSDATA.cs" />
-    <Compile Include="INSReader.cs" />
-    <Compile Include="IReadable.cs" />
-    <Compile Include="PozyxReader.cs" />
+    <Compile Include="Data Mapper\DataClass.cs" />
+    <Compile Include="Data Mapper\DataMapper.cs" />
+    <Compile Include="Data Mapper\Filter.cs" />
+    <Compile Include="Data Mapper\INSReader.cs" />
+    <Compile Include="Data Mapper\KalmanFilter.cs" />
+    <Compile Include="Data Mapper\PozyxReader.cs" />
+    <Compile Include="Data Mapper\SerialReader.cs" />
+    <Compile Include="Data Mapper\Utilities.cs" />
+    <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Neural Network\INS_POSZYX_NeuralNetworkTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DataClass.cs" />
-    <Compile Include="KalmanFilter.cs" />
-    <Compile Include="PositionCalculator.cs" />
-    <Compile Include="XYZ.cs" />
-    <Compile Include="DataPoint.cs" />
-    <Compile Include="Filter.cs" />
-    <Compile Include="SerialReader.cs" />
-    <Compile Include="Utilities.cs" />
-    <Compile Include="HzCalculator.cs" />
+    <Compile Include="Data Mapper\CustomSerialPort.cs" />
+    <Compile Include="Data Mapper\HzCalculator.cs" />
+    <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
+    <Compile Include="Data Mapper\DataEntry.cs" />
+    <Compile Include="Neural Network\Interfaces\INeuralNetwork.cs" />
+    <Compile Include="Neural Network\Interfaces\ISaveLoadableObject.cs" />
+    <Compile Include="Neural Network\1.0\NeuralNetwork.cs" />
+    <Compile Include="Neural Network\1.0\Dendrite.cs" />
+    <Compile Include="Neural Network\1.0\InputOutputData.cs" />
+    <Compile Include="Neural Network\2.0\ArtificialNeuralNetwork.cs" />
+    <Compile Include="Neural Network\1.0\Neuron.cs" />
+    <Compile Include="Neural Network\1.0\CryptoRandom.cs" />
+    <Compile Include="Neural Network\2.0\Neuron.cs" />
+    <Compile Include="Neural Network\1.0\Layer.cs" />
+    <Compile Include="Neural Network\2.0\Layer.cs" />
+    <Compile Include="Neural Network\2.0\InputOutputData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Data Mapper\packages.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Neural Network\" />
+    <Folder Include="Data Mapper\" />
+    <Folder Include="Data Mapper\Exception\" />
+    <Folder Include="Neural Network\Interfaces\" />
+    <Folder Include="Neural Network\1.0\" />
+    <Folder Include="Neural Network\2.0\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

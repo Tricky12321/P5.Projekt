@@ -6,7 +6,7 @@ namespace NeuralNetwork
 {
     class Program
     {
-        static List<InputOutputData> insOuts;
+        static List<InputOutputData> insOuts = new List<InputOutputData>();
 
         static void Main(string[] args)
         {
@@ -14,12 +14,11 @@ namespace NeuralNetwork
         }
 
         private static void StartNN(){
-            insOuts = new List<InputOutputData>();
-
+            /*
             CSVController data = new CSVController();
             data.GetFiles();
 
-            List<Tuple<List<double>, List<double>>> inputOutputlist = new List<Tuple<List<double>, List<double>>>();
+            List<InputOutputData> inputOutputlist = new List<InputOutputData>();
             foreach(CSVData inout in data.CSVDataList){
 
                 List<double> xValues = new List<double>();
@@ -27,35 +26,26 @@ namespace NeuralNetwork
                     xValues.Add(xval.X);
                 }
 
-                inputOutputlist.Add(Tuple.Create(xValues, inout.Pattern.GetArray()));
-            }
+                inputOutputlist.Add(new InputOutputData(xValues, inout.Pattern.GetArray()));
+            }*/
+            RandomData();
 
-            UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(1000000, 100, new int[] { 27, 50, 50, 50, 2 }, inputOutputlist);
+            UserInterfaceNeuralNetwork UI = new UserInterfaceNeuralNetwork(10000, 0.2, new int[] { 1, 3, 3, 1 }, insOuts);
         }
 
-        private static void GenerateRandom(){
-            Random random = new Random(Environment.TickCount);
-            for (int i = 0; i < 1000; i++)
+        private static void RandomData()
+        {
+            Random r = new Random(Environment.TickCount);
+            for (int i = 0; i < 10000; i++)
             {
+                double value1 = r.Next(0, 50) / 100.0;
                 List<double> ins = new List<double>();
-                double value1 = 0;
-                double value2 = 0;
-                double value3 = 0;
-
-                value1 = random.Next(0, 30);
-                value2 = random.Next(0, 30);
-                value3 = random.Next(0, 30);
-
-                ins.Add(value1 / 100.0);
-                ins.Add(value2 / 100.0);
-                ins.Add(value3 / 100.0);
+                ins.Add(value1);
 
                 List<double> outs = new List<double>();
-                outs.Add(value1 / 100.0 + value2 / 100.0 + value3 / 100.0);
-                InputOutputData inOut = new InputOutputData(ins, outs);
-                insOuts.Add(inOut);
+                outs.Add(value1 * 2);
+                insOuts.Add(new InputOutputData(ins, outs));
             }
-
         }
     }
 }

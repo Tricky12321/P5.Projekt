@@ -23,16 +23,16 @@ bool remote = false;                                    // set this to true to u
 boolean use_processing = false;                         // set this to true to output data for the processing sketch
 
 const uint8_t num_anchors = 4;                                    // the number of anchors
-uint16_t anchors[num_anchors] = {0x6e2b, 0x676e, 0x676c, 0x6738};     // the network id of the anchors: change these to the network ids of your anchors.
-int32_t anchors_x[num_anchors] = {4720, 4720, 0, 0};               // anchor x-coorindates in mm
-int32_t anchors_y[num_anchors] = {3446, 0, 3446, 0};                  // anchor y-coordinates in mm
-int32_t heights[num_anchors] = {1463, 0, 0, 890}; 
+uint16_t anchors[num_anchors] = {0x6e2b, 0x676c, 0x6738, 0x676e};     // the network id of the anchors: change these to the network ids of your anchors.
+int32_t anchors_x[num_anchors] =  {0    , 7700  , 8000  , -900 };               // anchor x-coorindates in mm
+int32_t anchors_y[num_anchors] =  {0    , 0     , 10030 , 14800};                  // anchor y-coordinates in mm
+int32_t heights[num_anchors] =    {2050 , 2050  , 2500  , 3450 }; 
 
 uint8_t algorithm = POZYX_POS_ALG_UWB_ONLY;             // positioning algorithm to use. try POZYX_POS_ALG_TRACKING for fast moving objects.
 uint8_t dimension = POZYX_3D;                           // positioning dimension
 int32_t height = 0;                                  // height of device, required in 2.5D positioning
 uint32_t last_millis = 0;
-
+uint32_t start_millis = 0;
 ////////////////////////////////////////////////
 bool establish_COM = true;
 bool first = true;
@@ -60,45 +60,25 @@ void setup(){
   //delay(2000);
 
   //Serial.println(F("Starting positioning: "));
+  start_millis = millis();
 }
 
 void loop(){
-  if(establish_COM) {
-    Serial.println("POZYX");
-    if(Serial.available() > 0){  
-      String c = Serial.readString();
-      if(c.indexOf("OK") > 0){
-        Serial.println("Connection established.");
-        establish_COM = false;   
-      }
-    }
-  } 
-  else {
-    if (first) {
-       Serial.println("Done");
-       first = false;
-    }
     coordinates_t position;
     int status;
-    if(remote){
+    if(remote) {
       status = Pozyx.doRemotePositioning(remote_id, &position, dimension, height, algorithm);
-    }else{
+    } else{
       status = Pozyx.doPositioning(&position, dimension, height, algorithm);
     }
     if (status == POZYX_SUCCESS){
-      int dt = millis() - last_millis;
+      uint32_t dt = millis() - last_millis;
       last_millis += dt; 
       printCoordinates(position, dt);
     }
-  }
-  
 }
 
-void printCoordinates(coordinates_t coor, int dt){
-
-  Serial.print("timer:");
-  Serial.println(dt);
-  
+void printCoordinates(coordinates_t coor, uint32_t dt){
   if(!use_processing){
     Serial.print("PO");
     Serial.print(coor.x);
