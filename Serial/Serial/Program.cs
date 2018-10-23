@@ -53,6 +53,9 @@ namespace Serial
 					case "logdata":
 						LogData(Input);
 						break;
+					case "test":
+						Test();
+						break;
 					default:
 						Console.WriteLine("Unknown command!");
 						break;
@@ -60,7 +63,14 @@ namespace Serial
 			} while (!Exit);
 		}
 
-
+		public static void Test() {
+			List<double> TestData = new List<double>() { 0, 0, 0, 0, 5, 7, 4, 0, -3, -6, -8, -5, -4, -1, 0, 2, 3, 4, 4, 7, 6, 4, 0, 0, -3, 0, 0, 0, 0, -1, -1, 0, 2 };
+			List<double> test = KalmanFilter.RunFilter(TestData);
+            for (int i = 0; i < TestData.Count; i++)
+			{
+				Console.WriteLine($"Raw: {TestData[i]} - Filter: {test[i]}");
+			}
+		}
 
 		public static void PrintCommands()
 		{
@@ -83,6 +93,7 @@ namespace Serial
 			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("help - shows this page");
 			Console.WriteLine("clear - clears the console");
+			Console.WriteLine("test - run test code");
 			Console.WriteLine("-----------------------------------");
 		}
 
@@ -341,6 +352,20 @@ namespace Serial
 					Kalman_Gyroscope.Add(Kalman.Item2);
                 }
 			}
+
+			if (File.Exists(INSFile)) {
+				File.Delete(INSFile);
+			}
+
+			if (File.Exists(INSKalmanFile))
+            {
+				File.Delete(INSKalmanFile);
+            }
+
+			if (File.Exists(POZYXFile))
+            {
+				File.Delete(POZYXFile);
+            }
 
 			// WRITE INS
 			using (StreamWriter FileWriter = File.AppendText(INSFile))

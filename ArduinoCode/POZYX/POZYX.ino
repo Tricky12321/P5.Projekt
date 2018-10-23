@@ -64,14 +64,6 @@ void setup(){
 }
 
 void loop(){
-  if(establish_COM) {
-    if (millis() - start_millis < 5000) {
-      Serial.println("POZYX");
-    } else {
-      establish_COM = false;
-    }
-  } 
-  else {
     coordinates_t position;
     int status;
     if(remote) {
@@ -84,8 +76,6 @@ void loop(){
       last_millis += dt; 
       printCoordinates(position, dt);
     }
-  }
-  
 }
 
 void printCoordinates(coordinates_t coor, int dt){

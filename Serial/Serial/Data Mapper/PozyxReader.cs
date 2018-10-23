@@ -31,12 +31,10 @@ namespace Serial
 				CheckData(TimerData);
 				CheckData(XYZstring);
 			}
-			catch (TimeoutException) { return Read(); }
-			catch (FormatException) { }
-			catch (IndexOutOfRangeException) { }
-			catch (IOException) {
-				return Read();
-			}
+            catch (Exception)
+            {
+                return Read();
+            }
 
 			return _pozyx_data;
 		}
