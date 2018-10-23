@@ -12,9 +12,10 @@ namespace Serial
 			List<double> X = new List<double>();
 			List<double> Y = new List<double>();
 			List<double> Z = new List<double>();
-
+			List<long> Tid = new List<long>();
 			foreach (var item in Input)
 			{
+				Tid.Add(item.TimeOfData);
 				X.Add(item.X);
 				Y.Add(item.Y);
 				Z.Add(item.Z);
@@ -26,7 +27,7 @@ namespace Serial
 			List<XYZ> Output = new List<XYZ>();
             for (int i = 0; i < count; i++)
 			{
-				Output.Add(new XYZ(X[i], Y[i], Z[i]));
+				Output.Add(new XYZ(X[i], Y[i], Z[i],Tid[i]));
 			}
 			return Output;
 		}
@@ -50,6 +51,7 @@ namespace Serial
 			{
 				filter.Update(measurements[t]);
 				filter.Predict(motion[t]);
+				Console.WriteLine(filter.State);
 				Output.Add(filter.State);
 			}
 			return Output;

@@ -227,7 +227,10 @@ namespace Serial
 		public static void LogData(string[] Input)
 		{
 			List<string> InputList = new List<string>(Input);
-
+			if (!(Input.Length > 1)) {
+				Console.WriteLine("Invalid input, use help to get data");
+				return;
+			}
 			switch (Input[1])
 			{
 				case "start":
@@ -391,13 +394,13 @@ namespace Serial
 					int DataCount = Kalman_Gyroscope.Count;
 					for (int i = 0; i < DataCount; i++)
 					{
-						FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
-											 $"\"{Accelerometer[i].X}\"," +
-											 $"\"{Accelerometer[i].Y}\"," +
-											 $"\"{Accelerometer[i].Z}\"," +
-											 $"\"{GyroScope[i].X}\"," +
-											 $"\"{GyroScope[i].Y}\"," +
-											 $"\"{GyroScope[i].Z}\"");
+						FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
+						                     $"\"{Kalman_Accelerometer[i].X}\"," +
+						                     $"\"{Kalman_Accelerometer[i].Y}\"," +
+						                     $"\"{Kalman_Accelerometer[i].Z}\"," +
+						                     $"\"{Kalman_Gyroscope[i].X}\"," +
+						                     $"\"{Kalman_Gyroscope[i].Y}\"," +
+						                     $"\"{Kalman_Gyroscope[i].Z}\"");
 
 					}
 					FileWriter.Close();

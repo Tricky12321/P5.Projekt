@@ -27,7 +27,7 @@ void setup()
 void loop(){
     sensor_raw_t sensor_raw;
     uint8_t calibration_status = 0;
-    int dt;
+    uint32_t dt;
     int status;
     if(remote){
        status = Pozyx.getRawSensorData(&sensor_raw, remote_id);
@@ -54,17 +54,14 @@ void loop(){
     // printCalibrationStatus(calibration_status);
 }
 
-void printRawSensorData(sensor_raw_t sensor_raw, int dt) {
-  Serial.print("timer:");
-  Serial.println(dt);
-  
+void printRawSensorData(sensor_raw_t sensor_raw, uint32_t dt) {
   Serial.print("AC");
   Serial.print(sensor_raw.linear_acceleration[0]);
   Serial.print(":");
   Serial.print(sensor_raw.linear_acceleration[1]);
   Serial.print(":");
-  Serial.println(sensor_raw.linear_acceleration[2]);
-  
+  Serial.print(sensor_raw.linear_acceleration[2]);
+  Serial.print("#");
   Serial.print("GY");
   Serial.print(sensor_raw.angular_vel[0]);
   Serial.print(":");
