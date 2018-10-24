@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 namespace Serial.DataMapper
 {
 	public class DataMapper
@@ -25,10 +26,13 @@ namespace Serial.DataMapper
 
 		public bool Kalman = false;
 
+		public Stopwatch Timer;
+
 		public DataMapper()
 		{
-			_INS = new INSReader();
-			_pozyx = new PozyxReader();
+			Timer = new Stopwatch();
+			_INS = new INSReader(Timer);
+			_pozyx = new PozyxReader(Timer);
 			Thread ReaderThread = new Thread(StartReading);
 			ReaderThread.Start();
 		}
@@ -48,7 +52,7 @@ namespace Serial.DataMapper
 
 			Accel = KalmanFilter.KalmanData(Accel);
 			Gyro = KalmanFilter.KalmanData(Gyro);
-
+            
 			int count = Accel.Count();
 			for (int i = 0; i < count; i++)
 			{
@@ -59,21 +63,28 @@ namespace Serial.DataMapper
 
 		public void StartReading()
 		{
+			ClearEntries();
+			_INS.ResetTid();
+			_pozyx.ResetTid();
 			Reading = true;
 			Thread ReadThreadINS = new Thread(ReadINS);
 			Thread ReadThreadPOZYX = new Thread(ReadPozyx);
 			ReadThreadINS.Start();
 			ReadThreadPOZYX.Start();
+			Timer.Start();
+            
 		}
 
 		public void StopReading()
 		{
 			Reading = false;
+			Timer.Stop();
 		}
 
 
 		private void ReadPozyx()
 		{
+			_pozyx.ResetTid();
 			while (Reading)
 			{
 				XYZ PoZYX_Position = _pozyx.Read();

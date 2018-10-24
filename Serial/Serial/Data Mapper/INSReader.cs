@@ -7,12 +7,16 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.IO.Ports;
 using System.IO;
+using System.Diagnostics;
 namespace Serial
 {
 	class INSReader : HzCalculator
 	{
 		private SerialPort _serialPort;
-		public UInt32 Tid = 0;
+		public long Tid = 0;
+		public static Stopwatch Timer_Input;
+		public static long Last_Timer = 0;
+
 		public XYZ AcceXYZ
 		{
 			get
@@ -37,35 +41,35 @@ namespace Serial
 		private double YAC;
 		private double ZAC;
 
-		public INSReader()
-		{
-			_serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
-		}
+		private object LockObject = new object();
+		private bool NewData = false;
 
-		public INSReader(string SerialPortName)
+		public INSReader(Stopwatch Timer)
 		{
-			_serialPort = new SerialPort(SerialPortName, 115200, Parity.None, 8, StopBits.One);
-			_serialPort.Open();
-			_serialPort.WriteLine("DATA OK");
+			Timer_Input = Timer;
+			_serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
 		}
 
 		public Tuple<XYZ, XYZ> Read()
 		{
 			try
 			{
-				string data1 = _serialPort.ReadLine();
-                string data2 = _serialPort.ReadLine();
-                string data3 = _serialPort.ReadLine();
-                CheckData(data1);
-                CheckData(data2);
-                CheckData(data3);
-                return new Tuple<XYZ, XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
+				List<string> dataItems = new List<string>(_serialPort.ReadLine().Split('#'));
+				foreach (var data in dataItems)
+				{
+					CheckData(data);
+				}
+				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
+				Last_Timer = Timer_Input.ElapsedMilliseconds;
+				Tid = Tid + TimerSinceLast;
+                HZ_rate = TimerSinceLast;
+				return new Tuple<XYZ, XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
 			}
-            catch (Exception)
-            {
-                return Read();
-            }
-            
+			catch (Exception)
+			{
+				return Read();
+			}
+
 		}
 
 		private void CheckData(string data)
@@ -75,7 +79,6 @@ namespace Serial
 				if (data.Contains("GY") && data.Contains(":"))
 				{
 					data = data.Substring(2, data.Length - 3);
-
 					var message_split = data.Split(':');
 					XGY = Convert.ToDouble(message_split[0]);
 					YGY = Convert.ToDouble(message_split[1]);
@@ -85,18 +88,23 @@ namespace Serial
 				else if (data.Contains("AC") && data.Contains(":"))
 				{
 					data = data.Substring(2, data.Length - 3);
-
 					var message_split = data.Split(':');
 					XAC = Convert.ToDouble(message_split[0]);
 					YAC = Convert.ToDouble(message_split[1]);
 					ZAC = Convert.ToDouble(message_split[2]);
+
 				}
-				else if (data.Contains("timer"))
+				/*else if (data.Contains("timer"))
 				{
-					UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", "").Replace("-",""));
-					Tid += TimerSinceLast;
-					HZ_rate = TimerSinceLast;
+					UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", "").Replace("-", ""));
+
+					if (TimerSinceLast == 0)
+					{
+						Console.WriteLine("Something went bad!!");
+					}
+
 				}
+				*/
 
 			}
 			catch (TimeoutException) { }
@@ -107,6 +115,7 @@ namespace Serial
 		public void ResetTid()
 		{
 			Tid = 0;
+			Last_Timer = Timer_Input.ElapsedMilliseconds;
 		}
 	}
 }

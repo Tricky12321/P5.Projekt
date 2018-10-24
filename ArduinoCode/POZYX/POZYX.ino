@@ -72,17 +72,13 @@ void loop(){
       status = Pozyx.doPositioning(&position, dimension, height, algorithm);
     }
     if (status == POZYX_SUCCESS){
-      int dt = millis() - last_millis;
+      uint32_t dt = millis() - last_millis;
       last_millis += dt; 
       printCoordinates(position, dt);
     }
 }
 
-void printCoordinates(coordinates_t coor, int dt){
-
-  Serial.print("timer:");
-  Serial.println(dt);
-  
+void printCoordinates(coordinates_t coor, uint32_t dt){
   if(!use_processing){
     Serial.print("PO");
     Serial.print(coor.x);

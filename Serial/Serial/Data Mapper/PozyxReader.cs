@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Diagnostics;
 namespace Serial
 {
 	class PozyxReader : HzCalculator
@@ -13,11 +14,14 @@ namespace Serial
 		private SerialPort _serialPort;
 		private XYZ _pozyx_data;
 		public XYZ Pozyx_data => _pozyx_data;
-		public UInt32 Tid = 0;
-        
+		public long Tid = 0;
 
-		public PozyxReader()
+		public static Stopwatch Timer_Input;
+		public static long Last_Timer = 0;
+
+		public PozyxReader(Stopwatch Timer)
 		{
+			Timer_Input = Timer;
 			_serialPort = SerialReader.GetSerialPort(ArduinoTypes.POZYX);
 			Console.WriteLine($"{_serialPort} Serial Port Opened");
 		}
@@ -26,10 +30,15 @@ namespace Serial
 		{
 			try
 			{
-				string TimerData = _serialPort.ReadLine();
-				string XYZstring = _serialPort.ReadLine();
-				CheckData(TimerData);
-				CheckData(XYZstring);
+				List<string> dataItems = new List<string>(_serialPort.ReadLine().Split('#'));
+                foreach (var data in dataItems)
+                {
+                    CheckData(data);
+                }
+				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
+                Last_Timer = Timer_Input.ElapsedMilliseconds;
+                Tid = Tid + TimerSinceLast;
+                HZ_rate = TimerSinceLast;
 			}
             catch (Exception)
             {
@@ -50,15 +59,14 @@ namespace Serial
 				double Xx = Convert.ToDouble(message_split[0]);
 				double Yy = Convert.ToDouble(message_split[1]);
 				double Zz = Convert.ToDouble(message_split[2]);
-				_pozyx_data = new XYZ(Xx, Yy, Zz,Tid);
-			}
-			else if (data.Contains("timer"))
-			{
-				UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", ""));
-                Tid += TimerSinceLast;
-                HZ_rate = TimerSinceLast;
-
+				_pozyx_data = new XYZ(Xx, Yy, Zz, Tid);
 			}
 		}
+
+		public void ResetTid()
+        {
+            Tid = 0;
+            Last_Timer = Timer_Input.ElapsedMilliseconds;
+        }
 	}
 }
