@@ -113,9 +113,9 @@ namespace Serial
                 string Data = null;
                 try
                 {
-                    Data = serialPort.ReadLine();
+                    Data = serialPort.ReadLine(); //TODO threw an overflow exception on logdata new
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException) 
                 {
                     return null;
                 }
