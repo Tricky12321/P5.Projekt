@@ -30,25 +30,29 @@ namespace Serial
 		{
 			try
 			{
-				List<string> dataItems = new List<string>(_serialPort.ReadLine().Split('#'));
-                foreach (var data in dataItems)
-                {
-                    CheckData(data);
-                }
-				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
-                Last_Timer = Timer_Input.ElapsedMilliseconds;
-                Tid = Tid + TimerSinceLast;
-                HZ_rate = TimerSinceLast;
-			}
-            catch (Exception)
-            {
-                return Read();
-            }
+				XYZ Output = null;
+				string data = "";
+				do
+				{
+					data = _serialPort.ReadLine();
+					Output = CheckData(data);
+				} while (Output == null);
 
-			return _pozyx_data;
+
+
+				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
+				Last_Timer = Timer_Input.ElapsedMilliseconds;
+				Tid = Tid + TimerSinceLast;
+				HZ_rate = TimerSinceLast;
+				return Output;
+			}
+			catch (Exception)
+			{
+				return Read();
+			}
 		}
 
-		private void CheckData(string data)
+		private XYZ CheckData(string data)
 		{
 
 			if (data.Contains("PO") && data.Contains(":"))
@@ -59,14 +63,18 @@ namespace Serial
 				double Xx = Convert.ToDouble(message_split[0]);
 				double Yy = Convert.ToDouble(message_split[1]);
 				double Zz = Convert.ToDouble(message_split[2]);
-				_pozyx_data = new XYZ(Xx, Yy, Zz, Tid);
+				return new XYZ(Xx, Yy, Zz, Tid);
+			}
+			else
+			{
+				return null;
 			}
 		}
 
 		public void ResetTid()
-        {
-            Tid = 0;
-            Last_Timer = Timer_Input.ElapsedMilliseconds;
-        }
+		{
+			Tid = 0;
+			Last_Timer = Timer_Input.ElapsedMilliseconds;
+		}
 	}
 }
