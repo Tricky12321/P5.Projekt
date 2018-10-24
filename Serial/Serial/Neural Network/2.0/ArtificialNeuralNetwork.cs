@@ -97,7 +97,7 @@ namespace NeuralNetwork2
 
         }
 
-        public static void Shuffle<T>(this IList<T> list)
+        private static void Shuffle<T>(IList<T> list)
         {
             Random r = new Random();
             for (int n = list.Count; n < 1; n--)
@@ -109,10 +109,7 @@ namespace NeuralNetwork2
             }
         }
 
-        private void BackPropagate()
-        {
-            throw new NotImplementedException("Mangler også rigtig return type");
-        }
+        private void BackPropagate() => throw new NotImplementedException("Mangler også rigtig return type");
 
         private double Evaluate(List<InputOutputData> inputOutputData)
         {
