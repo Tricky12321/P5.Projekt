@@ -70,6 +70,8 @@ namespace Serial.DataMapper
 			ReadThreadINS.Start();
 			ReadThreadPOZYX.Start();
 			Timer.Start();
+			Console.WriteLine("Starting data-read in 3 sec!");
+			Thread.Sleep(2000);
             
 		}
 
@@ -106,7 +108,9 @@ namespace Serial.DataMapper
 				{
 					if (_currentPoZYX != null)
 					{
-						NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
+						if (Output.Item1.TimeOfData > 1000) {
+							NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
+                        }
 					}
 				}
 				if (NewEntry != null)
