@@ -20,7 +20,7 @@ namespace Serial
 		static int MapperTimer = 0;
 		public static void Main()
 		{
-            //var test = new ArtificialNeuralNetwork(new int[]{1,2,3});
+            //  var test = new ArtificialNeuralNetwork(new int[]{1,2,3});
 			ShowMenu();
 		}
 

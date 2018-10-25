@@ -12,8 +12,6 @@ namespace Serial
 	class PozyxReader : HzCalculator
 	{
 		private SerialPort _serialPort;
-		private XYZ _pozyx_data;
-		public XYZ Pozyx_data => _pozyx_data;
 		public long Tid = 0;
 
 		public static Stopwatch Timer_Input;
@@ -28,28 +26,21 @@ namespace Serial
 
 		public XYZ Read()
 		{
-			try
+			XYZ Output = null;
+			string data = "";
+			do
 			{
-				XYZ Output = null;
-				string data = "";
-				do
-				{
-					data = _serialPort.ReadLine();
-					Output = CheckData(data);
-				} while (Output == null);
+				data = _serialPort.ReadLine();
+				Output = CheckData(data);
+			} while (Output == null);
 
+			long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
+			Last_Timer = Timer_Input.ElapsedMilliseconds;
+			Tid += TimerSinceLast;
+			HZ_rate = TimerSinceLast;
+			Output.TimeOfData = Tid;    
+			return Output;
 
-
-				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
-				Last_Timer = Timer_Input.ElapsedMilliseconds;
-				Tid = Tid + TimerSinceLast;
-				HZ_rate = TimerSinceLast;
-				return Output;
-			}
-			catch (Exception)
-			{
-				return Read();
-			}
 		}
 
 		private XYZ CheckData(string data)
@@ -60,10 +51,25 @@ namespace Serial
 				data = data.Substring(2, data.Length - 3);
 
 				var message_split = data.Split(':');
-				double Xx = Convert.ToDouble(message_split[0]);
-				double Yy = Convert.ToDouble(message_split[1]);
-				double Zz = Convert.ToDouble(message_split[2]);
-				return new XYZ(Xx, Yy, Zz, Tid);
+				try
+				{
+					double Xx = Convert.ToDouble(message_split[0]);
+					double Yy = Convert.ToDouble(message_split[1]);
+					double Zz = Convert.ToDouble(message_split[2]);
+					return new XYZ(Xx, Yy, Zz);
+
+				}
+				catch (IndexOutOfRangeException)
+				{
+					Console.WriteLine("[POZYX] Out of range");
+					return null;
+				}
+				catch (FormatException)
+				{
+					Console.WriteLine("[POZYX] Format exception");
+
+					return null;
+				}
 			}
 			else
 			{

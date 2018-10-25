@@ -33,8 +33,6 @@ namespace Serial.DataMapper
 			Timer = new Stopwatch();
 			_INS = new INSReader(Timer);
 			_pozyx = new PozyxReader(Timer);
-			Thread ReaderThread = new Thread(StartReading);
-			ReaderThread.Start();
 		}
 
 		public void GenerateKalman()
@@ -121,6 +119,7 @@ namespace Serial.DataMapper
 		public void ClearEntries()
 		{
 			dataEntries = new ConcurrentQueue<DataEntry>();
+			_currentPoZYX = null;
 		}
 
 		public IEnumerable<DataEntry> GetDataEntries(int amount = 1000)

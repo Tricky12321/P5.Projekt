@@ -30,8 +30,8 @@ namespace Serial
 					try
 					{
 						CustomSerialPort serialPort = new CustomSerialPort(Port, 115200, Parity.None, 8, StopBits.One); ;
-						serialPort.ReadTimeout = 500;
-						serialPort.WriteTimeout = 500;
+						serialPort.ReadTimeout = 1000;
+						serialPort.WriteTimeout = 1000;
 						serialPorts.Add(serialPort);
 					}
 					catch (IOException)
