@@ -87,7 +87,8 @@ namespace Serial
             Console.WriteLine(" - stop - Stops the logger");
             Console.WriteLine(" - save <Path> - Saves the data to files");
 			Console.WriteLine(" - new - Creates a DataMapper for logging");
-            Console.WriteLine(" - kalman - Generates Kalman values for INS");
+			Console.WriteLine(" - kalman - Generates Kalman values for INS");
+            Console.WriteLine(" - calibrate - Calibrates INS");
             Console.WriteLine("-----------------------------------");
 			Console.WriteLine("devices - Prints arduino devices");
 			Console.WriteLine("-----------------------------------");
@@ -235,6 +236,17 @@ namespace Serial
 			}
 			switch (Input[1])
 			{
+				case "calibrate":
+					if (dataMapper == null)
+					{
+						Console.WriteLine("No Data Mapper has been created!");
+					}
+					else
+					{
+						dataMapper.CalibrateINS();
+					}
+					break;
+
 				case "start":
 					if (dataMapper == null)
 					{
