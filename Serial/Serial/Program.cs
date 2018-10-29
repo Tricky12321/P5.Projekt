@@ -21,18 +21,18 @@ namespace Serial
 		static int MapperTimer = 0;
 		public static void Main()
 		{
-            var test = new NeuralNetwork1.NeuralNetwork(0.2, new int[]{2, 3, 3, 3, 1});
+            /*var test = new NeuralNetwork1.NeuralNetwork(0.2, new int[]{2, 3, 3, 3, 1});
 
             Random r = new Random(Environment.TickCount);
             for (int i = 0; i < 1000000; i++)
             {
                 test.Train(new List<double>() { 1, 1 }, new List<double>() { 1 });
-            }
-            //ShowMenu();
+            }*/
+            ShowMenu();
 
-            double[] tesfds = test.Run(new List<double>() { 1, 1 });
+            /*double[] tesfds = test.Run(new List<double>() { 1, 1 });
             Console.WriteLine("teststset");
-            tesfds.ToList().ForEach(Console.WriteLine);
+            tesfds.ToList().ForEach(Console.WriteLine)*/
         }
 
 		public static void ShowMenu()
