@@ -94,7 +94,57 @@ namespace NeuralNetwork2
 
         private void UpdateBatch(List<InputOutputData> batch, double learningRate)
         {
+            ResetNablaValues();
+            foreach (InputOutputData insOuts in batch)
+            {
+                BackPropagate(insOuts);
+            }
 
+            foreach (Layer layer in _layers)
+            {
+                foreach (Neuron neuron in layer.Neurons)
+                {
+                    for (int w = 0; w < neuron.Weights.Count; w++)
+                    {
+                        neuron.Weights[w] = neuron.Weights[w] - (learningRate / batch.Count) * neuron.NablaWeights[w];
+                    }
+                    neuron.Bias = neuron.Bias - (learningRate / batch.Count) * neuron.NablaBias;
+                }
+            }
+        }
+
+        private void BackPropagate(InputOutputData insOut)
+        {
+            ResetNablaValues(true);
+            List<double> activation = insOut.Inputs;
+            List<double>[] activations = new List<double>[_layers.Count];
+        }
+
+        private void ResetNablaValues(bool ResetTemp = false)
+        {
+
+            foreach (Layer layer in _layers)
+            {
+                foreach (Neuron neuron in layer.Neurons)
+                {
+                    if (ResetTemp)
+                    {
+                        neuron.TempNablaBias = 0.0;
+                        for (int w = 0; w < neuron.Weights.Count; w++)
+                        {
+                            neuron.TempNablaWeights[w] = 0.0;
+                        }
+                    }
+                    else
+                    {
+                        neuron.NablaBias = 0.0;
+                        for (int w = 0; w < neuron.Weights.Count; w++)
+                        {
+                            neuron.NablaWeights[w] = 0.0;
+                        }
+                    }
+                }
+            }
         }
 
         private static void Shuffle<T>(IList<T> list)
@@ -109,8 +159,6 @@ namespace NeuralNetwork2
             }
         }
 
-        private void BackPropagate() => throw new NotImplementedException("Mangler også rigtig return type");
-
         private double Evaluate(List<InputOutputData> inputOutputData)
         {
             //Calculated the deviation in result from output
@@ -120,7 +168,7 @@ namespace NeuralNetwork2
                 double[] result = FeedForward(insOuts.Inputs.ToArray());
                 for (int i = 0; i < result.Length; i++)
                 {
-                    sum += insOuts.Outputs[i] - result[i] < 0 ? -insOuts.Outputs[i] - result[i] : insOuts.Outputs[i] - result[i];
+                    sum += Math.Abs(insOuts.Outputs[i] - result[i]);
                 }
             }
             return sum;

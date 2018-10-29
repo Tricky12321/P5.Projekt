@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using NeuralNetwork;
 using System.IO;
-using NeuralNetwork2;
+using NeuralNetwork1;
+using System.Linq;
 
 namespace Serial
 {
@@ -20,9 +21,19 @@ namespace Serial
 		static int MapperTimer = 0;
 		public static void Main()
 		{
-            var test = new ArtificialNeuralNetwork(new int[]{1,2,3});
-			//ShowMenu();
-		}
+            /*var test = new NeuralNetwork1.NeuralNetwork(0.2, new int[]{2, 3, 3, 3, 1});
+
+            Random r = new Random(Environment.TickCount);
+            for (int i = 0; i < 1000000; i++)
+            {
+                test.Train(new List<double>() { 1, 1 }, new List<double>() { 1 });
+            }*/
+            ShowMenu();
+
+            /*double[] tesfds = test.Run(new List<double>() { 1, 1 });
+            Console.WriteLine("teststset");
+            tesfds.ToList().ForEach(Console.WriteLine)*/
+        }
 
 		public static void ShowMenu()
 		{
@@ -87,7 +98,8 @@ namespace Serial
             Console.WriteLine(" - stop - Stops the logger");
             Console.WriteLine(" - save <Path> - Saves the data to files");
 			Console.WriteLine(" - new - Creates a DataMapper for logging");
-            Console.WriteLine(" - kalman - Generates Kalman values for INS");
+			Console.WriteLine(" - kalman - Generates Kalman values for INS");
+            Console.WriteLine(" - calibrate - Calibrates INS");
             Console.WriteLine("-----------------------------------");
 			Console.WriteLine("devices - Prints arduino devices");
 			Console.WriteLine("-----------------------------------");
@@ -235,6 +247,17 @@ namespace Serial
 			}
 			switch (Input[1])
 			{
+				case "calibrate":
+					if (dataMapper == null)
+					{
+						Console.WriteLine("No Data Mapper has been created!");
+					}
+					else
+					{
+						dataMapper.CalibrateINS();
+					}
+					break;
+
 				case "start":
 					if (dataMapper == null)
 					{

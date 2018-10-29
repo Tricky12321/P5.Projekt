@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Serial.DataMapper;
 using System.Diagnostics;
+
 namespace NeuralNetwork
 {
     class INS_POSZYX_NeuralNetworkTester
@@ -19,7 +20,7 @@ namespace NeuralNetwork
         public INS_POSZYX_NeuralNetworkTester()
         {
             _dataMapper = new DataMapper();
-            nn = new NeuralNetwork(0.2, new int[] { 300, 500, 500, 3 });
+            nn = new NeuralNetwork1.NeuralNetwork(0.2, new int[] { 300, 500, 500, 3 });
         }
 
         public void Start()

@@ -17,7 +17,7 @@ namespace Serial.DataMapper
 		private ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
 		public ConcurrentQueue<DataEntry> AllDataEntries => dataEntries;
 
-		public ConcurrentQueue<Tuple<XYZ,XYZ>> KalmanData;
+		public ConcurrentQueue<Tuple<XYZ, XYZ>> KalmanData;
 
 		private bool Reading = false;
 
@@ -33,8 +33,6 @@ namespace Serial.DataMapper
 			Timer = new Stopwatch();
 			_INS = new INSReader(Timer);
 			_pozyx = new PozyxReader(Timer);
-			Thread ReaderThread = new Thread(StartReading);
-			ReaderThread.Start();
 		}
 
 		public void GenerateKalman()
@@ -43,8 +41,8 @@ namespace Serial.DataMapper
 			KalmanData = new ConcurrentQueue<Tuple<XYZ, XYZ>>();
 
 			List<XYZ> Accel = new List<XYZ>();
-            List<XYZ> Gyro = new List<XYZ>();
-            foreach (var Entry in dataEntries)
+			List<XYZ> Gyro = new List<XYZ>();
+			foreach (var Entry in dataEntries)
 			{
 				Accel.Add(Entry.INS_Accelerometer);
 				Gyro.Add(Entry.INS_Gyroscope);
@@ -52,7 +50,7 @@ namespace Serial.DataMapper
 
 			Accel = KalmanFilter.KalmanData(Accel);
 			Gyro = KalmanFilter.KalmanData(Gyro);
-            
+
 			int count = Accel.Count();
 			for (int i = 0; i < count; i++)
 			{
@@ -63,16 +61,29 @@ namespace Serial.DataMapper
 
 		public void StartReading()
 		{
-			ClearEntries();
-			_INS.ResetTid();
-			_pozyx.ResetTid();
-			Reading = true;
-			Thread ReadThreadINS = new Thread(ReadINS);
-			Thread ReadThreadPOZYX = new Thread(ReadPozyx);
-			ReadThreadINS.Start();
-			ReadThreadPOZYX.Start();
-			Timer.Start();
-            
+			if (Reading == true) {
+				Console.WriteLine("ALREADY READING....");
+				Console.WriteLine("ALREADY READING....");
+				Console.WriteLine("ALREADY READING....");
+				Console.WriteLine("ALREADY READING....");
+				Console.WriteLine("ALREADY READING....");
+			} else {
+				ClearEntries();
+                _INS.ResetTid();
+                _pozyx.ResetTid();
+                Reading = true;
+                Thread ReadThreadINS = new Thread(ReadINS);
+                Thread ReadThreadPOZYX = new Thread(ReadPozyx);
+				Console.WriteLine("Starting data-read in 3 sec!");
+				Thread.Sleep(2000);
+                ReadThreadINS.Start();
+                ReadThreadPOZYX.Start();
+                Timer.Start();
+				Thread.Sleep(1000);
+				Console.WriteLine("Started...");
+			}
+
+
 		}
 
 		public void StopReading()
@@ -108,7 +119,10 @@ namespace Serial.DataMapper
 				{
 					if (_currentPoZYX != null)
 					{
-						NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
+						if (Output.Item1.TimeOfData > 1000)
+						{
+							NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
+						}
 					}
 				}
 				if (NewEntry != null)
@@ -121,6 +135,7 @@ namespace Serial.DataMapper
 		public void ClearEntries()
 		{
 			dataEntries = new ConcurrentQueue<DataEntry>();
+			_currentPoZYX = null;
 		}
 
 		public IEnumerable<DataEntry> GetDataEntries(int amount = 1000)
@@ -135,6 +150,50 @@ namespace Serial.DataMapper
 			{
 				throw new TooManyDataEntriesRequestedException($"There is not this many DataEntries that can be requested.\nThere is only {avalibleDataEntries.Count()} avalible!");
 			}
+		}
+
+		public void CalibrateINS()
+		{
+			_INS.ClearCalibration();
+			Console.WriteLine("Leave sensor level!");
+			Thread.Sleep(1000);
+			StartReading();
+			Thread.Sleep(5000);
+			StopReading();
+			int count = 0;
+
+			double AX = 0;
+			double AY = 0;
+			double AZ = 0;
+			double GX = 0;
+			double GY = 0;
+			double GZ = 0;
+			foreach (var item in dataEntries)
+			{
+				AX += item.INS_Accelerometer.X;
+				AY += item.INS_Accelerometer.Y;
+				AZ += item.INS_Accelerometer.Z;
+				GX += item.INS_Gyroscope.X;
+				GY += item.INS_Gyroscope.Y;
+				GZ += item.INS_Gyroscope.Z;
+				count++;
+			}
+			Console.WriteLine($"Data collection done, calculating ({count})");
+            
+            AX /= count;
+            AY /= count;
+            AZ /= count;
+            GX /= count;
+            GY /= count;
+            GZ /= count;
+
+            XYZ Accelerometer_calibration = new XYZ(AX, AY, AZ);
+            XYZ Gyroscope_calibration = new XYZ(GX, GY, GZ);
+			Console.WriteLine($"Accelerometer\n{Accelerometer_calibration}");
+			Console.WriteLine($"Gyroscope\n{Gyroscope_calibration}");
+			_INS.SetCalibration(Accelerometer_calibration, Gyroscope_calibration);
+			ClearEntries();
+			Console.WriteLine("Calibration Done");
 		}
 
 	}

@@ -17,11 +17,22 @@ namespace Serial
 		public static Stopwatch Timer_Input;
 		public static long Last_Timer = 0;
 
+		private XYZ Accel_Calibration;
+		private XYZ Gyro_Calibration;
+		private bool UseCalibration = false;
+
 		public XYZ AcceXYZ
 		{
 			get
 			{
-				return new XYZ(XAC, YAC, ZAC, Tid);
+				if (UseCalibration)
+				{
+					return new XYZ(XAC - Accel_Calibration.X, YAC - Accel_Calibration.X, ZAC - Accel_Calibration.X, Tid);
+				}
+				else
+				{
+					return new XYZ(XAC, YAC, ZAC, Tid);
+				}
 			}
 		}
 
@@ -29,7 +40,14 @@ namespace Serial
 		{
 			get
 			{
-				return new XYZ(XGY, YGY, ZGY, Tid); ;
+				if (UseCalibration)
+				{
+					return new XYZ(XGY - Gyro_Calibration.X, YGY - Gyro_Calibration.Y, ZGY - Gyro_Calibration.Z, Tid);
+				}
+				else
+				{
+					return new XYZ(XGY, YGY, ZGY, Tid);
+				}
 			}
 		}
 
@@ -62,8 +80,8 @@ namespace Serial
 				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
 				Last_Timer = Timer_Input.ElapsedMilliseconds;
 				Tid = Tid + TimerSinceLast;
-                HZ_rate = TimerSinceLast;
-				return new Tuple<XYZ, XYZ>(new XYZ(XAC, YAC, ZAC, Tid), new XYZ(XGY, YGY, ZGY, Tid));
+				HZ_rate = TimerSinceLast;
+				return new Tuple<XYZ, XYZ>(AcceXYZ, GyroXYZ);
 			}
 			catch (Exception)
 			{
@@ -116,6 +134,17 @@ namespace Serial
 		{
 			Tid = 0;
 			Last_Timer = Timer_Input.ElapsedMilliseconds;
+		}
+
+		public void SetCalibration(XYZ Acclerometer, XYZ Gyroscope)
+		{
+			Accel_Calibration = Acclerometer;
+			Gyro_Calibration = Gyroscope;
+			UseCalibration = true;
+		}
+
+		public void ClearCalibration() {
+			UseCalibration = false;
 		}
 	}
 }

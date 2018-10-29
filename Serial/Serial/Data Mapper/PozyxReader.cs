@@ -12,8 +12,6 @@ namespace Serial
 	class PozyxReader : HzCalculator
 	{
 		private SerialPort _serialPort;
-		private XYZ _pozyx_data;
-		public XYZ Pozyx_data => _pozyx_data;
 		public long Tid = 0;
 
 		public static Stopwatch Timer_Input;
@@ -28,27 +26,24 @@ namespace Serial
 
 		public XYZ Read()
 		{
-			try
+			XYZ Output = null;
+			string data = "";
+			do
 			{
-				List<string> dataItems = new List<string>(_serialPort.ReadLine().Split('#'));
-                foreach (var data in dataItems)
-                {
-                    CheckData(data);
-                }
-				long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
-                Last_Timer = Timer_Input.ElapsedMilliseconds;
-                Tid = Tid + TimerSinceLast;
-                HZ_rate = TimerSinceLast;
-			}
-            catch (Exception)
-            {
-                return Read();
-            }
+				data = _serialPort.ReadLine();
+				Output = CheckData(data);
+			} while (Output == null);
 
-			return _pozyx_data;
+			long TimerSinceLast = Timer_Input.ElapsedMilliseconds - Last_Timer;
+			Last_Timer = Timer_Input.ElapsedMilliseconds;
+			Tid += TimerSinceLast;
+			HZ_rate = TimerSinceLast;
+			Output.TimeOfData = Tid;    
+			return Output;
+
 		}
 
-		private void CheckData(string data)
+		private XYZ CheckData(string data)
 		{
 
 			if (data.Contains("PO") && data.Contains(":"))
@@ -56,17 +51,36 @@ namespace Serial
 				data = data.Substring(2, data.Length - 3);
 
 				var message_split = data.Split(':');
-				double Xx = Convert.ToDouble(message_split[0]);
-				double Yy = Convert.ToDouble(message_split[1]);
-				double Zz = Convert.ToDouble(message_split[2]);
-				_pozyx_data = new XYZ(Xx, Yy, Zz, Tid);
+				try
+				{
+					double Xx = Convert.ToDouble(message_split[0]);
+					double Yy = Convert.ToDouble(message_split[1]);
+					double Zz = Convert.ToDouble(message_split[2]);
+					return new XYZ(Xx, Yy, Zz);
+
+				}
+				catch (IndexOutOfRangeException)
+				{
+					Console.WriteLine("[POZYX] Out of range");
+					return null;
+				}
+				catch (FormatException)
+				{
+					Console.WriteLine("[POZYX] Format exception");
+
+					return null;
+				}
+			}
+			else
+			{
+				return null;
 			}
 		}
 
 		public void ResetTid()
-        {
-            Tid = 0;
-            Last_Timer = Timer_Input.ElapsedMilliseconds;
-        }
+		{
+			Tid = 0;
+			Last_Timer = Timer_Input.ElapsedMilliseconds;
+		}
 	}
 }
