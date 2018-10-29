@@ -3,22 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Serial;
-using NeuralNetwork1;
 
-namespace NeuralNetwork
+namespace NeuralNetwork1
 {
     [Serializable]
     public class NeuralNetwork : INeuralNetwork
     {
         public List<Layer> Layers;
         public double LearningRate;
-        public int LayerCount
-        {
-            get
-            {
-                return Layers.Count;
-            }
-        }
+        private double _errors;
+        private int _layerCount;
 
         public NeuralNetwork() { }
 
@@ -28,6 +22,8 @@ namespace NeuralNetwork
 
             LearningRate = learningRate;
             Layers = new List<Layer>();
+
+            Random r = new Random(Environment.TickCount);
 
             for (int l = 0; l < layers.Length; l++)
             {
@@ -39,7 +35,7 @@ namespace NeuralNetwork
                     layer.Neurons.Add(new Neuron());
                 }
 
-                layer.Neurons.ForEach((nn) =>
+                layer.Neurons.ForEach(nn =>
                 {
                     if (l == 0)
                     {
@@ -49,18 +45,19 @@ namespace NeuralNetwork
                     {
                         for (int d = 0; d < layers[l - 1]; d++)
                         {
-                            nn.Dendrites.Add(new Dendrite());
+                            nn.Weights.Add(r.NextDouble());
                         }
                     }
                 });
             }
+            _layerCount = Layers.Count;
         }
 
         public double[] Run(List<double> input)
         {
             if (input.Count != Layers[0].NeuronCount) { return null; }
 
-            for (int l = 0; l < LayerCount; l++)
+            for (int l = 0; l < _layerCount; l++)
             {
                 Layer layer = Layers[l];
 
@@ -77,7 +74,7 @@ namespace NeuralNetwork
                         neuron.Value = 0;
                         for (int np = 0; np < Layers[l - 1].NeuronCount; np++)
                         {
-                            neuron.Value = neuron.Value + Layers[l - 1].Neurons[np].Value * neuron.Dendrites[np].Weight;
+                            neuron.Value = neuron.Value + Layers[l - 1].Neurons[np].Value * neuron.Weights[np];
                         }
 
                         neuron.Value = Sigmoid(neuron.Value + neuron.Bias);
@@ -85,7 +82,7 @@ namespace NeuralNetwork
                 }
             }
 
-            Layer last = Layers[LayerCount - 1];
+            Layer last = Layers[_layerCount - 1];
             int numOutput = last.NeuronCount;
             double[] output = new double[numOutput];
 
@@ -97,48 +94,48 @@ namespace NeuralNetwork
             return output;
         }
 
-        private double Sigmoid(double x)
+        private static double Sigmoid(double x)
         {
             return 1 / (1 + Math.Exp(-x));
         }
 
         public void Train(List<double> input, List<double> output)
         {
-
-            if ((input.Count != Layers[0].Neurons.Count) || (output.Count != Layers[LayerCount - 1].NeuronCount)) return;
+            if ((input.Count != Layers[0].Neurons.Count) || (output.Count != Layers[_layerCount - 1].NeuronCount)) return;
 
             Run(input);
 
-            for (int i = 0; i < Layers[LayerCount - 1].NeuronCount; i++)
+            for (int i = 0; i < Layers[_layerCount - 1].NeuronCount; i++)
             {
-                Neuron neuron = Layers[LayerCount - 1].Neurons[i];
+                Neuron neuron = Layers[_layerCount - 1].Neurons[i];
+                _errors = output[i] - neuron.Value;
+                Console.WriteLine(_errors);
+                neuron.Delta = output[i] - neuron.Value;
 
-                neuron.Delta = neuron.Value * (1 - neuron.Value) * (output[i] - neuron.Value);
-
-                for (int j = LayerCount - 2; j > 2; j--)
+                /*for (int j = _layerCount - 2; j > 2; j--)
                 {
                     for (int k = 0; k < Layers[j].NeuronCount; k++)
                     {
                         Neuron n = Layers[j].Neurons[k];
 
-                        n.Delta = n.Value * (1 - n.Value) * Layers[j + 1].Neurons[i].Dendrites[k].Weight * Layers[j + 1].Neurons[i].Delta;
+                        n.Delta = n.Value * (1 - n.Value) * Layers[j + 1].Neurons[i].Weights[k] * Layers[j + 1].Neurons[i].Delta;
                     }
-                }
+                }*/
             }
 
-            for (int i = LayerCount - 1; i > 1; i--)
+            for (int i = _layerCount - 1; i > 1; i--)
             {
                 for (int j = 0; j < Layers[i].NeuronCount; j++)
                 {
                     Neuron n = Layers[i].Neurons[j];
                     n.Bias = n.Bias + (LearningRate * n.Delta);
 
-                    for (int k = 0; k < n.Dendrites.Count; k++)
-                        n.Dendrites[k].Weight = n.Dendrites[k].Weight + (LearningRate * Layers[i - 1].Neurons[k].Value * n.Delta);
+                    for (int k = 0; k < n.Weights.Count; k++)
+                    {
+                        n.Weights[k] = n.Weights[k] + (LearningRate * Layers[i - 1].Neurons[k].Value * n.Delta);
+                    }
                 }
             }
-
-            return;
         }
 
         public void Save(string filePath, bool append = false)
