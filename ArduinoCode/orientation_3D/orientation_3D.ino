@@ -48,19 +48,19 @@ void loop(){
 }
 
 void printRawSensorData(sensor_raw_t sensor_raw) {
-  //Serial.print("AC");
+  Serial.print("AC");
   Serial.print(sensor_raw.linear_acceleration[0]);
-  Serial.print(",");
+  Serial.print(":");
   Serial.print(sensor_raw.linear_acceleration[1]);
-  Serial.print(",");
+  Serial.print(":");
   Serial.println(sensor_raw.linear_acceleration[2]);
-  //Serial.print("#");
-  //Serial.print("GY");
-  //Serial.print(sensor_raw.angular_vel[0]);
-  //Serial.print(":");
-  //Serial.print(sensor_raw.angular_vel[1]);
-  //Serial.print(":");
-  //Serial.println(sensor_raw.angular_vel[2]);
+  Serial.print("#");
+  Serial.print("GY");
+  Serial.print(sensor_raw.angular_vel[0]);
+  Serial.print(":");
+  Serial.print(sensor_raw.angular_vel[1]);
+  Serial.print(":");
+  Serial.println(sensor_raw.angular_vel[2]);
 }
 
 void printCalibrationStatus(uint8_t calibration_status){
