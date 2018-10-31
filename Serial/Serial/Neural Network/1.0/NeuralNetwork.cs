@@ -108,19 +108,12 @@ namespace NeuralNetwork1
             for (int i = 0; i < Layers[_layerCount - 1].NeuronCount; i++)
             {
                 Neuron neuron = Layers[_layerCount - 1].Neurons[i];
+                Console.WriteLine($"Neuron Index : {i}");
+                Console.WriteLine($"Forventet Output: {output[i]}");
+                Console.WriteLine($"Beregnet Output: {neuron.Value}");
                 _errors = output[i] - neuron.Value;
-                Console.WriteLine(_errors);
+                Console.WriteLine($"Error margin: {_errors}");
                 neuron.Delta = output[i] - neuron.Value;
-
-                /*for (int j = _layerCount - 2; j > 2; j--)
-                {
-                    for (int k = 0; k < Layers[j].NeuronCount; k++)
-                    {
-                        Neuron n = Layers[j].Neurons[k];
-
-                        n.Delta = n.Value * (1 - n.Value) * Layers[j + 1].Neurons[i].Weights[k] * Layers[j + 1].Neurons[i].Delta;
-                    }
-                }*/
             }
 
             for (int i = _layerCount - 1; i > 1; i--)
