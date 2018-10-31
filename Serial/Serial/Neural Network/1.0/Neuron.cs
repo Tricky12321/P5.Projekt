@@ -7,25 +7,15 @@ namespace NeuralNetwork1
     [Serializable]
     public class Neuron
     {
-        public List<Dendrite> Dendrites;
+        public List<Double> Weights = new List<double>();
         public double Bias;
         public double Delta;
         public double Value;
 
-        public int DentriesCount
-        {
-            get
-            {
-                return Dendrites.Count;
-            }
-        }
-
         public Neuron()
         {
-            CryptoRandom n = new CryptoRandom();
-            Bias = n.RandomValue;
-
-            Dendrites = new List<Dendrite>();
+            Random r = new Random(Environment.TickCount);
+            Bias = r.NextDouble();
         }
     }
 }

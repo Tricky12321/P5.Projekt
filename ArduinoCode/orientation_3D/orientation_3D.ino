@@ -7,6 +7,9 @@ uint16_t remote_id = 0x690f;          // the network id of the other pozyx devic
 uint32_t last_millis = 0;                 // used to compute the measurement interval in milliseconds 
 uint32_t start_millis = 0;
 bool establish_COM = true;
+bool use_serial_plotter = false;
+bool use_gyro = true;
+bool use_accelerometer = true;
 void setup()
 {  
   Serial.begin(115200);
@@ -48,7 +51,26 @@ void loop(){
 }
 
 void printRawSensorData(sensor_raw_t sensor_raw) {
-  Serial.print("AC");
+  if (use_serial_plotter) {
+    if (use_accelerometer) {
+        Serial.print(sensor_raw.linear_acceleration[0]);
+        Serial.print(",");
+        Serial.print(sensor_raw.linear_acceleration[1]);
+        Serial.print(",");
+        Serial.println(sensor_raw.linear_acceleration[2]);
+    }
+    if (use_gyro) {
+        Serial.print(sensor_raw.angular_vel[0]);
+        Serial.print(":");
+        Serial.print(sensor_raw.angular_vel[1]);
+        Serial.print(":");
+        Serial.println(sensor_raw.angular_vel[2]);
+    }
+  //Serial.print("#");
+  //Serial.print("GY");
+
+  } else {
+    Serial.print("AC");
   Serial.print(sensor_raw.linear_acceleration[0]);
   Serial.print(":");
   Serial.print(sensor_raw.linear_acceleration[1]);
@@ -61,6 +83,8 @@ void printRawSensorData(sensor_raw_t sensor_raw) {
   Serial.print(sensor_raw.angular_vel[1]);
   Serial.print(":");
   Serial.println(sensor_raw.angular_vel[2]);
+  }
+  
 }
 
 void printCalibrationStatus(uint8_t calibration_status){
