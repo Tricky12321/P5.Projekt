@@ -31,7 +31,7 @@ namespace Serial.DataMapper
 		bool Pozyx = false;
 		bool Ins = false;
 
-		public DataMapper(bool Pozyx = true, bool Ins = false)
+		public DataMapper(bool Pozyx = true, bool Ins = true)
 		{
 			Timer = new Stopwatch();
 			this.Pozyx = Pozyx;
@@ -67,7 +67,6 @@ namespace Serial.DataMapper
 			{
 				KalmanData.Enqueue(new Tuple<XYZ, XYZ>(Accel[i], Gyro[i]));
 			}
-
 		}
 
 		public void StartReading()
@@ -100,10 +99,7 @@ namespace Serial.DataMapper
 				Console.WriteLine("Started...");
 				ClearEntries();
                 Timer.Start();
-                
 			}
-
-
 		}
 
 		public void StopReading()
