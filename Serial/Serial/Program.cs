@@ -97,7 +97,7 @@ namespace Serial
             Console.WriteLine(" - start [Time in sed]- Start the logger");
             Console.WriteLine(" - stop - Stops the logger");
             Console.WriteLine(" - save <Path> - Saves the data to files");
-			Console.WriteLine(" - new - Creates a DataMapper for logging");
+			Console.WriteLine(" - new [pozyx/ins/[BLANK]]- Creates a DataMapper for logging, Blank uses both");
 			Console.WriteLine(" - kalman - Generates Kalman values for INS");
             Console.WriteLine(" - calibrate - Calibrates INS");
             Console.WriteLine("-----------------------------------");
@@ -274,6 +274,7 @@ namespace Serial
                                 dataMapper.StartReading();
 								TimerThread.Start();
 								Console.WriteLine($"Started Datamapper for {MapperTimer} sec");
+                                TimerThread.Join();
                                 
 							}
 							catch (Exception)
@@ -339,7 +340,22 @@ namespace Serial
 					}
 					break;
 				case "new":
-					dataMapper = new DataMapper.DataMapper();
+					if (Input.Length == 2) {
+						dataMapper = new DataMapper.DataMapper();
+					} else {
+						switch (Input[2])
+						{
+							case "ins":
+								dataMapper = new DataMapper.DataMapper(false,true);
+								break;
+							case "pozyx":
+                                dataMapper = new DataMapper.DataMapper(true, false);
+                                break;
+							default:
+								break;
+						}
+					}
+                        
 					Console.WriteLine("Created new DataMapper!");
 					break;
 				case "kalman":
@@ -400,13 +416,15 @@ namespace Serial
 				int DataCount = GyroScope.Count;
 				for (int i = 0; i < DataCount; i++)
 				{
-					FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
-										 $"\"{Accelerometer[i].X}\"," +
-										 $"\"{Accelerometer[i].Y}\"," +
-										 $"\"{Accelerometer[i].Z}\"," +
-										 $"\"{GyroScope[i].X}\"," +
-										 $"\"{GyroScope[i].Y}\"," +
-										 $"\"{GyroScope[i].Z}\"");
+					if (GyroScope[i] != null && Accelerometer[i] != null) {
+						FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
+						                     $"\"{Accelerometer[i].X}\"," +
+						                     $"\"{Accelerometer[i].Y}\"," +
+						                     $"\"{Accelerometer[i].Z}\"," +
+						                     $"\"{GyroScope[i].X}\"," +
+						                     $"\"{GyroScope[i].Y}\"," +
+						                     $"\"{GyroScope[i].Z}\"");
+                    }
 
 				}
 				FileWriter.Close();
@@ -419,14 +437,15 @@ namespace Serial
 					int DataCount = Kalman_Gyroscope.Count;
 					for (int i = 0; i < DataCount; i++)
 					{
-						FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
-						                     $"\"{Kalman_Accelerometer[i].X}\"," +
-						                     $"\"{Kalman_Accelerometer[i].Y}\"," +
-						                     $"\"{Kalman_Accelerometer[i].Z}\"," +
-						                     $"\"{Kalman_Gyroscope[i].X}\"," +
-						                     $"\"{Kalman_Gyroscope[i].Y}\"," +
-						                     $"\"{Kalman_Gyroscope[i].Z}\"");
-
+						if (Kalman_Gyroscope[i] != null && Kalman_Accelerometer[i] != null) {
+							FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
+							                     $"\"{Kalman_Accelerometer[i].X}\"," +
+							                     $"\"{Kalman_Accelerometer[i].Y}\"," +
+							                     $"\"{Kalman_Accelerometer[i].Z}\"," +
+							                     $"\"{Kalman_Gyroscope[i].X}\"," +
+							                     $"\"{Kalman_Gyroscope[i].Y}\"," +
+							                     $"\"{Kalman_Gyroscope[i].Z}\"");
+                        }
 					}
 					FileWriter.Close();
 				}
@@ -438,10 +457,12 @@ namespace Serial
 
 				foreach (var Data in Pozyx)
 				{
-					FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
-										 $"\"{Data.X}\"," +
-										 $"\"{Data.Y}\"," +
-										 $"\"{Data.Z}\"");
+					if (Data != null) {
+						FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
+						                     $"\"{Data.X}\"," +
+						                     $"\"{Data.Y}\"," +
+						                     $"\"{Data.Z}\"");
+                    }
 				}
 				FileWriter.Close();
 			}
@@ -452,7 +473,7 @@ namespace Serial
 			timer.Start();
             while (timer.ElapsedMilliseconds < (MapperTimer*1000))
 			{
-				Thread.Sleep(10);
+				Thread.Sleep(1);
 			}
 			dataMapper.StopReading();
 			Console.WriteLine("Done reading (TIMER)");

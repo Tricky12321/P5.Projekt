@@ -28,11 +28,22 @@ namespace Serial.DataMapper
 
 		public Stopwatch Timer;
 
-		public DataMapper()
+		bool Pozyx = false;
+		bool Ins = false;
+
+		public DataMapper(bool Pozyx = true, bool Ins = false)
 		{
 			Timer = new Stopwatch();
-			_INS = new INSReader(Timer);
-			_pozyx = new PozyxReader(Timer);
+			this.Pozyx = Pozyx;
+			this.Ins = Ins;
+			if (Pozyx)
+			{
+				_pozyx = new PozyxReader(Timer);
+			}
+			if (Ins)
+			{
+				_INS = new INSReader(Timer);
+			}
 		}
 
 		public void GenerateKalman()
@@ -61,26 +72,35 @@ namespace Serial.DataMapper
 
 		public void StartReading()
 		{
-			if (Reading == true) {
+			if (Reading == true)
+			{
 				Console.WriteLine("ALREADY READING....");
 				Console.WriteLine("ALREADY READING....");
 				Console.WriteLine("ALREADY READING....");
 				Console.WriteLine("ALREADY READING....");
 				Console.WriteLine("ALREADY READING....");
-			} else {
-				ClearEntries();
-                _INS.ResetTid();
-                _pozyx.ResetTid();
-                Reading = true;
-                Thread ReadThreadINS = new Thread(ReadINS);
-                Thread ReadThreadPOZYX = new Thread(ReadPozyx);
-				Console.WriteLine("Starting data-read in 3 sec!");
-				Thread.Sleep(2000);
-                ReadThreadINS.Start();
-                ReadThreadPOZYX.Start();
-                Timer.Start();
+			}
+			else
+			{
+				Reading = true;
+				if (Pozyx)
+				{
+					_pozyx.ResetTid();
+					Thread ReadThreadPOZYX = new Thread(ReadPozyx);
+					ReadThreadPOZYX.Start();
+				}
+
+				if (Ins)
+				{
+					_INS.ResetTid();
+					Thread ReadThreadINS = new Thread(ReadINS);
+					ReadThreadINS.Start();
+				}
 				Thread.Sleep(1000);
 				Console.WriteLine("Started...");
+				ClearEntries();
+                Timer.Start();
+                
 			}
 
 
@@ -101,7 +121,13 @@ namespace Serial.DataMapper
 				XYZ PoZYX_Position = _pozyx.Read();
 				lock (_dataEntryLock)
 				{
-					_currentPoZYX = PoZYX_Position;
+					if (Ins == false) {
+						DataEntry NewEntry;
+						NewEntry = new DataEntry(_currentPoZYX, null, null);
+						dataEntries.Enqueue(NewEntry);
+					} else {
+						_currentPoZYX = PoZYX_Position;
+                    }
 				}
 			}
 		}
@@ -117,12 +143,12 @@ namespace Serial.DataMapper
 				DataEntry NewEntry = null; ;
 				lock (_dataEntryLock)
 				{
-					if (_currentPoZYX != null)
+					if (Pozyx == false) {
+						NewEntry = new DataEntry(null, Accelerometer, Gyroscope);
+
+					} else if (_currentPoZYX != null)
 					{
-						if (Output.Item1.TimeOfData > 1000)
-						{
-							NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
-						}
+						NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
 					}
 				}
 				if (NewEntry != null)
@@ -179,16 +205,16 @@ namespace Serial.DataMapper
 				count++;
 			}
 			Console.WriteLine($"Data collection done, calculating ({count})");
-            
-            AX /= count;
-            AY /= count;
-            AZ /= count;
-            GX /= count;
-            GY /= count;
-            GZ /= count;
 
-            XYZ Accelerometer_calibration = new XYZ(AX, AY, AZ);
-            XYZ Gyroscope_calibration = new XYZ(GX, GY, GZ);
+			AX /= count;
+			AY /= count;
+			AZ /= count;
+			GX /= count;
+			GY /= count;
+			GZ /= count;
+
+			XYZ Accelerometer_calibration = new XYZ(AX, AY, AZ);
+			XYZ Gyroscope_calibration = new XYZ(GX, GY, GZ);
 			Console.WriteLine($"Accelerometer\n{Accelerometer_calibration}");
 			Console.WriteLine($"Gyroscope\n{Gyroscope_calibration}");
 			_INS.SetCalibration(Accelerometer_calibration, Gyroscope_calibration);
