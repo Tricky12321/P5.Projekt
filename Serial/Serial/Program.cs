@@ -8,7 +8,8 @@ using NeuralNetwork;
 using System.IO;
 using NeuralNetwork1;
 using System.Linq;
-
+using System.Text.RegularExpressions;
+using System.Text;
 namespace Serial
 {
 
@@ -252,13 +253,41 @@ namespace Serial
 			}
 			switch (Input[1])
 			{
+				case "weka":
+					if (Confirm("Are you sure you want to replace everything?", false))
+					{
+						string[] entries = Directory.GetFileSystemEntries(".", "*.csv", SearchOption.AllDirectories);
+						foreach (var FilePath in entries)
+						{
+							string FileContents = File.ReadAllText(FilePath);
+							string Output = Regex.Replace(FileContents, @"\d+,\d+", delegate (Match match)
+							  {
+								  string v = match.ToString().Replace(",", ".");
+								  return v;
+							  });
+							File.WriteAllText(FilePath, Output);
+						}
+					}
+					break;
+				case "combine":
+					if (true) {
+						StringBuilder FileContents = new StringBuilder();
+						string[] entries = Directory.GetFileSystemEntries(".", "*INS_KALMAN.csv", SearchOption.AllDirectories);
+						foreach (var FilePath in entries)
+						{
+							FileContents.Append(File.ReadAllText(FilePath));
+                        }
+						FileContents.Replace("Timer,AX,AY,AZ,GX,GY,GZ\n", "");
+						File.WriteAllText("Combined.csv", "Timer,AX,AY,AZ,GX,GY,GZ\n"+FileContents.ToString());
+                    }
+					break;
 				case "ra":
 					if (Input.Length == 3)
 					{
 						try
 						{
 
-                        dataMapper.CalculateRollingAverage(Convert.ToInt32(Input[2]));
+							dataMapper.CalculateRollingAverage(Convert.ToInt32(Input[2]));
 						}
 						catch (FormatException)
 						{
@@ -418,7 +447,7 @@ namespace Serial
 			List<XYZ> Kalman_Accelerometer = new List<XYZ>();
 			List<XYZ> Kalman_Gyroscope = new List<XYZ>();
 			List<XYZ> RA_Accelerometer = new List<XYZ>();
-            List<XYZ> RA_Gyroscope = new List<XYZ>();
+			List<XYZ> RA_Gyroscope = new List<XYZ>();
 			foreach (var DataEntryElement in DataList)
 			{
 				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
@@ -436,13 +465,13 @@ namespace Serial
 			}
 
 			if (dataMapper.RollingAverageBool)
-            {
-                foreach (var RollingAverage in dataMapper.RollingAverageData)
-                {
+			{
+				foreach (var RollingAverage in dataMapper.RollingAverageData)
+				{
 					RA_Accelerometer.Add(RollingAverage.Item1);
 					RA_Gyroscope.Add(RollingAverage.Item2);
-                }
-            }
+				}
+			}
 
 			if (File.Exists(INSFile))
 			{
@@ -455,9 +484,9 @@ namespace Serial
 			}
 
 			if (File.Exists(INSRollingAverageFile))
-            {
+			{
 				File.Delete(INSRollingAverageFile);
-            }
+			}
 
 			if (File.Exists(POZYXFile))
 			{
@@ -508,29 +537,29 @@ namespace Serial
 					FileWriter.Close();
 				}
 			}
-            // Write RollingAverage
+			// Write RollingAverage
 			if (dataMapper.RollingAverageBool)
-            {
-                using (StreamWriter FileWriter = File.AppendText(INSRollingAverageFile))
-                {
-                    FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
+			{
+				using (StreamWriter FileWriter = File.AppendText(INSRollingAverageFile))
+				{
+					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
 					int DataCount = RA_Gyroscope.Count;
-                    for (int i = 0; i < DataCount; i++)
-                    {
+					for (int i = 0; i < DataCount; i++)
+					{
 						if (RA_Gyroscope[i] != null && RA_Accelerometer[i] != null)
-                        {
-                            FileWriter.WriteLine($"\"{RA_Gyroscope[i].TimeOfData}\"," +
-							                     $"\"{RA_Accelerometer[i].X}\"," +
-							                     $"\"{RA_Accelerometer[i].Y}\"," +
-							                     $"\"{RA_Accelerometer[i].Z}\"," +
-							                     $"\"{RA_Gyroscope[i].X}\"," +
-							                     $"\"{RA_Gyroscope[i].Y}\"," +
-							                     $"\"{RA_Gyroscope[i].Z}\"");
-                        }
-                    }
-                    FileWriter.Close();
-                }
-            }
+						{
+							FileWriter.WriteLine($"\"{RA_Gyroscope[i].TimeOfData}\"," +
+												 $"\"{RA_Accelerometer[i].X}\"," +
+												 $"\"{RA_Accelerometer[i].Y}\"," +
+												 $"\"{RA_Accelerometer[i].Z}\"," +
+												 $"\"{RA_Gyroscope[i].X}\"," +
+												 $"\"{RA_Gyroscope[i].Y}\"," +
+												 $"\"{RA_Gyroscope[i].Z}\"");
+						}
+					}
+					FileWriter.Close();
+				}
+			}
 			// WRITE POZYX
 			using (StreamWriter FileWriter = File.AppendText(POZYXFile))
 			{
