@@ -75,6 +75,7 @@
     <Compile Include="Neural Network\1.0\Layer.cs" />
     <Compile Include="Neural Network\2.0\Layer.cs" />
     <Compile Include="Neural Network\2.0\InputOutputData.cs" />
+    <Compile Include="Load.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
