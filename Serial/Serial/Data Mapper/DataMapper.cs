@@ -246,7 +246,7 @@ namespace Serial.DataMapper
 			List<double> GX = new List<double>();
 			List<double> GY = new List<double>();
 			List<double> GZ = new List<double>();
-
+			List<long> Timer = new List<long>();
 
 			foreach (var data in datas)
 			{
@@ -257,6 +257,7 @@ namespace Serial.DataMapper
 				GX.Add(data.INS_Gyroscope.X);
 				GY.Add(data.INS_Gyroscope.Y);
 				GZ.Add(data.INS_Gyroscope.Z);
+				Timer.Add(data.INS_Gyroscope.TimeOfData);
 			}
 
 			AX = RollingAverage(AX, PeriodLength);
@@ -270,7 +271,7 @@ namespace Serial.DataMapper
 			{
 				Console.WriteLine($"[{i}] Accelerometer {AX[i]},{AY[i]},{AZ[i]}");
 				Console.WriteLine($"[{i}] Gyroscope {GX[i]},{GY[i]},{GZ[i]}");
-				RollingAverageData.Enqueue(new Tuple<XYZ, XYZ>(new XYZ(AX[i], AY[i], AZ[i]), new XYZ(GX[i], GY[i], GZ[i])));
+				RollingAverageData.Enqueue(new Tuple<XYZ, XYZ>(new XYZ(AX[i], AY[i], AZ[i],Timer[i]), new XYZ(GX[i], GY[i], GZ[i], Timer[i])));
 			}
 			RollingAverageBool = true;
 		}
