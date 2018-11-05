@@ -12,7 +12,7 @@ namespace Serial
 			List<double> X = new List<double>();
 			List<double> Y = new List<double>();
 			List<double> Z = new List<double>();
-			List<long> Tid = new List<long>();
+			List<double> Tid = new List<double>();
 			foreach (var item in Input)
 			{
 				Tid.Add(item.TimeOfData);

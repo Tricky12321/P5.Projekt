@@ -1,4 +1,4 @@
-﻿using System; using System.Collections.Generic;  namespace Serial {     public class XYZ     {         public double X, Y, Z; 		public long TimeOfData = 0;             public XYZ() { }  		public XYZ(double x, double y, double z)         {             X = x;             Y = y;             Z = z;         }  		public XYZ(double x, double y, double z, long Tid)         {             X = x;             Y = y;             Z = z; 			TimeOfData = Tid;         }
+﻿using System; using System.Collections.Generic;  namespace Serial {     public class XYZ     {         public double X, Y, Z; 		public double TimeOfData = 0;             public XYZ() { }  		public XYZ(double x, double y, double z)         {             X = x;             Y = y;             Z = z;         }  		public XYZ(double x, double y, double z, double Tid)         {             X = x;             Y = y;             Z = z; 			TimeOfData = Tid;         }
 
 		public override string ToString()
 		{

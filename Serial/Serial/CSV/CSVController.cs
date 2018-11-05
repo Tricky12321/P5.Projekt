@@ -61,8 +61,6 @@ namespace Serial.CSV
                         double posY = Convert.ToDouble(FinalElements[2]);
                         double posZ = Convert.ToDouble(FinalElements[3]);
 
-
-
                         dataPos.InsertXYZ(new XYZ(posX, posY, posZ, timeStamp));
                     }
                 }
