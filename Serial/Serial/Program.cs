@@ -22,9 +22,11 @@ namespace Serial
             dyn.CalculateNaiveVelocity();
 
             var test = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList.Select(x => x.X).ToList(), dyn.NaiveVelocityList.Select(x => x.TimeOfData).ToList());
-            foreach(var csdc in test)
+
+            var testet = dyn.CalculatePosition(test);
+            foreach (var csdc in testet)
             {
-                Console.WriteLine(csdc.X);
+                Console.WriteLine($"\"{csdc.TimeOfData}\", \"{csdc.X}\"");
             }
         }
     }

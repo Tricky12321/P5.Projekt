@@ -6,12 +6,15 @@ namespace Serial.DynamicCalibrationName
 {
     public class DynamicCalibration
     {
-        const int _runningAverageBatchSizes = 100;
-        const double _slopeDiffenceTreshold = 0.735;
-        const double _gravitationalConst = 9.81;
-        const int _gradientCalculationOffset = 1;
+        private int _runningAverageBatchSizes = 100;
+        private double _slopeDiffenceTreshold = 0.70;
+        private double _gravitationalConst = 9.82;
 
-        public List<XYZ> NaiveVelocityList = new List<XYZ>();
+        public List<XYZ> VelocityList = new List<XYZ>();
+        public List<XYZ> DistanceList = new List<XYZ>();
+        public List<XYZ> DynamicVelocityList = new List<XYZ>();
+
+        public List<XYZ> DynamicDistanceList = new List<XYZ>();
 
         private List<XYZ> _accelerationList = new List<XYZ>();
 
@@ -30,96 +33,91 @@ namespace Serial.DynamicCalibrationName
             }
         }
 
-        public List<XYZ> CalculatePosition(List<XYZ> velocityList)
-        {
-            List<XYZ> distanceList = new List<XYZ>();
-            distanceList.Add(new XYZ(0,0,0,0));
-
-            for (int i = 1; i < velocityList.Count; i++)
-            {
-                XYZ newDistance = new XYZ();
-                newDistance.X = (velocityList[i].TimeOfData - velocityList[i - 1].TimeOfData) * (velocityList[i].X + velocityList[i - 1].X) / 2 + distanceList[i - 1].X;
-                newDistance.TimeOfData = velocityList[i].TimeOfData;
-                distanceList.Add(newDistance);
-                //(t1-t0) * (v1+v0)/2 + d0 
-            }
-            return distanceList;
-        }
-
-
         public void CalculateNaiveVelocity()
         {
-            NaiveVelocityList.Add(new XYZ(0, 0, 0, 1.0));
+            VelocityList.Add(new XYZ(0, 0, 0, 1.0));
             for (int i = 1; i < _accelerationList.Count; i++)
             {
                 XYZ placeXYZ = new XYZ();
 
                 placeXYZ.TimeOfData = _accelerationList[i].TimeOfData;
-                placeXYZ.X = (placeXYZ.TimeOfData - NaiveVelocityList[i - 1].TimeOfData)
+                placeXYZ.X = (placeXYZ.TimeOfData - VelocityList[i - 1].TimeOfData)
                                             * ((_accelerationList[i - 1].X + _accelerationList[i].X) / 2)
-                                            + NaiveVelocityList[i - 1].X;
-                placeXYZ.Y = (placeXYZ.TimeOfData - NaiveVelocityList[i - 1].TimeOfData)
+                                            + VelocityList[i - 1].X;
+                placeXYZ.Y = (placeXYZ.TimeOfData - VelocityList[i - 1].TimeOfData)
                                             * ((_accelerationList[i - 1].Y + _accelerationList[i].Y) / 2)
-                                            + NaiveVelocityList[i - 1].Y;
-                placeXYZ.Z = (placeXYZ.TimeOfData - NaiveVelocityList[i - 1].TimeOfData)
+                                            + VelocityList[i - 1].Y;
+                placeXYZ.Z = (placeXYZ.TimeOfData - VelocityList[i - 1].TimeOfData)
                                             * ((_accelerationList[i - 1].Z + _accelerationList[i].Z) / 2)
-                                            + NaiveVelocityList[i - 1].Z;
-                NaiveVelocityList.Add(placeXYZ);
+                                            + VelocityList[i - 1].Z;
+                VelocityList.Add(placeXYZ);
             }
-        }
 
-        /// <summary>
-        /// Returns a list containing velocity for the dynamic calibration.
-        /// </summary>
-        /// <param name="inputs"> list of naive calculated valied from an axis </param>
-        /// <param name="times"> a list of times from the naive calculated velocity </param>
-        public List<XYZ> CalculateDynamicVelocityList(List<double> inputs, List<double> times)
-        {
-            List<XYZ> dynamicVelocityList = new List<XYZ>();
+            List<double> inputs = VelocityList.Select(x => x.X).ToList();
+            List<double> times = VelocityList.Select(x => x.TimeOfData).ToList();
+            List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(inputs, times, _runningAverageBatchSizes, 1);
 
-            List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(inputs, times, _runningAverageBatchSizes, _gradientCalculationOffset);
             List<Tuple<int, int>> driftingIndexesList = FindDriftRanges(accelerationPointsList);
 
-            foreach (XYZ point in NaiveVelocityList)
+            double bestSlopeTreshold = 1.5;
+            double lastValue = 5;
+
+            for (double i = 0.3; i < 1.5; i += 0.01)
             {
-                dynamicVelocityList.Add(new XYZ(point.X, point.Y, point.Z, point.TimeOfData));
+
+                _slopeDiffenceTreshold = i;
+                CalculateDynamicVelocityList(driftingIndexesList);
+                var test = Math.Abs(DynamicVelocityList.First().X - DynamicVelocityList.Last().X);
+                if (test < lastValue)
+                {
+                    lastValue = test;
+                    bestSlopeTreshold = i;
+                }
+                DynamicVelocityList.Clear();
             }
 
-            for (int i = 0; i < driftingIndexesList.Count; i++)
+            _slopeDiffenceTreshold = bestSlopeTreshold;
+            CalculateDynamicVelocityList(driftingIndexesList);
+        }
+
+        private void CalculateDynamicVelocityList(List<Tuple<int, int>> accelerationPoints)
+        {
+            foreach (XYZ point in VelocityList)
             {
-                int startIndex = driftingIndexesList[i].Item1;
-                int endIndex = driftingIndexesList[i].Item2;
-                List<XYZ> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
+                DynamicVelocityList.Add(new XYZ(point.X, point.Y, point.Z, point.TimeOfData));
+            }
+
+            for (int i = 0; i < accelerationPoints.Count; i++)
+            {
+                int startIndex = accelerationPoints[i].Item1;
+                int endIndex = accelerationPoints[i].Item2;
+                List<XYZ> driftVelocity = DynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
 
                 double slope = CalculateTendencySlope(driftVelocity.Select(x => x.X).ToList(), driftVelocity.Select(x => x.TimeOfData).ToList());
 
-                for (int j = startIndex; j < NaiveVelocityList.Count; j++)
+                for (int j = startIndex; j < VelocityList.Count; j++)
                 {
-                    dynamicVelocityList[j].X = dynamicVelocityList[j].X - slope * (dynamicVelocityList[j].TimeOfData - dynamicVelocityList[startIndex].TimeOfData);
+                    DynamicVelocityList[j].X = DynamicVelocityList[j].X - slope * (DynamicVelocityList[j].TimeOfData - DynamicVelocityList[startIndex].TimeOfData);
                 }
             }
             /*
             int thisIndex = 0;
             double defaultValue = 0;
-            for (int i = 1; i < NaiveVelocityList.Count; i++)
+            for (int i = 1; i < VelocityList.Count; i++)
             {
-                if (accelerationPointsList.Count != thisIndex && accelerationPointsList[thisIndex].Item2 == i)
+                if (accelerationPoints[thisIndex].Item2 == i)
                 {
-                    //dynamicVelocityList[i].X -= defaultValue;
+                    DynamicVelocityList[i].X += defaultValue;
                     thisIndex++;
                 }
                 else
                 {
-                    dynamicVelocityList[i].X = dynamicVelocityList[i - 1].X;
-                    defaultValue = dynamicVelocityList[i].X;
+                    DynamicVelocityList[i].X = DynamicVelocityList[i - 1].X;
+                    defaultValue = DynamicVelocityList[i].X;
                 }
             }*/
-                return dynamicVelocityList;
         }
 
-        /// <summary>
-        /// Returns a list containing indexes for when drifting is detected.
-        /// </summary>
         private List<Tuple<int, int>> FindDriftRanges(List<Tuple<double, int>> accelerationPointsList)
         {
             List<Tuple<int, int>> driftRanges = new List<Tuple<int, int>>();
@@ -142,15 +140,11 @@ namespace Serial.DynamicCalibrationName
                 }
             }
 
-            driftRanges.Add(new Tuple<int, int>(accelerationPointsList[accelerationPointsList.Count - 1].Item2 + 1, NaiveVelocityList.Count - 1));
+            driftRanges.Add(new Tuple<int, int>(accelerationPointsList[accelerationPointsList.Count - 1].Item2 + 1, VelocityList.Count - 1));
 
             return driftRanges;
         }
 
-
-        /// <summary>
-        /// Finds times for when the difference in velocity is over a gradient treshold.
-        /// </summary>
         private List<Tuple<double, int>> FindAccelerationPoints(List<double> points, List<double> times, int batchSize, int offset)
         {
             List<Tuple<double, int>> listToReturn = new List<Tuple<double, int>>();
@@ -169,9 +163,6 @@ namespace Serial.DynamicCalibrationName
             return listToReturn;
         }
 
-        /// <summary>
-        /// Returns the slope for the points given as parameter.
-        /// </summary>
         private double CalculateTendencySlope(List<double> points, List<double> times)
         {
             if (points.Count != 0 || times.Count != 0)
