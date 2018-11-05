@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
+
 namespace Serial.DataMapper
 {
 	public class DataMapper
@@ -18,6 +20,7 @@ namespace Serial.DataMapper
 		public ConcurrentQueue<DataEntry> AllDataEntries => dataEntries;
 
 		public ConcurrentQueue<Tuple<XYZ, XYZ>> KalmanData;
+		public ConcurrentQueue<Tuple<XYZ, XYZ>> RollingAverageData;
 
 		private bool Reading = false;
 
@@ -25,6 +28,7 @@ namespace Serial.DataMapper
 		private XYZ _currentPoZYX = null;
 
 		public bool Kalman = false;
+		public bool RollingAverageBool = false;
 
 		public Stopwatch Timer;
 
@@ -81,24 +85,26 @@ namespace Serial.DataMapper
 			}
 			else
 			{
-				Reading = true;
-				if (Pozyx)
-				{
-					_pozyx.ResetTid();
-					Thread ReadThreadPOZYX = new Thread(ReadPozyx);
-					ReadThreadPOZYX.Start();
-				}
+				
+                Reading = true;
+                if (Pozyx)
+                {
+                    _pozyx.ResetTid();
+                    Thread ReadThreadPOZYX = new Thread(ReadPozyx);
+                    ReadThreadPOZYX.Start();
+                }
 
-				if (Ins)
-				{
+                if (Ins)
+                {
 					_INS.ResetTid();
-					Thread ReadThreadINS = new Thread(ReadINS);
-					ReadThreadINS.Start();
-				}
-				Thread.Sleep(1000);
-				Console.WriteLine("Started...");
+                    Thread ReadThreadINS = new Thread(ReadINS);
+                    ReadThreadINS.Start();
+                }
+                Thread.Sleep(1000);
+                Console.WriteLine("Started...");
 				ClearEntries();
-                Timer.Start();
+
+				Timer.Start();
 			}
 		}
 
@@ -108,7 +114,6 @@ namespace Serial.DataMapper
 			Timer.Stop();
 		}
 
-
 		private void ReadPozyx()
 		{
 			_pozyx.ResetTid();
@@ -117,13 +122,16 @@ namespace Serial.DataMapper
 				XYZ PoZYX_Position = _pozyx.Read();
 				lock (_dataEntryLock)
 				{
-					if (Ins == false) {
+					if (Ins == false)
+					{
 						DataEntry NewEntry;
 						NewEntry = new DataEntry(_currentPoZYX, null, null);
 						dataEntries.Enqueue(NewEntry);
-					} else {
+					}
+					else
+					{
 						_currentPoZYX = PoZYX_Position;
-                    }
+					}
 				}
 			}
 		}
@@ -139,10 +147,12 @@ namespace Serial.DataMapper
 				DataEntry NewEntry = null; ;
 				lock (_dataEntryLock)
 				{
-					if (Pozyx == false) {
+					if (Pozyx == false)
+					{
 						NewEntry = new DataEntry(null, Accelerometer, Gyroscope);
 
-					} else if (_currentPoZYX != null)
+					}
+					else if (_currentPoZYX != null)
 					{
 						NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
 					}
@@ -156,7 +166,9 @@ namespace Serial.DataMapper
 
 		public void ClearEntries()
 		{
-			dataEntries = new ConcurrentQueue<DataEntry>();
+			KalmanData = new ConcurrentQueue<Tuple<XYZ, XYZ>>();
+            RollingAverageData = new ConcurrentQueue<Tuple<XYZ, XYZ>>();
+            dataEntries = new ConcurrentQueue<DataEntry>();
 			_currentPoZYX = null;
 		}
 
@@ -216,6 +228,58 @@ namespace Serial.DataMapper
 			_INS.SetCalibration(Accelerometer_calibration, Gyroscope_calibration);
 			ClearEntries();
 			Console.WriteLine("Calibration Done");
+		}
+
+		public void AddDataEntry(DataEntry dataEntry)
+		{
+			dataEntries.Enqueue(dataEntry);
+		}
+
+		public void CalculateRollingAverage(int PeriodLength)
+		{
+			RollingAverageData = new ConcurrentQueue<Tuple<XYZ, XYZ>>();
+			List<DataEntry> datas = new List<DataEntry>(dataEntries);
+			List<double> AX = new List<double>();
+			List<double> AY = new List<double>();
+			List<double> AZ = new List<double>();
+
+			List<double> GX = new List<double>();
+			List<double> GY = new List<double>();
+			List<double> GZ = new List<double>();
+			List<long> Timer = new List<long>();
+
+			foreach (var data in datas)
+			{
+				AX.Add(data.INS_Accelerometer.X);
+				AY.Add(data.INS_Accelerometer.Y);
+				AZ.Add(data.INS_Accelerometer.Z);
+
+				GX.Add(data.INS_Gyroscope.X);
+				GY.Add(data.INS_Gyroscope.Y);
+				GZ.Add(data.INS_Gyroscope.Z);
+				Timer.Add(data.INS_Gyroscope.TimeOfData);
+			}
+
+			AX = RollingAverage(AX, PeriodLength);
+			AY = RollingAverage(AY, PeriodLength);
+			AZ = RollingAverage(AZ, PeriodLength);
+			GX = RollingAverage(GX, PeriodLength);
+			GY = RollingAverage(GY, PeriodLength);
+			GZ = RollingAverage(GZ, PeriodLength);
+			int count = AX.Count;
+			for (int i = 0; i < count; i++)
+			{
+				Console.WriteLine($"[{i}] Accelerometer {AX[i]},{AY[i]},{AZ[i]}");
+				Console.WriteLine($"[{i}] Gyroscope {GX[i]},{GY[i]},{GZ[i]}");
+				RollingAverageData.Enqueue(new Tuple<XYZ, XYZ>(new XYZ(AX[i], AY[i], AZ[i],Timer[i]), new XYZ(GX[i], GY[i], GZ[i], Timer[i])));
+			}
+			RollingAverageBool = true;
+		}
+
+		private List<double> RollingAverage(List<double> InputList, int PeriodLength)
+		{
+
+			return Enumerable.Range(0, InputList.Count - PeriodLength).Select(n => InputList.Skip(n).Take(PeriodLength).Average()).ToList();
 		}
 
 	}

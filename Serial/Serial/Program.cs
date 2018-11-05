@@ -21,19 +21,19 @@ namespace Serial
 		static int MapperTimer = 0;
 		public static void Main()
 		{
-            /*var test = new NeuralNetwork1.NeuralNetwork(0.2, new int[]{2, 3, 3, 3, 1});
+			/*var test = new NeuralNetwork1.NeuralNetwork(0.2, new int[]{2, 3, 3, 3, 1});
 
             Random r = new Random(Environment.TickCount);
             for (int i = 0; i < 1000000; i++)
             {
                 test.Train(new List<double>() { 1, 1 }, new List<double>() { 1 });
             }*/
-            ShowMenu();
+			ShowMenu();
 
-            /*double[] tesfds = test.Run(new List<double>() { 1, 1 });
+			/*double[] tesfds = test.Run(new List<double>() { 1, 1 });
             Console.WriteLine("teststset");
             tesfds.ToList().ForEach(Console.WriteLine)*/
-        }
+		}
 
 		public static void ShowMenu()
 		{
@@ -62,6 +62,8 @@ namespace Serial
 						PrintDevices();
 						break;
 					case "logdata":
+					case "ld":
+					case "log":
 						LogData(Input);
 						break;
 					case "test":
@@ -74,10 +76,11 @@ namespace Serial
 			} while (!Exit);
 		}
 
-		public static void Test() {
+		public static void Test()
+		{
 			List<double> TestData = new List<double>() { 0, 0, 0, 0, 5, 7, 4, 0, -3, -6, -8, -5, -4, -1, 0, 2, 3, 4, 4, 7, 6, 4, 0, 0, -3, 0, 0, 0, 0, -1, -1, 0, 2 };
 			List<double> test = KalmanFilter.RunFilter(TestData);
-            for (int i = 0; i < TestData.Count; i++)
+			for (int i = 0; i < TestData.Count; i++)
 			{
 				Console.WriteLine($"Raw: {TestData[i]} - Filter: {test[i]}");
 			}
@@ -94,13 +97,14 @@ namespace Serial
 			Console.WriteLine(" - new - Creates a new CC");
 			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("logdata - logging of test data");
-            Console.WriteLine(" - start [Time in sed]- Start the logger");
-            Console.WriteLine(" - stop - Stops the logger");
-            Console.WriteLine(" - save <Path> - Saves the data to files");
+			Console.WriteLine(" - start [Time in sed]- Start the logger");
+			Console.WriteLine(" - stop - Stops the logger");
+			Console.WriteLine(" - save <Path> - Saves the data to files");
 			Console.WriteLine(" - new [pozyx/ins/[BLANK]]- Creates a DataMapper for logging, Blank uses both");
 			Console.WriteLine(" - kalman - Generates Kalman values for INS");
-            Console.WriteLine(" - calibrate - Calibrates INS");
-            Console.WriteLine("-----------------------------------");
+			Console.WriteLine(" - ra - Generates Rolling Average for INS");
+			Console.WriteLine(" - calibrate - Calibrates INS");
+			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("devices - Prints arduino devices");
 			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("help - shows this page");
@@ -241,12 +245,40 @@ namespace Serial
 		public static void LogData(string[] Input)
 		{
 			List<string> InputList = new List<string>(Input);
-			if (!(Input.Length > 1)) {
+			if (!(Input.Length > 1))
+			{
 				Console.WriteLine("Invalid input, use help to get data");
 				return;
 			}
 			switch (Input[1])
 			{
+				case "ra":
+					if (Input.Length == 3)
+					{
+						try
+						{
+
+                        dataMapper.CalculateRollingAverage(Convert.ToInt32(Input[2]));
+						}
+						catch (FormatException)
+						{
+							Console.WriteLine("Invalid format!");
+						}
+					}
+					else
+					{
+						dataMapper.CalculateRollingAverage(10);
+					}
+					break;
+				case "load":
+					if (Input.Length == 3)
+					{
+						Load load = new Load(Input[2] + ".csv");
+						load.HandleCSV();
+						dataMapper = load.data;
+					}
+					break;
+
 				case "calibrate":
 					if (dataMapper == null)
 					{
@@ -271,11 +303,11 @@ namespace Serial
 							{
 								MapperTimer = Convert.ToInt32(InputList[2]);
 								Thread TimerThread = new Thread(dataMapperTimer);
-                                dataMapper.StartReading();
+								dataMapper.StartReading();
 								TimerThread.Start();
 								Console.WriteLine($"Started Datamapper for {MapperTimer} sec");
-                                TimerThread.Join();
-                                
+								TimerThread.Join();
+
 							}
 							catch (Exception)
 							{
@@ -302,9 +334,11 @@ namespace Serial
 					break;
 				case "clear":
 					if (dataMapper == null)
-                    {
-                        Console.WriteLine("No Data Mapper has been created!");
-					} else {
+					{
+						Console.WriteLine("No Data Mapper has been created!");
+					}
+					else
+					{
 						dataMapper.ClearEntries();
 						Console.WriteLine("Cleared the DataList");
 					}
@@ -340,22 +374,25 @@ namespace Serial
 					}
 					break;
 				case "new":
-					if (Input.Length == 2) {
+					if (Input.Length == 2)
+					{
 						dataMapper = new DataMapper.DataMapper();
-					} else {
+					}
+					else
+					{
 						switch (Input[2])
 						{
 							case "ins":
-								dataMapper = new DataMapper.DataMapper(false,true);
+								dataMapper = new DataMapper.DataMapper(false, true);
 								break;
 							case "pozyx":
-                                dataMapper = new DataMapper.DataMapper(true, false);
-                                break;
+								dataMapper = new DataMapper.DataMapper(true, false);
+								break;
 							default:
 								break;
 						}
 					}
-                        
+
 					Console.WriteLine("Created new DataMapper!");
 					break;
 				case "kalman":
@@ -367,19 +404,21 @@ namespace Serial
 					break;
 			}
 		}
-       
+
 		public static void WriteToCSV(string Name)
 		{
 			string INSFile = Name + "_INS.csv";
 			string POZYXFile = Name + "_POZYX.csv";
 			string INSKalmanFile = Name + "_INS_KALMAN.csv";
+			string INSRollingAverageFile = Name + "_INS_RA.csv";
 			List<DataMapper.DataEntry> DataList = new List<DataMapper.DataEntry>(dataMapper.AllDataEntries.ToArray());
 			List<XYZ> Accelerometer = new List<XYZ>();
 			List<XYZ> GyroScope = new List<XYZ>();
 			List<XYZ> Pozyx = new List<XYZ>();
 			List<XYZ> Kalman_Accelerometer = new List<XYZ>();
 			List<XYZ> Kalman_Gyroscope = new List<XYZ>();
-
+			List<XYZ> RA_Accelerometer = new List<XYZ>();
+            List<XYZ> RA_Gyroscope = new List<XYZ>();
 			foreach (var DataEntryElement in DataList)
 			{
 				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
@@ -387,27 +426,43 @@ namespace Serial
 				Pozyx.Add(DataEntryElement.PoZYX);
 			}
 
-			if (dataMapper.Kalman) {
+			if (dataMapper.Kalman)
+			{
 				foreach (var Kalman in dataMapper.KalmanData)
-                {
+				{
 					Kalman_Accelerometer.Add(Kalman.Item1);
 					Kalman_Gyroscope.Add(Kalman.Item2);
-                }
+				}
 			}
 
-			if (File.Exists(INSFile)) {
+			if (dataMapper.RollingAverageBool)
+            {
+                foreach (var RollingAverage in dataMapper.RollingAverageData)
+                {
+					RA_Accelerometer.Add(RollingAverage.Item1);
+					RA_Gyroscope.Add(RollingAverage.Item2);
+                }
+            }
+
+			if (File.Exists(INSFile))
+			{
 				File.Delete(INSFile);
 			}
 
 			if (File.Exists(INSKalmanFile))
-            {
+			{
 				File.Delete(INSKalmanFile);
+			}
+
+			if (File.Exists(INSRollingAverageFile))
+            {
+				File.Delete(INSRollingAverageFile);
             }
 
 			if (File.Exists(POZYXFile))
-            {
+			{
 				File.Delete(POZYXFile);
-            }
+			}
 
 			// WRITE INS
 			using (StreamWriter FileWriter = File.AppendText(INSFile))
@@ -416,39 +471,65 @@ namespace Serial
 				int DataCount = GyroScope.Count;
 				for (int i = 0; i < DataCount; i++)
 				{
-					if (GyroScope[i] != null && Accelerometer[i] != null) {
+					if (GyroScope[i] != null && Accelerometer[i] != null)
+					{
 						FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
-						                     $"\"{Accelerometer[i].X}\"," +
-						                     $"\"{Accelerometer[i].Y}\"," +
-						                     $"\"{Accelerometer[i].Z}\"," +
-						                     $"\"{GyroScope[i].X}\"," +
-						                     $"\"{GyroScope[i].Y}\"," +
-						                     $"\"{GyroScope[i].Z}\"");
-                    }
+											 $"\"{Accelerometer[i].X}\"," +
+											 $"\"{Accelerometer[i].Y}\"," +
+											 $"\"{Accelerometer[i].Z}\"," +
+											 $"\"{GyroScope[i].X}\"," +
+											 $"\"{GyroScope[i].Y}\"," +
+											 $"\"{GyroScope[i].Z}\"");
+					}
 
 				}
 				FileWriter.Close();
 			}
-            // Write INS KALMAN
-			if (dataMapper.Kalman) {
+			// Write INS KALMAN
+			if (dataMapper.Kalman)
+			{
 				using (StreamWriter FileWriter = File.AppendText(INSKalmanFile))
 				{
 					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
 					int DataCount = Kalman_Gyroscope.Count;
 					for (int i = 0; i < DataCount; i++)
 					{
-						if (Kalman_Gyroscope[i] != null && Kalman_Accelerometer[i] != null) {
+						if (Kalman_Gyroscope[i] != null && Kalman_Accelerometer[i] != null)
+						{
 							FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
-							                     $"\"{Kalman_Accelerometer[i].X}\"," +
-							                     $"\"{Kalman_Accelerometer[i].Y}\"," +
-							                     $"\"{Kalman_Accelerometer[i].Z}\"," +
-							                     $"\"{Kalman_Gyroscope[i].X}\"," +
-							                     $"\"{Kalman_Gyroscope[i].Y}\"," +
-							                     $"\"{Kalman_Gyroscope[i].Z}\"");
-                        }
+												 $"\"{Kalman_Accelerometer[i].X}\"," +
+												 $"\"{Kalman_Accelerometer[i].Y}\"," +
+												 $"\"{Kalman_Accelerometer[i].Z}\"," +
+												 $"\"{Kalman_Gyroscope[i].X}\"," +
+												 $"\"{Kalman_Gyroscope[i].Y}\"," +
+												 $"\"{Kalman_Gyroscope[i].Z}\"");
+						}
 					}
 					FileWriter.Close();
 				}
+			}
+            // Write RollingAverage
+			if (dataMapper.RollingAverageBool)
+            {
+                using (StreamWriter FileWriter = File.AppendText(INSRollingAverageFile))
+                {
+                    FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
+					int DataCount = RA_Gyroscope.Count;
+                    for (int i = 0; i < DataCount; i++)
+                    {
+						if (RA_Gyroscope[i] != null && RA_Accelerometer[i] != null)
+                        {
+                            FileWriter.WriteLine($"\"{RA_Gyroscope[i].TimeOfData}\"," +
+							                     $"\"{RA_Accelerometer[i].X}\"," +
+							                     $"\"{RA_Accelerometer[i].Y}\"," +
+							                     $"\"{RA_Accelerometer[i].Z}\"," +
+							                     $"\"{RA_Gyroscope[i].X}\"," +
+							                     $"\"{RA_Gyroscope[i].Y}\"," +
+							                     $"\"{RA_Gyroscope[i].Z}\"");
+                        }
+                    }
+                    FileWriter.Close();
+                }
             }
 			// WRITE POZYX
 			using (StreamWriter FileWriter = File.AppendText(POZYXFile))
@@ -457,21 +538,23 @@ namespace Serial
 
 				foreach (var Data in Pozyx)
 				{
-					if (Data != null) {
+					if (Data != null)
+					{
 						FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
-						                     $"\"{Data.X}\"," +
-						                     $"\"{Data.Y}\"," +
-						                     $"\"{Data.Z}\"");
-                    }
+											 $"\"{Data.X}\"," +
+											 $"\"{Data.Y}\"," +
+											 $"\"{Data.Z}\"");
+					}
 				}
 				FileWriter.Close();
 			}
 		}
 
-		public static void dataMapperTimer() {
+		public static void dataMapperTimer()
+		{
 			Stopwatch timer = new Stopwatch();
 			timer.Start();
-            while (timer.ElapsedMilliseconds < (MapperTimer*1000))
+			while (timer.ElapsedMilliseconds < (MapperTimer * 1000))
 			{
 				Thread.Sleep(1);
 			}
