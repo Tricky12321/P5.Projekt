@@ -118,7 +118,7 @@ namespace Serial
                     var message_split = data.Split(':');
                     // 360/5760 = 0.0625f MAGIC NUMBER
 					Angle = Convert.ToDouble(message_split[0])*0.0625f;
-					Console.WriteLine($"Angle {Angle}");
+					//Console.WriteLine($"Angle {Angle}");
                 }
 
 			}
