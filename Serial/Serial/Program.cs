@@ -105,6 +105,7 @@ namespace Serial
 			Console.WriteLine(" - kalman - Generates Kalman values for INS");
 			Console.WriteLine(" - ra - Generates Rolling Average for INS");
 			Console.WriteLine(" - calibrate - Calibrates INS");
+			Console.WriteLine(" - load - load a CSV file into a datamapper");
 			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("devices - Prints arduino devices");
 			Console.WriteLine("-----------------------------------");
