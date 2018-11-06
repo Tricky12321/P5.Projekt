@@ -271,16 +271,17 @@ namespace Serial
 					}
 					break;
 				case "combine":
-					if (true) {
+					if (true)
+					{
 						StringBuilder FileContents = new StringBuilder();
 						string[] entries = Directory.GetFileSystemEntries(".", "*INS_KALMAN.csv", SearchOption.AllDirectories);
 						foreach (var FilePath in entries)
 						{
 							FileContents.Append(File.ReadAllText(FilePath));
-                        }
+						}
 						FileContents.Replace("Timer,AX,AY,AZ,GX,GY,GZ\n", "");
-						File.WriteAllText("Combined.csv", "Timer,AX,AY,AZ,GX,GY,GZ\n"+FileContents.ToString());
-                    }
+						File.WriteAllText("Combined.csv", "Timer,AX,AY,AZ,GX,GY,GZ\n" + FileContents.ToString());
+					}
 					break;
 				case "ra":
 					if (Input.Length == 3)
@@ -445,6 +446,7 @@ namespace Serial
 			List<XYZ> Accelerometer = new List<XYZ>();
 			List<XYZ> GyroScope = new List<XYZ>();
 			List<XYZ> Pozyx = new List<XYZ>();
+			List<double> Angles = new List<double>();
 			List<XYZ> Kalman_Accelerometer = new List<XYZ>();
 			List<XYZ> Kalman_Gyroscope = new List<XYZ>();
 			List<XYZ> RA_Accelerometer = new List<XYZ>();
@@ -454,6 +456,7 @@ namespace Serial
 				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
 				GyroScope.Add(DataEntryElement.INS_Gyroscope);
 				Pozyx.Add(DataEntryElement.PoZYX);
+				Angles.Add(DataEntryElement.INS_Angle);
 			}
 
 			if (dataMapper.Kalman)
@@ -497,7 +500,7 @@ namespace Serial
 			// WRITE INS
 			using (StreamWriter FileWriter = File.AppendText(INSFile))
 			{
-				FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
+				FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ,A");
 				int DataCount = GyroScope.Count;
 				for (int i = 0; i < DataCount; i++)
 				{
@@ -509,9 +512,9 @@ namespace Serial
 											 $"\"{Accelerometer[i].Z}\"," +
 											 $"\"{GyroScope[i].X}\"," +
 											 $"\"{GyroScope[i].Y}\"," +
-											 $"\"{GyroScope[i].Z}\"");
+											 $"\"{GyroScope[i].Z}\"," +
+											 $"\"{Angles[i]}\"");
 					}
-
 				}
 				FileWriter.Close();
 			}
@@ -520,7 +523,7 @@ namespace Serial
 			{
 				using (StreamWriter FileWriter = File.AppendText(INSKalmanFile))
 				{
-					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
+					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ,A");
 					int DataCount = Kalman_Gyroscope.Count;
 					for (int i = 0; i < DataCount; i++)
 					{
@@ -532,7 +535,8 @@ namespace Serial
 												 $"\"{Kalman_Accelerometer[i].Z}\"," +
 												 $"\"{Kalman_Gyroscope[i].X}\"," +
 												 $"\"{Kalman_Gyroscope[i].Y}\"," +
-												 $"\"{Kalman_Gyroscope[i].Z}\"");
+												 $"\"{Kalman_Gyroscope[i].Z}\"," +
+												 $"\"{Angles[i]}\"");
 						}
 					}
 					FileWriter.Close();
@@ -555,7 +559,8 @@ namespace Serial
 												 $"\"{RA_Accelerometer[i].Z}\"," +
 												 $"\"{RA_Gyroscope[i].X}\"," +
 												 $"\"{RA_Gyroscope[i].Y}\"," +
-												 $"\"{RA_Gyroscope[i].Z}\"");
+												 $"\"{RA_Gyroscope[i].Z}\"," +
+												 $"\"{Angles[i]}\"");
 						}
 					}
 					FileWriter.Close();

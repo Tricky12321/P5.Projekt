@@ -125,7 +125,7 @@ namespace Serial.DataMapper
 					if (Ins == false)
 					{
 						DataEntry NewEntry;
-						NewEntry = new DataEntry(_currentPoZYX, null, null);
+						NewEntry = new DataEntry(_currentPoZYX, null, null,0);
 						dataEntries.Enqueue(NewEntry);
 					}
 					else
@@ -144,17 +144,18 @@ namespace Serial.DataMapper
 				var Output = _INS.Read();
 				XYZ Accelerometer = Output.Item1;
 				XYZ Gyroscope = Output.Item2;
+				double Angle = Output.Item3;
 				DataEntry NewEntry = null; ;
 				lock (_dataEntryLock)
 				{
 					if (Pozyx == false)
 					{
-						NewEntry = new DataEntry(null, Accelerometer, Gyroscope);
+						NewEntry = new DataEntry(null, Accelerometer, Gyroscope, Angle);
 
 					}
 					else if (_currentPoZYX != null)
 					{
-						NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope);
+						NewEntry = new DataEntry(_currentPoZYX, Accelerometer, Gyroscope, Angle);
 					}
 				}
 				if (NewEntry != null)
