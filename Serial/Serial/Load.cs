@@ -70,11 +70,11 @@ namespace Serial
 
 		public CSVTypes GetCSVType()
 		{
-			if (Path.Contains("ins"))
+			if (Path.ToLower().Contains("ins"))
 			{
 				return CSVTypes.INS;
 			}
-			else if (Path.Contains("pozyx"))
+			else if (Path.ToLower().Contains("pozyx"))
 			{
 				return CSVTypes.POZYX;
 			}

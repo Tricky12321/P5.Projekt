@@ -60,7 +60,6 @@ namespace Serial
 		private double ZAC;
 
 		private object LockObject = new object();
-		private bool NewData = false;
 
 		public INSReader(Stopwatch Timer)
 		{

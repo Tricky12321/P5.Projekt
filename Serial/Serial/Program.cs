@@ -330,20 +330,27 @@ namespace Serial
 					{
 						if (InputList.Count == 3)
 						{
-							try
-							{
-								MapperTimer = Convert.ToInt32(InputList[2]);
-								Thread TimerThread = new Thread(dataMapperTimer);
-								dataMapper.StartReading();
-								TimerThread.Start();
-								Console.WriteLine($"Started Datamapper for {MapperTimer} sec");
-								TimerThread.Join();
-
-							}
-							catch (Exception)
-							{
-								Console.WriteLine("Invalid format!");
-							}
+							if (Input[2] == "nem") {
+                                dataMapper.StartReading();
+								if (Confirm("Stop?", true)) {
+									dataMapper.StopReading();
+								}
+							} else {
+								try
+								{
+									MapperTimer = Convert.ToInt32(InputList[2]);
+									Thread TimerThread = new Thread(dataMapperTimer);
+									dataMapper.StartReading();
+									TimerThread.Start();
+									Console.WriteLine($"Started Datamapper for {MapperTimer} sec");
+									TimerThread.Join();
+									
+								}
+								catch (Exception)
+								{
+									Console.WriteLine("Invalid format!");
+								}
+                            }
 						}
 						else
 						{

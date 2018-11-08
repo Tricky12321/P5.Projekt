@@ -53,11 +53,11 @@ void loop(){
 void printRawSensorData(sensor_raw_t sensor_raw) {
   if (use_serial_plotter) {
     if (use_accelerometer) {
-        Serial.print(sensor_raw.linear_acceleration[0]);
-        Serial.print(",");
-        Serial.print(sensor_raw.linear_acceleration[1]);
-        Serial.print(",");
-        Serial.println(sensor_raw.linear_acceleration[2]);
+          Serial.print(sensor_raw.gravity_vector[0]);
+          Serial.print(",");
+          Serial.print(sensor_raw.gravity_vector[1]);
+          Serial.print(",");
+          Serial.println(sensor_raw.gravity_vector[2]);
     }
     if (use_gyro) {
         Serial.print(sensor_raw.angular_vel[0]);
