@@ -62,7 +62,6 @@ namespace Serial
 					data.AddDataEntry(new DataEntry(new XYZ(X, Y, Z, Timer), null, null,0));
                 }
 				Console.WriteLine($"Loaded {DataList.Count} lines from {Path} [{Type}]");
-                
 			} else {
 				Console.WriteLine("Type UNKNOWN!!!!");
 			}
