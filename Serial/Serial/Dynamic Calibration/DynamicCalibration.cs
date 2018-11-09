@@ -7,7 +7,7 @@ namespace Serial.DynamicCalibrationName
     public class DynamicCalibration
     {
         const int _runningAverageBatchSizes = 100;
-        const double _slopeDiffenceTreshold = 0.735;
+        const double _slopeDiffenceTreshold = 0.7;
         const double _gravitationalConst = 9.81;
         const int _gradientCalculationOffset = 1;
 

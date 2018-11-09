@@ -24,7 +24,7 @@ namespace Serial
             var test = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList.Select(x => x.X).ToList(), dyn.NaiveVelocityList.Select(x => x.TimeOfData).ToList());
 
             var testet = dyn.CalculatePosition(test);
-            foreach (var csdc in testet)
+            foreach (var csdc in test)
             {
                 Console.WriteLine($"\"{csdc.TimeOfData}\", \"{csdc.X}\"");
             }
