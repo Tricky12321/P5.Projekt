@@ -75,11 +75,11 @@ void loop(){
 
 void printCoordinates(coordinates_t coor){
   if (use_serial_plotter) {
-    Serial.print(sensor_raw.euler_angles[0]);
+    Serial.print(coor.x);
     Serial.print(",");
-    Serial.print(sensor_raw.euler_angles[1]);
+    Serial.print(coor.y);
     Serial.print(",");
-    Serial.println(sensor_raw.euler_angles[2]);
+    Serial.println(coor.z);
   } else {
     Serial.print("PO");
     Serial.print(coor.x);
