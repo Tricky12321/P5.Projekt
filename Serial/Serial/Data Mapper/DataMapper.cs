@@ -247,7 +247,7 @@ namespace Serial.DataMapper
 			List<double> GX = new List<double>();
 			List<double> GY = new List<double>();
 			List<double> GZ = new List<double>();
-			List<long> Timer = new List<long>();
+			List<double> Timer = new List<double>();
 
 			foreach (var data in datas)
 			{
