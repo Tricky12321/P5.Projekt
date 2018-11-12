@@ -6,8 +6,8 @@ namespace Serial.DynamicCalibrationName
 {
     public class DynamicCalibration
     {
-        const int _runningAverageBatchSizes = 100;
-        const double _slopeDiffenceTreshold = 0.7;
+        const int _runningAverageBatchSizes = 500;
+        const double _slopeDiffenceTreshold = 0.3;
         const double _gravitationalConst = 9.81;
         const int _gradientCalculationOffset = 1;
 
@@ -17,14 +17,14 @@ namespace Serial.DynamicCalibrationName
 
         public DynamicCalibration(List<XYZ> acceleration)
         {
-            _accelerationList.Add(new XYZ(0, 0, 0, 1.0));
+            _accelerationList.Add(new XYZ(0, 0, 0, 0.0));
 
             foreach (XYZ acc in acceleration)
             {
                 XYZ pos = new XYZ();
-                pos.X = acc.X / 1000.0 * _gravitationalConst;
-                pos.Y = acc.Y / 1000.0 * _gravitationalConst;
-                pos.Z = acc.Z / 1000.0 * _gravitationalConst;
+                pos.X = (acc.X / 1000.0) * _gravitationalConst;
+                pos.Y = (acc.Y / 1000.0) * _gravitationalConst;
+                pos.Z = (acc.Z / 1000.0) * _gravitationalConst;
                 pos.TimeOfData = acc.TimeOfData / 1000.0;
                 _accelerationList.Add(pos);
             }
@@ -49,7 +49,7 @@ namespace Serial.DynamicCalibrationName
 
         public void CalculateNaiveVelocity()
         {
-            NaiveVelocityList.Add(new XYZ(0, 0, 0, 1.0));
+            NaiveVelocityList.Add(new XYZ(0, 0, 0, 0.0));
             for (int i = 1; i < _accelerationList.Count; i++)
             {
                 XYZ placeXYZ = new XYZ();
@@ -73,16 +73,30 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         /// <param name="inputs"> list of naive calculated valied from an axis </param>
         /// <param name="times"> a list of times from the naive calculated velocity </param>
-        public List<XYZ> CalculateDynamicVelocityList(List<double> inputs, List<double> times)
+        public List<XYZ> CalculateDynamicVelocityList(List<double> inputs, List<double> times, bool useRunningAverage = true)
         {
             List<XYZ> dynamicVelocityList = new List<XYZ>();
 
-            List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(inputs, times, _runningAverageBatchSizes, _gradientCalculationOffset);
+            List<Tuple<double, double>> velocityList = new List<Tuple<double, double>>();
+
+            if (useRunningAverage)
+            {
+                velocityList = GetRunningAverageAcceleration(inputs, times);
+            }
+            else
+            {
+                foreach (XYZ point in NaiveVelocityList)
+                {
+                    velocityList.Add(new Tuple<double, double>(point.X, point.TimeOfData));
+                }
+            }
+
+            List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(velocityList.Select(x => x.Item1).ToList(), velocityList.Select(x => x.Item2).ToList(), _runningAverageBatchSizes, _gradientCalculationOffset);
             List<Tuple<int, int>> driftingIndexesList = FindDriftRanges(accelerationPointsList);
 
-            foreach (XYZ point in NaiveVelocityList)
+            foreach (Tuple<double,double> point in velocityList)
             {
-                dynamicVelocityList.Add(new XYZ(point.X, point.Y, point.Z, point.TimeOfData));
+                dynamicVelocityList.Add(new XYZ(point.Item1, 0.0, 0.0, point.Item2));
             }
 
             for (int i = 0; i < driftingIndexesList.Count; i++)
@@ -93,9 +107,10 @@ namespace Serial.DynamicCalibrationName
 
                 double slope = CalculateTendencySlope(driftVelocity.Select(x => x.X).ToList(), driftVelocity.Select(x => x.TimeOfData).ToList());
 
-                for (int j = startIndex; j < NaiveVelocityList.Count; j++)
+                for (int j = startIndex; j < velocityList.Count; j++)
                 {
-                    dynamicVelocityList[j].X = dynamicVelocityList[j].X - slope * (dynamicVelocityList[j].TimeOfData - dynamicVelocityList[startIndex].TimeOfData);
+                    var test = slope * (dynamicVelocityList[j].TimeOfData - dynamicVelocityList[startIndex].TimeOfData);
+                    dynamicVelocityList[j].X = dynamicVelocityList[j].X - test;
                 }
             }
             /*
@@ -155,19 +170,82 @@ namespace Serial.DynamicCalibrationName
         {
             List<Tuple<double, int>> listToReturn = new List<Tuple<double, int>>();
 
+            List<Tuple<double, int>> slopeDifferencesList = CalculateSlopeDifferences(points, times, batchSize, offset);
+
+            foreach(Tuple<double, int> slope in slopeDifferencesList)
+            {
+                if(Math.Abs(slope.Item1) > _slopeDiffenceTreshold){
+                    listToReturn.Add(new Tuple<double, int>(times[slope.Item2], slope.Item2));
+                }
+            }
+            return listToReturn;
+        }
+
+        /// <summary>
+        /// Returns a Tuple containing the difference in slopes between two ranges defined be batchsize and offset
+        /// </summary>
+        /// <returns>The slope differences.</returns>
+        /// <param name="points">A list of the raw acceleration data for one axis.</param>
+        /// <param name="times">List of all times from the raw data.</param>
+        /// <param name="batchSize">The size of the ranges on which the slope will be calculated, the ranges will each be batchSize/2 long.</param>
+        /// <param name="offset">The offset between ranges on which the slope will be calculated</param>
+        private List<Tuple<double, int>> CalculateSlopeDifferences(List<double> points, List<double> times, int batchSize, int offset)
+        {
+            List<Tuple<double, int>> listToReturn = new List<Tuple<double, int>>();
             int timesToRun = points.Count / offset - batchSize / offset - 1;
 
             for (int i = 0; i < timesToRun; i++)
             {
                 double thresFirst = CalculateTendencySlope(points.GetRange(i * offset, batchSize / 2).ToList(), times.GetRange(i * offset, batchSize / 2).ToList());
                 double thresSecond = CalculateTendencySlope(points.GetRange(i * offset + batchSize / 2, batchSize / 2).ToList(), times.GetRange(i * offset + batchSize / 2, batchSize / 2).ToList());
-                if (!(thresFirst + _slopeDiffenceTreshold > thresSecond && thresFirst - _slopeDiffenceTreshold < thresSecond))
-                {
-                    listToReturn.Add(new Tuple<double, int>(times[i * offset + batchSize / 2], i * offset + batchSize / 2));
-                }
+                listToReturn.Add(new Tuple<double, int>(thresSecond-thresFirst, i * offset + batchSize / 2));
             }
             return listToReturn;
         }
+
+        /*private double CalculateCoefficientOfDetermination(List<double> points, List<double> times, int batchSize, int offset)
+        {
+
+        }*/
+
+
+        /// <summary>
+        /// Gets the running average acceleration.
+        /// </summary>
+        /// <returns>A list of tuples containing acceleration and time, the list will be without the last range of <paramref name="periodLength"/> length.</returns>
+        /// <param name="input">Input acceleration data.</param>
+        /// <param name="times">Times related to the input data.</param>
+        /// <param name="periodLength">Period Lenght of the running averages.</param>
+        private List<Tuple<double, double>> GetRunningAverageAcceleration(List<double> input, List<double> times, int periodLength = 100)
+        {
+            List<Tuple<double, double>> listToReturn = new List<Tuple<double, double>>();
+
+            List<double> averageList = CalculateRunningAverage(input);
+
+            for (int i = 0; i < averageList.Count; i++)
+            {
+                listToReturn.Add(new Tuple<double, double>(averageList[i], times[i]));
+            }
+            return listToReturn;
+        }
+
+        /// <summary>
+        /// Calculates the running average of a list of doubles.
+        /// </summary>
+        /// <returns>List of doubles containing the runnging average.</returns>
+        /// <param name="input">List of doubles containing the input.</param>
+        /// <param name="periodLength">The length of the periodes for the average.</param>
+        private List<double> CalculateRunningAverage(List<double> input, int periodLength = 100)
+        {
+            List<double> listToReturn = new List<double>();
+            for (int i = 0; i < input.Count - periodLength; i++)
+            {
+                List<double> subRange = input.GetRange(i, periodLength);
+                listToReturn.Add(subRange.Average());
+            }
+            return listToReturn;
+        }
+
 
         /// <summary>
         /// Returns the slope for the points given as parameter.
