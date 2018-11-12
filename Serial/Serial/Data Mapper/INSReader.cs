@@ -20,7 +20,7 @@ namespace Serial
 		private XYZ Accel_Calibration;
 		private XYZ Gyro_Calibration;
 		private bool UseCalibration = false;
-
+		private double Angle;
 		public XYZ AcceXYZ
 		{
 			get
@@ -60,7 +60,6 @@ namespace Serial
 		private double ZAC;
 
 		private object LockObject = new object();
-		private bool NewData = false;
 
 		public INSReader(Stopwatch Timer)
 		{
@@ -68,7 +67,7 @@ namespace Serial
 			_serialPort = SerialReader.GetSerialPort(ArduinoTypes.INS);
 		}
 
-		public Tuple<XYZ, XYZ> Read()
+		public Tuple<XYZ, XYZ, double> Read()
 		{
 			try
 			{
@@ -81,7 +80,7 @@ namespace Serial
 				Last_Timer = Timer_Input.ElapsedMilliseconds;
 				Tid = Tid + TimerSinceLast;
 				HZ_rate = TimerSinceLast;
-				return new Tuple<XYZ, XYZ>(AcceXYZ, GyroXYZ);
+				return new Tuple<XYZ, XYZ, double>(AcceXYZ, GyroXYZ, Angle);
 			}
 			catch (Exception)
 			{
@@ -112,17 +111,14 @@ namespace Serial
 					ZAC = Convert.ToDouble(message_split[2]);
 
 				}
-				/*else if (data.Contains("timer"))
-				{
-					UInt32 TimerSinceLast = Convert.ToUInt32(data.Replace("timer:", "").Replace("\r", "").Replace("-", ""));
-
-					if (TimerSinceLast == 0)
-					{
-						Console.WriteLine("Something went bad!!");
-					}
-
-				}
-				*/
+				else if (data.Contains("AN"))
+                {
+                    data = data.Substring(2, data.Length - 3);
+                    var message_split = data.Split(':');
+                    // 360/5760 = 0.0625f MAGIC NUMBER
+					Angle = Convert.ToDouble(message_split[0])*0.0625f;
+					//Console.WriteLine($"Angle {Angle}");
+                }
 
 			}
 			catch (TimeoutException) { }

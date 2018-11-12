@@ -8,7 +8,7 @@ uint32_t last_millis = 0;                 // used to compute the measurement int
 uint32_t start_millis = 0;
 bool establish_COM = true;
 bool use_serial_plotter = false;
-bool use_gyro = true;
+bool use_gyro = false;
 bool use_accelerometer = true;
 void setup()
 {  
@@ -53,11 +53,11 @@ void loop(){
 void printRawSensorData(sensor_raw_t sensor_raw) {
   if (use_serial_plotter) {
     if (use_accelerometer) {
-        Serial.print(sensor_raw.linear_acceleration[0]);
-        Serial.print(",");
-        Serial.print(sensor_raw.linear_acceleration[1]);
-        Serial.print(",");
-        Serial.println(sensor_raw.linear_acceleration[2]);
+          Serial.print(sensor_raw.gravity_vector[0]);
+          Serial.print(",");
+          Serial.print(sensor_raw.gravity_vector[1]);
+          Serial.print(",");
+          Serial.println(sensor_raw.gravity_vector[2]);
     }
     if (use_gyro) {
         Serial.print(sensor_raw.angular_vel[0]);
@@ -66,6 +66,7 @@ void printRawSensorData(sensor_raw_t sensor_raw) {
         Serial.print(":");
         Serial.println(sensor_raw.angular_vel[2]);
     }
+    
   //Serial.print("#");
   //Serial.print("GY");
 
@@ -82,7 +83,10 @@ void printRawSensorData(sensor_raw_t sensor_raw) {
   Serial.print(":");
   Serial.print(sensor_raw.angular_vel[1]);
   Serial.print(":");
-  Serial.println(sensor_raw.angular_vel[2]);
+  Serial.print(sensor_raw.angular_vel[2]);
+  Serial.print("#");
+  Serial.print("AN");
+  Serial.println(sensor_raw.euler_angles[0]);
   }
   
 }
