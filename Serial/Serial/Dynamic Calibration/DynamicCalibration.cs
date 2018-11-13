@@ -8,6 +8,7 @@ namespace Serial.DynamicCalibrationName
     {
         const int _runningAverageBatchSizes = 500;
         const double _slopeDiffenceTreshold = 0.3;
+        const double _pointOffsetStationaryTreshold = 0.3;
         const double _gravitationalConst = 9.81;
         const int _gradientCalculationOffset = 1;
 
@@ -30,7 +31,7 @@ namespace Serial.DynamicCalibrationName
             }
         }
 
-        public List<XYZ> CalculatePosition(List<XYZ> velocityList)
+        public List<Tuple<double, double>> CalculatePosition(List<double> velocityList, List<double> times)
         {
             List<XYZ> distanceList = new List<XYZ>();
             distanceList.Add(new XYZ(0,0,0,0));
@@ -71,7 +72,7 @@ namespace Serial.DynamicCalibrationName
         /// <summary>
         /// Returns a list containing velocity for the dynamic calibration.
         /// </summary>
-        /// <param name="inputs"> list of naive calculated valied from an axis </param>
+        /// <param name="inputs"> list of naive calculated velocities from an axis </param>
         /// <param name="times"> a list of times from the naive calculated velocity </param>
         public List<XYZ> CalculateDynamicVelocityList(List<double> inputs, List<double> times, bool useRunningAverage = true)
         {
@@ -92,7 +93,9 @@ namespace Serial.DynamicCalibrationName
             }
 
             List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(velocityList.Select(x => x.Item1).ToList(), velocityList.Select(x => x.Item2).ToList(), _runningAverageBatchSizes, _gradientCalculationOffset);
-            List<Tuple<int, int>> driftingIndexesList = FindDriftRanges(accelerationPointsList);
+            List<Tuple<int, int>> driftingIndexesList = FindDriftRanges(accelerationPointsList, velocityList.Count - 1);
+
+
 
             foreach (Tuple<double,double> point in velocityList)
             {
@@ -129,13 +132,36 @@ namespace Serial.DynamicCalibrationName
                     defaultValue = dynamicVelocityList[i].X;
                 }
             }*/
-                return dynamicVelocityList;
+            return dynamicVelocityList;
+        }
+
+        private List<Tuple<double, int>> FindStationaryRanges(List<double> input, List<double> times, int batchSize, int offset)
+        {
+            if (input.Count == times.Count)
+            {
+                List<Tuple<double, int>> listToReturn = new List<Tuple<double, int>>();
+                int timesToRun = input.Count / offset - batchSize / offset - 1;
+
+                for (int i = 0; i < timesToRun; i++)
+                {
+                    List<double> batchInputs = input.GetRange(i * offset, batchSize);
+                    List<double> batchTimes = times.GetRange(i * offset, batchSize);
+
+                    double pointsOffset = CalculatePointsOffset(batchInputs, batchTimes);
+                    if (pointsOffset < _pointOffsetStationaryTreshold)
+                    {
+                        listToReturn.Add(new Tuple<double, int>(times[i * offset], i * offset));
+                    }
+                }
+                return listToReturn;
+            }
+            throw new InvalidInputException("FindStationaryRangesRanges got a different amount of times and inputs, they should be that same");
         }
 
         /// <summary>
         /// Returns a list containing indexes for when drifting is detected.
         /// </summary>
-        private List<Tuple<int, int>> FindDriftRanges(List<Tuple<double, int>> accelerationPointsList)
+        private List<Tuple<int, int>> FindDriftRanges(List<Tuple<double, int>> accelerationPointsList, int lastIndex)
         {
             List<Tuple<int, int>> driftRanges = new List<Tuple<int, int>>();
 
@@ -157,7 +183,7 @@ namespace Serial.DynamicCalibrationName
                 }
             }
 
-            driftRanges.Add(new Tuple<int, int>(accelerationPointsList[accelerationPointsList.Count - 1].Item2 + 1, NaiveVelocityList.Count - 1));
+            driftRanges.Add(new Tuple<int, int>(accelerationPointsList[accelerationPointsList.Count - 1].Item2 + 1, lastIndex));
 
             return driftRanges;
         }
@@ -174,7 +200,7 @@ namespace Serial.DynamicCalibrationName
 
             foreach(Tuple<double, int> slope in slopeDifferencesList)
             {
-                if(Math.Abs(slope.Item1) > _slopeDiffenceTreshold){
+                if (Math.Abs(slope.Item1) > _slopeDiffenceTreshold){
                     listToReturn.Add(new Tuple<double, int>(times[slope.Item2], slope.Item2));
                 }
             }
@@ -202,11 +228,6 @@ namespace Serial.DynamicCalibrationName
             }
             return listToReturn;
         }
-
-        /*private double CalculateCoefficientOfDetermination(List<double> points, List<double> times, int batchSize, int offset)
-        {
-
-        }*/
 
 
         /// <summary>
@@ -246,6 +267,20 @@ namespace Serial.DynamicCalibrationName
             return listToReturn;
         }
 
+        private double CalculatePointsOffset(List<double> points, List<double> times)
+        {
+            double pointsAverage = points.Average();
+            double timeAverage = times.Average();
+            List<double> xYOffset = new List<double>();
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                xYOffset.Add((times[i] - timeAverage) * (points[i] - pointsAverage));
+            }
+
+            return xYOffset.Sum();
+        }
+
 
         /// <summary>
         /// Returns the slope for the points given as parameter.
@@ -254,17 +289,16 @@ namespace Serial.DynamicCalibrationName
         {
             if (points.Count != 0 || times.Count != 0)
             {
-                double pointsAverage = points.Average();
                 double timeAverage = times.Average();
-                List<double> xYOffset = new List<double>();
                 List<double> squareXOffset = new List<double>();
 
                 for (int i = 0; i < points.Count; i++)
                 {
-                    xYOffset.Add((times[i] - timeAverage) * (points[i] - pointsAverage));
                     squareXOffset.Add(Math.Pow(times[i] - timeAverage, 2));
                 }
-                return xYOffset.Sum() / squareXOffset.Sum();
+
+                return CalculatePointsOffset(points, times) / squareXOffset.Sum();
+
             }
             return 0;
         }
