@@ -56,7 +56,7 @@ namespace Serial.DataMapper
 		public ConcurrentQueue<DataEntry> SegmentData(int NumPrSegment = 50)
 		{
 			SegmentedData = new ConcurrentQueue<DataEntry>(dataEntries);
-			ConcurrentQueue<DataEntry> OutputSegments = new List<DataEntry>();
+			ConcurrentQueue<DataEntry> OutputSegments = new ConcurrentQueue<DataEntry>();
 			var CurrentSegment = new List<DataEntry>();
 			int NumOfSegments = Convert.ToInt32(Math.Ceiling((decimal)SegmentedData.Count / NumPrSegment));
 			for (int i = 0; i < NumOfSegments; i++)
@@ -276,7 +276,7 @@ namespace Serial.DataMapper
 			List<double> GX = new List<double>();
 			List<double> GY = new List<double>();
 			List<double> GZ = new List<double>();
-			List<long> Timer = new List<long>();
+			List<double> Timer = new List<double>();
 
 			foreach (var data in datas)
 			{

@@ -4,10 +4,10 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using NeuralNetwork;
 using System.IO;
-using NeuralNetwork1;
 using System.Linq;
+using Serial.CSV;
+using Serial.DynamicCalibrationName;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Collections.Concurrent;
@@ -17,7 +17,6 @@ namespace Serial
 
 	class MainClass
 	{
-		static INS_POSZYX_NeuralNetworkTester nn;
 		static DataMapper.DataMapper dataMapper;
 
 		static int MapperTimer = 0;
@@ -51,7 +50,7 @@ namespace Serial
 						PrintCommands();
 						break;
 					case "nn":
-						NeuralNetwork(Input);
+						//NeuralNetwork(Input);
 						break;
 					case "exit":
 						Exit = true;
@@ -124,7 +123,7 @@ namespace Serial
 			}
 		}
 
-		public static void NeuralNetwork(string[] Input)
+		/*public static void NeuralNetwork(string[] Input)
 		{
 			List<string> InputList = new List<string>(Input);
 
@@ -206,7 +205,7 @@ namespace Serial
 					return;
 			}
 		}
-
+*/
 		public static bool Confirm(string Message, bool? Default = null)
 		{
 			string YN = "[y/n]";

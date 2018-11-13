@@ -59,22 +59,14 @@
     <Compile Include="Data Mapper\Utilities.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Neural Network\INS_POSZYX_NeuralNetworkTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data Mapper\CustomSerialPort.cs" />
     <Compile Include="Data Mapper\HzCalculator.cs" />
     <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
     <Compile Include="Data Mapper\DataEntry.cs" />
-    <Compile Include="Neural Network\Interfaces\INeuralNetwork.cs" />
-    <Compile Include="Neural Network\Interfaces\ISaveLoadableObject.cs" />
-    <Compile Include="Neural Network\1.0\NeuralNetwork.cs" />
-    <Compile Include="Neural Network\1.0\InputOutputData.cs" />
-    <Compile Include="Neural Network\2.0\ArtificialNeuralNetwork.cs" />
-    <Compile Include="Neural Network\1.0\Neuron.cs" />
-    <Compile Include="Neural Network\2.0\Neuron.cs" />
-    <Compile Include="Neural Network\1.0\Layer.cs" />
-    <Compile Include="Neural Network\2.0\Layer.cs" />
-    <Compile Include="Neural Network\2.0\InputOutputData.cs" />
+    <Compile Include="CSV\CSVController.cs" />
+    <Compile Include="CSV\CSVData.cs" />
+    <Compile Include="Dynamic Calibration\DynamicCalibration.cs" />
     <Compile Include="Load.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -83,12 +75,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Neural Network\" />
     <Folder Include="Data Mapper\" />
     <Folder Include="Data Mapper\Exception\" />
-    <Folder Include="Neural Network\Interfaces\" />
-    <Folder Include="Neural Network\1.0\" />
-    <Folder Include="Neural Network\2.0\" />
+    <Folder Include="CSV\" />
+    <Folder Include="Dynamic Calibration\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
