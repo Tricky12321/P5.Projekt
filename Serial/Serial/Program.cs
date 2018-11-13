@@ -10,6 +10,7 @@ using NeuralNetwork1;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Collections.Concurrent;
 namespace Serial
 {
 
@@ -436,6 +437,22 @@ namespace Serial
 				case "kalman":
 					dataMapper.GenerateKalman();
 					Console.WriteLine("Generated data kalman filtered data of INS data.");
+					break;
+				case "segment":
+					string SegmentFile = "Segmented.csv";
+					if (File.Exists(SegmentFile))
+                    {
+						File.Delete(SegmentFile);
+                    }
+					ConcurrentQueue<DataMapper.DataEntry> OutputSegments = dataMapper.SegmentData();
+					var test = File.AppendText(SegmentFile);
+
+					test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle");
+                    foreach (var item in OutputSegments)
+                    {
+						test.WriteLine($"\"{item.INS_Accelerometer.TimeOfData}\",\"{item.INS_Accelerometer.X}\",\"{item.INS_Accelerometer.Y}\",\"{item.INS_Accelerometer.Z}\",\"{item.INS_Gyroscope.X}\",\"{item.INS_Gyroscope.Y}\",\"{item.INS_Gyroscope.Z}\",\"{item.INS_Angle}\",");
+					}
+					Console.WriteLine($"Done segmenting data! {OutputSegments.Count}");
 					break;
 				default:
 					Console.WriteLine("Invalid input format, use help command!");
