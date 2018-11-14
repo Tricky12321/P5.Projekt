@@ -72,7 +72,7 @@ namespace Serial.DataMapper
                 {
 
 
-                    long Time = Convert.ToInt32(Math.Round(CurrentSegment.Average(X => X.INS_Accelerometer.TimeOfData), 0));
+                    double Time = Convert.ToInt32(Math.Round(CurrentSegment.Average(X => X.INS_Accelerometer.TimeOfData), 0));
                     double ACC_X = CurrentSegment.Average(X => X.INS_Accelerometer.X);
                     double ACC_Y = CurrentSegment.Average(X => X.INS_Accelerometer.Y);
                     double ACC_Z = CurrentSegment.Average(X => X.INS_Accelerometer.Z);
