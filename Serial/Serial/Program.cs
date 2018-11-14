@@ -14,13 +14,11 @@ using System.Collections.Concurrent;
 using Serial.Menu;
 namespace Serial
 {
-
-
     class MainClass
     {
         public static void Main()
         {
-			HovedMenu.ShowMenu();
+			MainMenu.ShowMenu();
         }
     }
 }
