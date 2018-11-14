@@ -68,7 +68,7 @@
     <Compile Include="CSV\CSVData.cs" />
     <Compile Include="Dynamic Calibration\DynamicCalibration.cs" />
     <Compile Include="Load.cs" />
-    <Compile Include="Menu\HovedMenu.cs" />
+    <Compile Include="Menu\MainMenu.cs" />
     <Compile Include="HighpassFilter\HighpassFilter.cs" />
   </ItemGroup>
   <ItemGroup>

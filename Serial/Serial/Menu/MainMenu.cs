@@ -11,7 +11,7 @@ using Serial.Highpass;
 using System.Linq;
 namespace Serial.Menu
 {
-    public static class HovedMenu
+    public static class MainMenu
     {
 		static DataMapper.DataMapper dataMapper;
 		static int MapperTimer = 0;
