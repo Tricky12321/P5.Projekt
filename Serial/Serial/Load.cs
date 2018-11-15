@@ -44,7 +44,10 @@ namespace Serial
 					double GX = Convert.ToDouble(LineSplit[4]);
 					double GY = Convert.ToDouble(LineSplit[5]);
 					double GZ = Convert.ToDouble(LineSplit[6]);
-					double Angle = Convert.ToDouble(LineSplit[7]);
+					double Angle = 0f;
+					if (LineSplit.Length == 8) {
+						Angle = Convert.ToDouble(LineSplit[7]);
+                    }
 					data.AddDataEntry(new DataEntry(null, new XYZ(AX, AY, AZ, Timer), new XYZ(GX, GY, GZ, Timer),Angle));
 				}
 				Console.WriteLine($"Loaded {DataList.Count} lines from {Path} [{Type}]");
