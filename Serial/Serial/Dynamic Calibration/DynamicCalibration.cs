@@ -73,7 +73,9 @@ namespace Serial.DynamicCalibrationName
             return distanceList;
         }
 
-
+        /// <summary>
+        /// Calculates the naive velocity.
+        /// </summary>
         public void CalculateNaiveVelocity()
         {
             NaiveVelocityList.Add(new XYZ(0, 0, 0, 0.0));
@@ -100,19 +102,15 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         /// <param name="inputs"> list of naive calculated velocities from an axis </param>
         /// <param name="times"> a list of times from the naive calculated velocity </param>
-        public List<Tuple<double, double>> CalculateDynamicVelocityList(List<Tuple<double, double>> inputTimes, bool useRunningAverage = true)
+        public List<Tuple<double, double>> CalculateDynamicVelocityList(List<Tuple<double, double>> inputTimes, bool useRunningAverage = false)
         {
-            List<double> inputs = inputTimes.Select(x => x.Item1).ToList();
-            List<double> times = inputTimes.Select(x => x.Item2).ToList();
-
             List<Tuple<double, double>> dynamicVelocityList = new List<Tuple<double, double>>();
 
             List<Tuple<double, double>> velocityList = useRunningAverage ? GetRunningAverageAcceleration(inputTimes) : inputTimes;
 
-            List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(velocityList, _runningAverageBatchTime, _gradientCalculationOffset);
-            List<Tuple<int, int>> driftingIndexesList = FindDriftRanges(accelerationPointsList, velocityList.Count - 1);
-
-            var tets = FindStationaryRanges(GetTupleListWithOneAxisAndTimes(_accelerationList), 3.0, 1);
+            #region DriftRemoval 
+            //Trying to remove drift//
+            List<Tuple<int, int>> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
 
             foreach (Tuple<double,double> point in velocityList)
             {
@@ -129,17 +127,87 @@ namespace Serial.DynamicCalibrationName
 
                 for (int j = startIndex; j < velocityList.Count; j++)
                 {
-                    var test = slope * (dynamicVelocityList[j].Item2 - dynamicVelocityList[startIndex].Item2);
-                    dynamicVelocityList[j] = new Tuple<double, double>(dynamicVelocityList[j].Item1 - test, dynamicVelocityList[j].Item2);
+                    double slopeOffset = slope * (dynamicVelocityList[j].Item2 - dynamicVelocityList[startIndex].Item2);
+                    dynamicVelocityList[j] = new Tuple<double, double>(dynamicVelocityList[j].Item1 - slopeOffset, dynamicVelocityList[j].Item2);
                 }
             }
+            #endregion
+            //Done trying to remove drift/
+
+            #region CalibrateStationary
+            List<Tuple<int, int>> stationaryIndexList = GetStationaryIndexes(GetTupleListWithOneAxisAndTimes(_accelerationList), 2.0, 1);
+
+            //stationaryIndexList.ForEach(x => Console.WriteLine($"{_accelerationList[x.Item1].TimeOfData}, {_accelerationList[x.Item2].TimeOfData}"));
+
+            for (int i = 0; i < stationaryIndexList.Count; i++)
+            {
+                int startIndex = stationaryIndexList[i].Item1;
+                int endIndex = stationaryIndexList[i].Item2;
+                List<Tuple<double, double>> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
+
+                double slope = CalculateTendencySlope(driftVelocity);
+
+                for (int j = startIndex; j < dynamicVelocityList.Count; j++)
+                {
+                    double slopeOffset = slope * (dynamicVelocityList[j].Item2 - dynamicVelocityList[startIndex].Item2);
+                    dynamicVelocityList[j] = new Tuple<double, double>(dynamicVelocityList[j].Item1 - slopeOffset, dynamicVelocityList[j].Item2);
+                }
+            }
+
+            #endregion
             return dynamicVelocityList;
         }
 
+        /// <summary>
+        /// Gets the stationary indexes.
+        /// </summary>
+        /// <returns>The stationary indexes.</returns>
+        /// <param name="stationaryRanges">Stationary ranges.</param>
+        private List<Tuple<int, int>> GetStationaryIndexes(List<Tuple<double, double>> inputsTimes, double batchTime, int offset)
+        {
+            List<Tuple<double, int>> stationaryRanges = FindStationaryRanges(inputsTimes, batchTime, offset);
+
+            List<Tuple<int, int>> stationaryIndexRanges = new List<Tuple<int, int>>();
+
+            int startIndex = 0;
+            int endIndex = stationaryRanges[0].Item2;
+
+            //stationaryIndexRanges.Add(new Tuple<int, int>(0, stationaryRanges[0].Item2 - 1));
+
+            for (int i = 1; i < stationaryRanges.Count; i++)
+            {
+                if (stationaryRanges[i].Item2 == stationaryRanges[i - 1].Item2 + 1)
+                {
+                    endIndex = stationaryRanges[i].Item2;
+                }
+                else
+                {
+                    if (startIndex != endIndex)
+                    {
+                        stationaryIndexRanges.Add(new Tuple<int, int>(startIndex, endIndex));
+                    }
+                    startIndex = stationaryRanges[i].Item2;
+                }
+            }
+
+            stationaryIndexRanges.Add(new Tuple<int, int>(startIndex, inputsTimes.Count - 1));
+
+            return stationaryIndexRanges.FindAll(x => x.Item1 < x.Item2).ToList();
+        }
+
+
+        /// <summary>
+        /// Finds the stationary ranges.
+        /// </summary>
+        /// <returns>The stationary ranges.</returns>
+        /// <param name="inputsTimes">Inputs times.</param>
+        /// <param name="batchTime">Batch time in seconds (the time for the batch size).</param>
+        /// <param name="offset">Offset.</param>
         private List<Tuple<double, int>> FindStationaryRanges(List<Tuple<double, double>> inputsTimes, double batchTime, int offset)
         {
             List<double> inputs = inputsTimes.Select(x => x.Item1).ToList();
             List<double> times = inputsTimes.Select(x => x.Item2).ToList();
+
             List<Tuple<double, int>> listToReturn = new List<Tuple<double, int>>();
 
             if (inputs.Count == times.Count)
@@ -149,18 +217,23 @@ namespace Serial.DynamicCalibrationName
                 int i = 0;
                 while (hasInput)
                 {
-                    double startFromTime = inputsTimes[i * offset].Item2;
-                    List<Tuple<double, double>> batchInputsTimes = inputsTimes.FindAll(x => x.Item2 >= startFromTime && x.Item2 < startFromTime + batchTime).ToList();
+                    if (inputsTimes[i].Item2 < batchTime / 2)
+                    {
+                        i++;
+                        continue;
+                    }
 
-                    //batchInputsTimes.ForEach(x => Console.WriteLine($"\"{x.Item2.ToString().Replace(',', '.')}\",\"{x.Item1.ToString().Replace(',', '.')}\""));
-
+                    double midPointTime = inputsTimes[i * offset].Item2;
+                    List<Tuple<double, double>> batchInputsTimes = inputsTimes.FindAll(x => x.Item2 >= midPointTime - batchTime / 2 && x.Item2 < midPointTime + batchTime / 2).ToList();
+                    
                     double tendensySlope = CalculateTendencySlope(batchInputsTimes);
                     double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
 
-                    double coefficientOfDeterminition = CalculateCoefficientOfDeterminition(batchInputsTimes, tendensySlope, tendensyOffset);
-                    if (coefficientOfDeterminition > _pointCoefficientOfDeterminitionTreshold)
+                    double coefficientOfDeterminition = CalculateResidualCoefficient(batchInputsTimes, tendensySlope, tendensyOffset);
+                    //Console.WriteLine($"\"{inputsTimes[i].Item2.ToString().Replace(",",".")}\",\"{coefficientOfDeterminition.ToString().Replace(",",".")}\"");
+
+                    if (coefficientOfDeterminition < _pointCoefficientOfDeterminitionTreshold)
                     {
-                        Console.WriteLine(startFromTime);
                         listToReturn.Add(new Tuple<double, int>(times[i * offset], i * offset));
                     }
 
@@ -179,8 +252,10 @@ namespace Serial.DynamicCalibrationName
         /// <summary>
         /// Returns a list containing indexes for when drifting is detected.
         /// </summary>
-        private List<Tuple<int, int>> FindDriftRanges(List<Tuple<double, int>> accelerationPointsList, int lastIndex)
+        private List<Tuple<int, int>> FindDriftRanges(List<Tuple<double, double>> inputsTimes, double batchTime, int offset, int lastIndex)
         {
+            List<Tuple<double, int>> accelerationPointsList = FindAccelerationPoints(inputsTimes, batchTime, offset);
+
             List<Tuple<int, int>> driftRanges = new List<Tuple<int, int>>();
 
             int startIndex = 0;
@@ -215,7 +290,6 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         private List<Tuple<double, int>> FindAccelerationPoints(List<Tuple<double, double>> inputsTimes, double batchTime, int offset)
         {
-            List<double> points = inputsTimes.Select(x => x.Item1).ToList();
             List<double> times = inputsTimes.Select(x => x.Item2).ToList();
 
             List<Tuple<double, int>> listToReturn = new List<Tuple<double, int>>();
@@ -253,6 +327,7 @@ namespace Serial.DynamicCalibrationName
                     i++;
                     continue;
                 }
+
                 double midPointTime = inputsTimes[i].Item2;
                 List<Tuple<double, double>> firstBatchList = inputsTimes.FindAll(x => x.Item2 >= midPointTime - batchTime && x.Item2 < midPointTime).ToList();
                 double thresFirst = CalculateTendencySlope(firstBatchList);
@@ -310,42 +385,21 @@ namespace Serial.DynamicCalibrationName
             return listToReturn;
         }
 
-        private double CalculateCoefficientOfDeterminition(List<Tuple<double, double>> inputsTimes, double slopeTendensy, double offsetTendensy)
+        /// <summary>
+        /// Calculates the residual coefficient, which is not the sum of Squared errors, but something alike, 
+        /// that calculates the offset of the raw data to the tendensyline . 
+        /// </summary>
+        /// <returns>The residual coefficient.</returns>
+        /// <param name="inputsTimes">Input which should be acceleration and times</param>
+        /// <param name="slopeTendensy">Tendensy line offset.</param>
+        /// <param name="offsetTendensy">Tendensy line offset.</param>
+        private double CalculateResidualCoefficient(List<Tuple<double, double>> inputsTimes, double slopeTendensy, double offsetTendensy)
         {
-            List<double> yAxis = inputsTimes.Select(x => x.Item1).ToList();
-            List<double> xAxis = inputsTimes.Select(x => x.Item2).ToList();
-            double yAxisAverage = yAxis.Average();
-
-            List<double> totalSSList = new List<double>();
-            yAxis.ForEach(x => totalSSList.Add(Math.Pow((x - yAxisAverage), 2)));
-            double sStotal = totalSSList.Sum();
-
             List<double> residualSSList = new List<double>();
             inputsTimes.ForEach(x => residualSSList.Add(Math.Pow(x.Item1 - (slopeTendensy * x.Item2 + offsetTendensy), 2)));
             double sSResidual = residualSSList.Sum();
 
-            return 1 - sSResidual / sStotal;
-
-            /*
-            List<double> xTimesYList = new List<double>();
-            List<double> xList = new List<double>();
-            List<double> xSquaredList = new List<double>();
-            List<double> yList = new List<double>();
-            List<double> ySquaredList = new List<double>();
-            int n = inputsTimes.Count;
-
-            foreach (Tuple<double, double> input in inputsTimes)
-            {
-                xTimesYList.Add(input.Item1 * input.Item2);
-                xList.Add(input.Item2);
-                yList.Add(input.Item1);
-                xSquaredList.Add(Math.Pow(input.Item2, 2));
-                ySquaredList.Add(Math.Pow(input.Item1, 2));
-            }
-            double r = 1 - ((n * xTimesYList.Sum() - (xList.Sum() * yList.Sum()))
-                        / Math.Sqrt((n * xSquaredList.Sum() - Math.Pow(xList.Sum(), 2)) * n * ySquaredList.Sum() - Math.Pow(yList.Sum(), 2)));
-
-            return Math.Pow(r, 2);*/
+            return sSResidual / inputsTimes.Count();
         }
 
         private double CalculateTendensyOffset(List<Tuple<double, double>> inputsTimes, double slope)
@@ -356,10 +410,11 @@ namespace Serial.DynamicCalibrationName
             return (yAxis.Sum()-slope*xAxis.Sum()) / inputsTimes.Count();
         }
 
-
         /// <summary>
-        /// Returns the slope for the points given as parameter.
+        /// Calculates the tendency slope.
         /// </summary>
+        /// <returns>The tendency slope.</returns>
+        /// <param name="inputsTimes">The data from which the slope will be calculated.</param>
         private double CalculateTendencySlope(List<Tuple<double, double>> inputsTimes)
         {
             List<double> inputs = inputsTimes.Select(x => x.Item1).ToList();
