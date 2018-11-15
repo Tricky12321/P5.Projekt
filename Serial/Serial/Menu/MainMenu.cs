@@ -17,7 +17,6 @@ namespace Serial.Menu
 		static int MapperTimer = 0;
 		public static void ShowMenu()
 		{
-
 			bool Exit = false;
 			do
 			{

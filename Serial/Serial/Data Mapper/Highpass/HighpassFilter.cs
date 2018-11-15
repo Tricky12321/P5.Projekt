@@ -11,23 +11,23 @@ namespace Serial.DataMapper.Highpass
         /// <summary>
         /// rez amount, from sqrt(2) to ~ 0.1
         /// </summary>
-        private readonly float resonance;
+        readonly float resonance;
 
-        private readonly float frequency;
-        private readonly int sampleRate;
-        private readonly PassType passType;
+        readonly float frequency;
+        readonly int sampleRate;
+        readonly PassType passType;
 
-        private readonly float c, a1, a2, a3, b1, b2;
+        readonly float c, a1, a2, a3, b1, b2;
 
         /// <summary>
         /// Array of input values, latest are in front
         /// </summary>
-        private float[] inputHistory = new float[2];
+        float[] inputHistory = new float[2];
 
         /// <summary>
         /// Array of output values, latest are in front
         /// </summary>
-        private float[] outputHistory = new float[3];
+        float[] outputHistory = new float[3];
 
 		public HighpassFilter(float frequency, int sampleRate, PassType passType, float resonance)
         {

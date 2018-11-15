@@ -8,12 +8,12 @@ namespace Serial.DataMapper.DataReader
 {
     public class ReaderController
     {
-		private PozyxReader _pozyx;
-        private INSReader _INS;
+		PozyxReader _pozyx;
+        INSReader _INS;
 
-        private ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
+        ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
 
-        private ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
+        ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
         public ConcurrentQueue<DataEntry> AllDataEntries => dataEntries;
 
         public ConcurrentQueue<Tuple<XYZ, XYZ>> KalmanData;
@@ -21,18 +21,18 @@ namespace Serial.DataMapper.DataReader
 
         public ConcurrentQueue<DataEntry> SegmentedData = new ConcurrentQueue<DataEntry>();
 
-        private bool Reading = false;
+        bool Reading;
 
-        private object _dataEntryLock = new object();
-        private XYZ _currentPoZYX = null;
+        object _dataEntryLock = new object();
+        XYZ _currentPoZYX;
 
-        public bool Kalman = false;
-        public bool RollingAverageBool = false;
+        public bool Kalman;
+        public bool RollingAverageBool;
 
         public Stopwatch Timer;
 
-        bool Pozyx = false;
-        bool Ins = false;
+        bool Pozyx;
+        bool Ins;
 
 
 		public ReaderController(bool Pozyx = true, bool Ins = true)
@@ -91,7 +91,7 @@ namespace Serial.DataMapper.DataReader
             Timer.Stop();
         }
 
-        private void ReadPozyx()
+        void ReadPozyx()
         {
             _pozyx.ResetTid();
             while (Reading)
@@ -113,7 +113,7 @@ namespace Serial.DataMapper.DataReader
             }
         }
 
-        private void ReadINS()
+        void ReadINS()
         {
             _INS.ResetTid();
             while (Reading)
@@ -122,7 +122,7 @@ namespace Serial.DataMapper.DataReader
                 XYZ Accelerometer = Output.Item1;
                 XYZ Gyroscope = Output.Item2;
                 double Angle = Output.Item3;
-                DataEntry NewEntry = null; ;
+                DataEntry NewEntry = null;
                 lock (_dataEntryLock)
                 {
                     if (Pozyx == false)
@@ -158,10 +158,7 @@ namespace Serial.DataMapper.DataReader
                 Output.ToList().ForEach(X => X.Used = true);
                 return Output;
             }
-            else
-            {
                 throw new TooManyDataEntriesRequestedException($"There is not this many DataEntries that can be requested.\nThere is only {avalibleDataEntries.Count()} avalible!");
-            }
         }
 
 		public void CalibrateINS()

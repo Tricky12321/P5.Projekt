@@ -18,10 +18,10 @@ namespace Serial.DataMapper.DataReader
 	{
 
 
-		static List<CustomSerialPort> OpenSerialPorts = new List<CustomSerialPort>();
+		static  List<CustomSerialPort> OpenSerialPorts = new List<CustomSerialPort>();
 		static List<CustomSerialPort> serialPorts = new List<CustomSerialPort>();
 
-		private static void FindSerialPorts()
+		static void FindSerialPorts()
 		{
 			if (serialPorts.Count == 0)
 			{
@@ -30,7 +30,7 @@ namespace Serial.DataMapper.DataReader
 				{
 					try
 					{
-						CustomSerialPort serialPort = new CustomSerialPort(Port, 115200, Parity.None, 8, StopBits.One); ;
+						CustomSerialPort serialPort = new CustomSerialPort(Port, 115200, Parity.None, 8, StopBits.One);
 						serialPort.ReadTimeout = 1000;
 						serialPort.WriteTimeout = 1000;
 						serialPorts.Add(serialPort);

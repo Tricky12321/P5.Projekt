@@ -9,8 +9,8 @@ namespace Serial
 {
     public class HzCalculator
     {
-		private const int _hz_log_count = 100;
-        private ConcurrentQueue<double> _hz_rate_log = new ConcurrentQueue<double>();
+		const int _hz_log_count = 100;
+        readonly ConcurrentQueue<double> _hz_rate_log = new ConcurrentQueue<double>();
         public double HZ_rate
         {
             get

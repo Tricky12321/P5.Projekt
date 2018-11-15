@@ -13,7 +13,7 @@ namespace Serial.DynamicCalibrationName
 
         public List<XYZ> NaiveVelocityList = new List<XYZ>();
 
-        private List<XYZ> _accelerationList = new List<XYZ>();
+        List<XYZ> _accelerationList = new List<XYZ>();
 
         public DynamicCalibration(List<XYZ> acceleration)
         {
@@ -212,11 +212,10 @@ namespace Serial.DynamicCalibrationName
         /// <summary>
         /// Gets the running average acceleration.
         /// </summary>
-        /// <returns>A list of tuples containing acceleration and time, the list will be without the last range of <paramref name="periodLength"/> length.</returns>
+        /// <returns>A list of tuples containing acceleration and time, the list will be without the last range of length.</returns>
         /// <param name="input">Input acceleration data.</param>
         /// <param name="times">Times related to the input data.</param>
-        /// <param name="periodLength">Period Lenght of the running averages.</param>
-        private List<Tuple<double, double>> GetRunningAverageAcceleration(List<double> input, List<double> times, int periodLength = 100)
+        private List<Tuple<double, double>> GetRunningAverageAcceleration(List<double> input, List<double> times)
         {
             List<Tuple<double, double>> listToReturn = new List<Tuple<double, double>>();
 

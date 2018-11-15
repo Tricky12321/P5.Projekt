@@ -27,7 +27,6 @@ namespace Serial.Menu
                         return true;
                     case "n":
                         ValidInput = true;
-
                         return false;
                     case "":
                         if (Default != null)
