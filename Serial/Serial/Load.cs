@@ -45,7 +45,7 @@ namespace Serial
 					double GY = Convert.ToDouble(LineSplit[5]);
 					double GZ = Convert.ToDouble(LineSplit[6]);
 					double Angle = 0f;
-					if (LineSplit.Length == 7) {
+					if (LineSplit.Length == 8) {
 						Angle = Convert.ToDouble(LineSplit[7]);
                     }
 					data.AddDataEntry(new DataEntry(null, new XYZ(AX, AY, AZ, Timer), new XYZ(GX, GY, GZ, Timer),Angle));
