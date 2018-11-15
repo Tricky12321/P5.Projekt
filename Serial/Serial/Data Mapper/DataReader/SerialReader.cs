@@ -5,7 +5,8 @@ using System.IO.Ports;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
-namespace Serial
+using Serial.DataMapper.Serial;
+namespace Serial.DataMapper.DataReader
 {
 	public enum ArduinoTypes
 	{
@@ -121,7 +122,7 @@ namespace Serial
                 }
 
 				Console.WriteLine($"[{serialPort.PortName}] Checking... ({SerialType.ToString()})");
-				Console.WriteLine($"DATA: {Data}");
+				// Console.WriteLine($"DATA: {Data}");
 				if (SerialType == ArduinoTypes.INS)
 				{
 					if (Data.Contains("AC") || Data.Contains("GY"))

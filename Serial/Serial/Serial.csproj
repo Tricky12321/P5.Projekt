@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -49,18 +48,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data Mapper\DataClass.cs" />
     <Compile Include="Data Mapper\DataMapper.cs" />
-    <Compile Include="Data Mapper\Filter.cs" />
-    <Compile Include="Data Mapper\INSReader.cs" />
-    <Compile Include="Data Mapper\KalmanFilter.cs" />
-    <Compile Include="Data Mapper\PozyxReader.cs" />
-    <Compile Include="Data Mapper\SerialReader.cs" />
-    <Compile Include="Data Mapper\Utilities.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Data Mapper\CustomSerialPort.cs" />
     <Compile Include="Data Mapper\HzCalculator.cs" />
     <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
     <Compile Include="Data Mapper\DataEntry.cs" />
@@ -70,6 +61,16 @@
     <Compile Include="Load.cs" />
     <Compile Include="Menu\MainMenu.cs" />
     <Compile Include="HighpassFilter\HighpassFilter.cs" />
+    <Compile Include="Data Mapper\Kalman\KalmanController.cs" />
+    <Compile Include="Data Mapper\Kalman\KalmanFilter.cs" />
+    <Compile Include="Data Mapper\DataReader\INSReader.cs" />
+    <Compile Include="Data Mapper\DataReader\PozyxReader.cs" />
+    <Compile Include="Data Mapper\DataReader\SerialReader.cs" />
+    <Compile Include="Data Mapper\DataReader\ReaderController.cs" />
+    <Compile Include="Data Mapper\Segmenter\SegmentController.cs" />
+    <Compile Include="Menu\MenuController.cs" />
+    <Compile Include="Utilities.cs" />
+    <Compile Include="Data Mapper\Serial\CustomSerialPort.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -83,6 +84,10 @@
     <Folder Include="Dynamic Calibration\" />
     <Folder Include="Menu\" />
     <Folder Include="HighpassFilter\" />
+    <Folder Include="Data Mapper\Kalman\" />
+    <Folder Include="Data Mapper\DataReader\" />
+    <Folder Include="Data Mapper\Segmenter\" />
+    <Folder Include="Data Mapper\Serial\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

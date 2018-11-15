@@ -8,7 +8,8 @@ using System.Collections.Concurrent;
 using System.IO.Ports;
 using System.IO;
 using System.Diagnostics;
-namespace Serial
+
+namespace Serial.DataMapper.DataReader
 {
 	class INSReader : HzCalculator
 	{

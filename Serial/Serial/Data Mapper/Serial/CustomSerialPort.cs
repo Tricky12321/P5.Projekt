@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO.Ports;
-namespace Serial
+namespace Serial.DataMapper.Serial
 {
 	public class CustomSerialPort : SerialPort
 	{

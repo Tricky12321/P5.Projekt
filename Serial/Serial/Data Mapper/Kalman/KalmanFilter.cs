@@ -2,7 +2,7 @@
 using KalmanFilters;
 using System.Collections.Generic;
 using System.Linq;
-namespace Serial
+namespace Serial.DataMapper.Kalman
 {
 	public class KalmanFilter
 	{

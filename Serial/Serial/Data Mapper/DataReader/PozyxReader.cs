@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Diagnostics;
-namespace Serial
+namespace Serial.DataMapper.DataReader
 {
 	class PozyxReader : HzCalculator
 	{
