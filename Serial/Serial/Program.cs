@@ -20,13 +20,15 @@ namespace Serial
             //var test = csvController.AccDataList[20];
             DynamicCalibration dyn = new DynamicCalibration(csvController.AccDataList[0].AccelerationData);
             dyn.CalculateNaiveVelocity();
-           
-            var test = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList.Select(x => x.X).ToList(), dyn.NaiveVelocityList.Select(x => x.TimeOfData).ToList());
+
+            var sjdfkljf = dyn.GetTupleListWithOneAxisAndTimes(dyn.NaiveVelocityList);
+
+            var test = dyn.CalculateDynamicVelocityList(dyn.GetTupleListWithOneAxisAndTimes(dyn.NaiveVelocityList));
             //var test = dyn.NaiveVelocityList;
             var testet = dyn.CalculatePosition(test);
-            foreach (var csdc in test)
+            foreach (var csdc in testet)
             {
-                Console.WriteLine($"\"{csdc.TimeOfData}\", \"{csdc.X}\"");
+                Console.WriteLine($"\"{csdc.Item2.ToString().Replace(',','.')}\", \"{csdc.Item1.ToString().Replace(',', '.')}\"");
             }
         }
     }
