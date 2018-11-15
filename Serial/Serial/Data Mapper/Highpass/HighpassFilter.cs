@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Serial.Highpass
+namespace Serial.DataMapper.Highpass
 {
     public class HighpassFilter
     {

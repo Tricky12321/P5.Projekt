@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using System.Threading;
 using System.Diagnostics;
-using Serial.Highpass;
+using Serial.DataMapper.Highpass;
 using System.Linq;
 namespace Serial.Menu
 {
