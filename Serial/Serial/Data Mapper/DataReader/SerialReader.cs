@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using Serial.DataMapper.Serial;
+using Serial.Utility;
 namespace Serial.DataMapper.DataReader
 {
 	public enum ArduinoTypes

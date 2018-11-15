@@ -2,7 +2,7 @@
 using Serial.DataMapper;
 using System.IO;
 using System.Collections.Generic;
-namespace Serial
+namespace Serial.Utility
 {
 	public enum CSVTypes
 	{

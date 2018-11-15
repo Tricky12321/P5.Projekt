@@ -9,6 +9,7 @@ using System.Threading;
 using System.Diagnostics;
 using Serial.DataMapper.Highpass;
 using System.Linq;
+using Serial.Utility;
 namespace Serial.Menu
 {
 	public static class MainMenu
