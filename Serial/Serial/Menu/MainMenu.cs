@@ -28,9 +28,6 @@ namespace Serial.Menu
 					case "help":
 						PrintCommands();
 						break;
-					case "nn":
-						//NeuralNetwork(Input);
-						break;
 					case "logdata":
 					case "ld":
 					case "log":
