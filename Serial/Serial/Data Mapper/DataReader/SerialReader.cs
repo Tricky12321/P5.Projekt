@@ -5,7 +5,9 @@ using System.IO.Ports;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
-namespace Serial
+using Serial.DataMapper.Serial;
+using Serial.Utility;
+namespace Serial.DataMapper.DataReader
 {
 	public enum ArduinoTypes
 	{
@@ -17,10 +19,10 @@ namespace Serial
 	{
 
 
-		static List<CustomSerialPort> OpenSerialPorts = new List<CustomSerialPort>();
+		static  List<CustomSerialPort> OpenSerialPorts = new List<CustomSerialPort>();
 		static List<CustomSerialPort> serialPorts = new List<CustomSerialPort>();
 
-		private static void FindSerialPorts()
+		static void FindSerialPorts()
 		{
 			if (serialPorts.Count == 0)
 			{
@@ -29,7 +31,7 @@ namespace Serial
 				{
 					try
 					{
-						CustomSerialPort serialPort = new CustomSerialPort(Port, 115200, Parity.None, 8, StopBits.One); ;
+						CustomSerialPort serialPort = new CustomSerialPort(Port, 115200, Parity.None, 8, StopBits.One);
 						serialPort.ReadTimeout = 1000;
 						serialPort.WriteTimeout = 1000;
 						serialPorts.Add(serialPort);
@@ -121,7 +123,7 @@ namespace Serial
                 }
 
 				Console.WriteLine($"[{serialPort.PortName}] Checking... ({SerialType.ToString()})");
-				Console.WriteLine($"DATA: {Data}");
+				// Console.WriteLine($"DATA: {Data}");
 				if (SerialType == ArduinoTypes.INS)
 				{
 					if (Data.Contains("AC") || Data.Contains("GY"))

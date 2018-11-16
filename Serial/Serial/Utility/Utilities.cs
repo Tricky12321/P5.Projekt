@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Serial
+namespace Serial.Utility
 {
     public class Utilities
     {

@@ -8,19 +8,31 @@ using System.Collections.Concurrent;
 using System.IO.Ports;
 using System.IO;
 using System.Diagnostics;
-namespace Serial
+
+namespace Serial.DataMapper.DataReader
 {
 	class INSReader : HzCalculator
 	{
-		private SerialPort _serialPort;
+		SerialPort _serialPort;
 		public long Tid = 0;
 		public static Stopwatch Timer_Input;
 		public static long Last_Timer = 0;
 
-		private XYZ Accel_Calibration;
-		private XYZ Gyro_Calibration;
-		private bool UseCalibration = false;
-		private double Angle;
+		XYZ Accel_Calibration;
+		XYZ Gyro_Calibration;
+		bool UseCalibration = false;
+		double Angle;
+
+		double XGY;
+        double YGY;
+        double ZGY;
+
+        double XAC;
+        double YAC;
+        double ZAC;
+
+        object LockObject = new object();
+
 		public XYZ AcceXYZ
 		{
 			get
@@ -50,16 +62,6 @@ namespace Serial
 				}
 			}
 		}
-
-		private double XGY;
-		private double YGY;
-		private double ZGY;
-
-		private double XAC;
-		private double YAC;
-		private double ZAC;
-
-		private object LockObject = new object();
 
 		public INSReader(Stopwatch Timer)
 		{

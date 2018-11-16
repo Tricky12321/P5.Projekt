@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Diagnostics;
-namespace Serial
+namespace Serial.DataMapper.DataReader
 {
 	class PozyxReader : HzCalculator
 	{
-		private SerialPort _serialPort;
-		public long Tid = 0;
+		SerialPort _serialPort;
+		public long Tid;
 
 		public static Stopwatch Timer_Input;
-		public static long Last_Timer = 0;
+		public static long Last_Timer;
 
 		public PozyxReader(Stopwatch Timer)
 		{
@@ -38,12 +38,12 @@ namespace Serial
 			Last_Timer = Timer_Input.ElapsedMilliseconds;
 			Tid += TimerSinceLast;
 			HZ_rate = TimerSinceLast;
-			Output.TimeOfData = Tid;    
+			Output.TimeOfData = Tid;
 			return Output;
 
 		}
 
-		private XYZ CheckData(string data)
+		XYZ CheckData(string data)
 		{
 
 			if (data.Contains("PO") && data.Contains(":"))
@@ -71,10 +71,7 @@ namespace Serial
 					return null;
 				}
 			}
-			else
-			{
-				return null;
-			}
+			return null;
 		}
 
 		public void ResetTid()

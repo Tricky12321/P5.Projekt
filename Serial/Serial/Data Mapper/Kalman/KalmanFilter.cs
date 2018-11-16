@@ -2,11 +2,11 @@
 using KalmanFilters;
 using System.Collections.Generic;
 using System.Linq;
-namespace Serial
+namespace Serial.DataMapper.Kalman
 {
 	public class KalmanFilter
 	{
-		private double A, H, Q, R, P, x;
+		double A, H, Q, R, P, x;
 
 		public static List<XYZ> KalmanData(List<XYZ> Input) {
 			List<double> X = new List<double>();

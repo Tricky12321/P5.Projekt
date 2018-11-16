@@ -2,7 +2,7 @@
 using Serial.DataMapper;
 using System.IO;
 using System.Collections.Generic;
-namespace Serial
+namespace Serial.Utility
 {
 	public enum CSVTypes
 	{
@@ -37,7 +37,7 @@ namespace Serial
 					int Length = LineReplaced.Length;
 					string[] LineSplit = LineReplaced.Substring(1, LineReplaced.Length - 2).Split('#');
 					// INS
-					int Timer = Convert.ToInt32(LineSplit[0]);
+					long Timer = Convert.ToInt32(LineSplit[0]);
 					double AX = Convert.ToDouble(LineSplit[1]);
 					double AY = Convert.ToDouble(LineSplit[2]);
 					double AZ = Convert.ToDouble(LineSplit[3]);
