@@ -127,7 +127,11 @@ namespace Serial.DynamicCalibrationName
 
                 List<Tuple<double, double>> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
 
-                double slope = CalculateTendencySlope(driftVelocity);
+                List<Tuple<double, double>> driftVelocityStartEnd = new List<Tuple<double, double>>();
+                driftVelocityStartEnd.Add(driftVelocity.First());
+                driftVelocityStartEnd.Add(driftVelocity.Last());
+
+                double slope = CalculateTendencySlope(driftVelocityStartEnd);
                 double startPointOffset = dynamicVelocityList[startIndex].Item1;
 
                 for (int j = startIndex; j < endIndex; j++)
@@ -140,7 +144,7 @@ namespace Serial.DynamicCalibrationName
 
             foreach (Tuple<int, int> startEndIndex in stationaryIndexList)
             {
-                for (int j = startEndIndex.Item1; j < startEndIndex.Item2; j++)
+                for (int j = startEndIndex.Item1; j <= startEndIndex.Item2; j++)
                 {
                     dynamicVelocityList[j] = new Tuple<double, double>(0, dynamicVelocityList[j].Item2);
                 }
