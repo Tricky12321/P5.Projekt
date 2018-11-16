@@ -80,13 +80,6 @@ namespace Serial.Menu
 		{
 			MenuController.DefaultHelp();
 			Console.WriteLine("-----------------------------------");
-			Console.WriteLine("nn - Neural network");
-			Console.WriteLine(" - start - Starts the Neural Network");
-			Console.WriteLine(" - stop - Stops the Neural Network");
-			Console.WriteLine(" - save <Path> - Saves the Neural Network to a file");
-			Console.WriteLine(" - load <Path> - Loads the Neural Network from a file");
-			Console.WriteLine(" - new - Creates a new CC");
-			Console.WriteLine("-----------------------------------");
 			Console.WriteLine("logdata - logging of test data");
 			Console.WriteLine(" - start [Time in sed]- Start the logger");
 			Console.WriteLine(" - stop - Stops the logger");
