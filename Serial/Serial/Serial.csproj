@@ -68,6 +68,7 @@
     <Compile Include="CSV\CSVData.cs" />
     <Compile Include="Dynamic Calibration\DynamicCalibration.cs" />
     <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
+    <Compile Include="Dynamic Calibration\Point.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
