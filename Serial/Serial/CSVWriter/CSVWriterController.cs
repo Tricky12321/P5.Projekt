@@ -183,7 +183,6 @@ namespace Serial.CSVWriter
 					FileWriter.Close();
 				}
 			}
-
 		}
 
 		private void WriteRollingAverage(List<double> Angles)

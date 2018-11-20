@@ -132,8 +132,12 @@ namespace Serial.DataMapper.DataReader
 					if (Pozyx == false)
 					{
 						NewEntry = new DataEntry(null, Output.Item1, Output.Item2, Angle);
-
-					}
+                        if (_INS.IsCalibrated())
+                        {
+                            var Output_non = _INS.GetNonCalibrated();
+                            NewNonCaliEntry = new DataEntry(null, Output_non.Item1, Output_non.Item2, Angle);
+                        }
+                    }
 					else if (_currentPoZYX != null)
 					{
 						NewEntry = new DataEntry(_currentPoZYX, Output.Item1, Output.Item2, Angle);
