@@ -76,13 +76,13 @@ namespace Serial.DynamicCalibrationName
             return distanceList;
         }
 
-        public void CalibrateCoefficientofDeterminition(double calibrationTime)
+        public void CalibrateResidualSumOfSquares(double calibrationTime)
         {
             List<TimePoint> accelerationCalibrationBatch = GetPointListWithOneAxisAndTimes(_accelerationList.TakeWhile(x => x.TimeOfData <= calibrationTime).ToList());
 
             double slope = CalculateTendencySlope(accelerationCalibrationBatch);
             double offset = CalculateTendensyOffset(accelerationCalibrationBatch, slope);
-            double errorMarginCalibration = CalculateResidualCoefficient(accelerationCalibrationBatch, slope, offset);
+            double errorMarginCalibration = CalculateResidualSumOfSquares(accelerationCalibrationBatch, slope, offset);
             _pointCoefficientOfDeterminitionTreshold = errorMarginCalibration * 1.2;
         }
 
@@ -121,11 +121,7 @@ namespace Serial.DynamicCalibrationName
             List<TimePoint> dynamicVelocityList = new List<TimePoint>();
             List<TimePoint> velocityList = useRunningAverage ? GetRunningAverageAcceleration(inputTimes) : inputTimes;
 
-
-            foreach (TimePoint point in velocityList)
-            {
-                dynamicVelocityList.Add(new TimePoint(point.Value, point.Time));
-            }
+            velocityList.ForEach(x => dynamicVelocityList.Add(new TimePoint(x.Value, x.Time)));
             /*
             #region DriftRemoval
 
@@ -336,7 +332,7 @@ namespace Serial.DynamicCalibrationName
                     double tendensySlope = CalculateTendencySlope(batchInputsTimes);
                     double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
 
-                    double coefficientOfDeterminition = CalculateResidualCoefficient(batchInputsTimes, tendensySlope, tendensyOffset);
+                    double coefficientOfDeterminition = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
                     //Console.WriteLine($"\"{inputsTimes[i].Item2.ToString().Replace(",",".")}\",\"{coefficientOfDeterminition.ToString().Replace(",",".")}\"");
 
                     if (coefficientOfDeterminition < _pointCoefficientOfDeterminitionTreshold)
@@ -505,7 +501,7 @@ namespace Serial.DynamicCalibrationName
         /// <param name="inputsTimes">Input which should be acceleration and times</param>
         /// <param name="slopeTendensy">Tendensy line offset.</param>
         /// <param name="offsetTendensy">Tendensy line offset.</param>
-        private double CalculateResidualCoefficient(List<TimePoint> inputsTimes, double slopeTendensy, double offsetTendensy)
+        private double CalculateResidualSumOfSquares(List<TimePoint> inputsTimes, double slopeTendensy, double offsetTendensy)
         {
             List<double> residualSSList = new List<double>();
             inputsTimes.ForEach(x => residualSSList.Add(Math.Pow(x.Value - (slopeTendensy * x.Time + offsetTendensy), 2)));
