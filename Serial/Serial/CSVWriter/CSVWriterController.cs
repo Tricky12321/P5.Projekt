@@ -224,7 +224,7 @@ namespace Serial.CSVWriter
 			}
 		}
 
-		public void WriteAll()
+		private void WriteAll()
 		{
 			List<double> Angles = PrepareNormal();
 

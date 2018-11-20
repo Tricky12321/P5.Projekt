@@ -201,13 +201,27 @@ namespace Serial.Menu
 					break;
 
 				case "calibrate":
+					
 					if (dataMapper == null)
 					{
 						Console.WriteLine("No Data Mapper has been created!");
 					}
 					else
 					{
-						dataMapper.CalibrateINS();
+						if (Input.Length == 3) {
+							int Timer = 0;
+							try
+							{
+								Timer = Convert.ToInt32(Input[2]) * 1000;
+								dataMapper.CalibrateINS(Timer);
+							}
+							catch (FormatException ex)
+							{
+								Console.WriteLine("Not a number givin!");
+							}
+						} else {
+							dataMapper.CalibrateINS();
+						}
 					}
 					break;
 

@@ -176,16 +176,17 @@ namespace Serial.DataMapper.DataReader
 			throw new TooManyDataEntriesRequestedException($"There is not this many DataEntries that can be requested.\nThere is only {avalibleDataEntries.Count()} avalible!");
 		}
 
-		public void CalibrateINS()
+		public void CalibrateINS(int tid = 5000)
 		{
 			_INS.ClearCalibration();
 			Console.WriteLine("Leave sensor level!");
 			Thread.Sleep(1000);
 			StartReading();
-			Thread.Sleep(5000);
-			StopReading();
-			int count = 0;
+			Thread.Sleep(tid);
 
+			StopReading();
+			Console.WriteLine($"Calibrated for {tid/1000} sec");
+			int count = 0;
 			double AX = 0;
 			double AY = 0;
 			double AZ = 0;

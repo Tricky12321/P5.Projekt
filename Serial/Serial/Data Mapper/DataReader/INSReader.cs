@@ -55,7 +55,7 @@ namespace Serial.DataMapper.DataReader
 			{
 				if (UseCalibration)
 				{
-					return new XYZ(XAC - Accel_Calibration.X, YAC - Accel_Calibration.X, ZAC - Accel_Calibration.X, Tid);
+					return new XYZ(XAC - Accel_Calibration.X, YAC - Accel_Calibration.Y, ZAC - Accel_Calibration.Z, Tid);
 				}
 				else
 				{
