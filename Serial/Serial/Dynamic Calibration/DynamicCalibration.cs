@@ -8,7 +8,7 @@ namespace Serial.DynamicCalibrationName
     public class DynamicCalibration
     {
         const double _runningAverageBatchTime = 1.0;
-        private double _slopeDiffenceTreshold = 0.2;                      //The lower the value is, the more acceleration points will be found.
+        private double _slopeDiffenceTreshold = 0.25;                      //The lower the value is, the more acceleration points will be found.
         private double _pointCoefficientOfDeterminitionTreshold;   //defines the upper value for when the scrubber is stationary.
         const double _stationaryDetectionBatchTime = 2.0;
         const double _gravitationalConst = 9.81;
@@ -36,10 +36,11 @@ namespace Serial.DynamicCalibrationName
         public List<TimePoint> GetPointListWithOneAxisAndTimes(List<XYZ> inputsTimes, char axis = 'X')
         {
             List<TimePoint> listToReturn = new List<TimePoint>();
-            foreach(XYZ input in inputsTimes)
+            foreach (XYZ input in inputsTimes)
             {
                 double axisValue;
-                switch(axis){
+                switch (axis)
+                {
                     case 'X':
                         axisValue = input.X;
                         break;
@@ -115,18 +116,17 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         /// <param name="inputs"> list of naive calculated velocities from an axis </param>
         /// <param name="times"> a list of times from the naive calculated velocity </param>
-        public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = true, bool useStationaryDetection = false)
+        public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = false, bool useStationaryDetection = true)
         {
             List<TimePoint> dynamicVelocityList = new List<TimePoint>();
             List<TimePoint> velocityList = useRunningAverage ? GetRunningAverageAcceleration(inputTimes) : inputTimes;
 
-            List<IndexRangePoint> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
 
             foreach (TimePoint point in velocityList)
             {
                 dynamicVelocityList.Add(new TimePoint(point.Value, point.Time));
             }
-
+            /*
             #region DriftRemoval
 
             //Trying to remove drift//
@@ -146,18 +146,24 @@ namespace Serial.DynamicCalibrationName
                         double slopeOffset = slope * (dynamicVelocityList[j].Time - dynamicVelocityList[startIndex].Time);
                         dynamicVelocityList[j].Value = (dynamicVelocityList[j].Value - slopeOffset);
                     }
+
+                    for (int j = startIndex; j < endIndex; j++)
+                    {
+                        dynamicVelocityList[j].Value = dynamicVelocityList[startIndex].Value;
+                    }
                 }
             }
 
             #endregion
             //Done trying to remove drift/
+*/
+            List<IndexRangePoint> stationaryIndexList = GetStationaryIndexes(GetPointListWithOneAxisAndTimes(_accelerationList), _stationaryDetectionBatchTime, _gradientCalculationOffset);
+            List<IndexRangePoint> drivingIndexList = GetDrivingRangesFromStationaryIndex(stationaryIndexList);
 
             #region StationaryCalibrate
 
             if (useStationaryDetection)
             {
-                List<IndexRangePoint> stationaryIndexList = GetStationaryIndexes(GetPointListWithOneAxisAndTimes(_accelerationList), _stationaryDetectionBatchTime, _gradientCalculationOffset);
-                List<IndexRangePoint> drivingIndexList = GetDrivingRangesFromStationaryIndex(stationaryIndexList);
 
                 for (int i = 0; i < drivingIndexList.Count; i++)
                 {
@@ -179,10 +185,9 @@ namespace Serial.DynamicCalibrationName
                     {
                         double slopeOffset = slope * (dynamicVelocityList[j].Time - dynamicVelocityList[startIndex].Time);
 
-                        dynamicVelocityList[j] = new TimePoint(dynamicVelocityList[j].Value - slopeOffset - startPointOffset, dynamicVelocityList[j].Time);
+                        dynamicVelocityList[j].Value = dynamicVelocityList[j].Value - slopeOffset - startPointOffset;
                     }
                 }
-
                 foreach (IndexRangePoint startEndIndex in stationaryIndexList)
                 {
                     for (int j = startEndIndex.IndexStart; j <= startEndIndex.IndexEnd; j++)
@@ -192,8 +197,53 @@ namespace Serial.DynamicCalibrationName
                 }
             }
             #endregion
-            
+            /*
+            for (int i = 0; i < drivingIndexList.Count; i++)
+            {
+                int startIndex = drivingIndexList[i].IndexStart;
+                int endIndex = drivingIndexList[i].IndexEnd;
+
+                List<TimePoint> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
+
+                List<IndexRangePoint> driftingIndexesList = FindDriftRanges(driftVelocity, _runningAverageBatchTime, _gradientCalculationOffset, driftVelocity.Count - 1);
+                driftingIndexesList.ForEach(x => { x.IndexStart += startIndex; x.IndexEnd += startIndex; });
+
+                foreach (IndexRangePoint indexRange in driftingIndexesList)
+                {
+                    double slope = CalculateTendencySlope(dynamicVelocityList.GetRange(indexRange.IndexStart, indexRange.IndexEnd - indexRange.IndexStart));
+
+                    for (int j = startIndex; j < endIndex; j++)
+                    {
+                        double slopeOffset = 1.0/(endIndex-startIndex) * (endIndex-j) * slope * (dynamicVelocityList[j].Time - dynamicVelocityList[startIndex].Time);
+                        dynamicVelocityList[j].Value = (dynamicVelocityList[j].Value - slopeOffset);
+                    }
+                }
+
+                /*
+                for (int i = 0; i < driftingIndexesList.Count; i++)
+                {
+                    int startIndex = driftingIndexesList[i].IndexStart;
+                    int endIndex = driftingIndexesList[i].IndexEnd;
+
+                    List<TimePoint> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
+                    double slope = CalculateTendencySlope(driftVelocity);
+
+                    for (int j = startIndex; j < velocityList.Count; j++)
+                    {
+                        double slopeOffset = slope * (dynamicVelocityList[j].Time - dynamicVelocityList[startIndex].Time);
+                        dynamicVelocityList[j].Value = (dynamicVelocityList[j].Value - slopeOffset);
+                    }
+
+                    for (int j = startIndex; j < endIndex; j++)
+                    {
+                        dynamicVelocityList[j].Value = dynamicVelocityList[startIndex].Value;
+                    }
+                }
+
+            }*/
+
             return dynamicVelocityList;
+
         }
 
         private List<IndexRangePoint> GetDrivingRangesFromStationaryIndex(List<IndexRangePoint> stationaryIndexes)
@@ -282,7 +332,7 @@ namespace Serial.DynamicCalibrationName
 
                     double midPointTime = inputsTimes[i * offset].Time;
                     List<TimePoint> batchInputsTimes = inputsTimes.FindAll(x => x.Time >= midPointTime - batchTime / 2 && x.Time < midPointTime + batchTime / 2).ToList();
-                    
+
                     double tendensySlope = CalculateTendencySlope(batchInputsTimes);
                     double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
 
@@ -326,7 +376,7 @@ namespace Serial.DynamicCalibrationName
                 {
                     startIndex = accelerationPointsList[i].Index + 1;
                 }
-                else 
+                else
                 {
                     endIndex = accelerationPointsList[i].Index - 1;
                     if (startIndex != endIndex)
@@ -353,9 +403,10 @@ namespace Serial.DynamicCalibrationName
 
             List<IndexPoint> slopeDifferencesList = CalculateSlopeDifferences(inputsTimes, batchTime, offset);
 
-            foreach(IndexPoint slope in slopeDifferencesList)
+            foreach (IndexPoint slope in slopeDifferencesList)
             {
-                if (Math.Abs(slope.Value) > _slopeDiffenceTreshold){
+                if (Math.Abs(slope.Value) > _slopeDiffenceTreshold)
+                {
                     listToReturn.Add(new IndexPoint(times[slope.Index], slope.Index));
                 }
             }
@@ -372,26 +423,30 @@ namespace Serial.DynamicCalibrationName
         /// <param name="offset">The offset between ranges on which the slope will be calculated</param>
         private List<IndexPoint> CalculateSlopeDifferences(List<TimePoint> inputsTimes, double batchTime, int offset)
         {
+            List<TimePoint> inputTimesDyn = inputsTimes;
             List<IndexPoint> listToReturn = new List<IndexPoint>();
             bool hasInput = true;
+
+            double firstTime = inputTimesDyn.First().Time;
+            inputTimesDyn.ForEach(x => x.Time = x.Time - firstTime);
 
             int i = 0;
 
             while (hasInput)
-            { 
-                if (inputsTimes[i].Time < batchTime)
+            {
+                if (inputTimesDyn[i].Time < batchTime)
                 {
                     i++;
                     continue;
                 }
 
-                double midPointTime = inputsTimes[i].Time;
-                List<TimePoint> firstBatchList = inputsTimes.FindAll(x => x.Time >= midPointTime - batchTime && x.Time < midPointTime).ToList();
+                double midPointTime = inputTimesDyn[i].Time;
+                List<TimePoint> firstBatchList = inputTimesDyn.FindAll(x => x.Time >= midPointTime - batchTime && x.Time < midPointTime).ToList();
                 double thresFirst = CalculateTendencySlope(firstBatchList);
-                List<TimePoint> secondBatchList = inputsTimes.FindAll(x => x.Time >= midPointTime && x.Time < midPointTime + batchTime).ToList();
+                List<TimePoint> secondBatchList = inputTimesDyn.FindAll(x => x.Time >= midPointTime && x.Time < midPointTime + batchTime).ToList();
                 double thresSecond = CalculateTendencySlope(secondBatchList);
 
-                if (inputsTimes.Last() == secondBatchList.Last())
+                if (inputTimesDyn.Last() == secondBatchList.Last())
                 {
                     hasInput = false;
                 }
@@ -464,7 +519,7 @@ namespace Serial.DynamicCalibrationName
             List<double> yAxis = inputsTimes.Select(x => x.Value).ToList();
             List<double> xAxis = inputsTimes.Select(x => x.Time).ToList();
 
-            return (yAxis.Sum()-slope*xAxis.Sum()) / inputsTimes.Count();
+            return (yAxis.Sum() - slope * xAxis.Sum()) / inputsTimes.Count();
         }
 
         /// <summary>
