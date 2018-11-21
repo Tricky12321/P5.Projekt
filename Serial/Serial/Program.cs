@@ -20,7 +20,7 @@ namespace Serial
             //var test = csvController.AccDataList[20];
             DynamicCalibration dyn = new DynamicCalibration(csvController.AccDataList[0].AccelerationData);
             dyn.CalculateNaiveVelocity();
-            dyn.CalibrateCoefficientofDeterminition(2.0);
+            dyn.CalibrateResidualSumOfSquares(2.0);
 
             var sjdfkljf = dyn.GetPointListWithOneAxisAndTimes(dyn.NaiveVelocityList);
 

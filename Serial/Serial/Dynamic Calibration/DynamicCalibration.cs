@@ -9,8 +9,8 @@ namespace Serial.DynamicCalibrationName
     {
         const double _runningAverageBatchTime = 1.0;
         private double _slopeDiffenceTreshold = 0.25;                      //The lower the value is, the more acceleration points will be found.
-        private double _pointCoefficientOfDeterminitionTreshold;   //defines the upper value for when the scrubber is stationary.
-        const double _stationaryDetectionBatchTime = 2.0;
+        private double _pointResidualSSTreshold;   //defines the upper value for when the scrubber is stationary.
+        const double _stationaryDetectionBatchTime = 1.0;
         const double _gravitationalConst = 9.81;
         const int _gradientCalculationOffset = 1;
 
@@ -59,16 +59,13 @@ namespace Serial.DynamicCalibrationName
 
         public List<TimePoint> CalculatePosition(List<TimePoint> inputTimes)
         {
-            List<double> inputs = inputTimes.Select(x => x.Value).ToList();
-            List<double> times = inputTimes.Select(x => x.Time).ToList();
-
             List<TimePoint> distanceList = new List<TimePoint>();
             distanceList.Add(new TimePoint(0.0, 0.0));
 
-            for (int i = 1; i < inputs.Count; i++)
+            for (int i = 1; i < inputTimes.Count; i++)
             {
-                double newDistance = (times[i] - times[i - 1]) * (inputs[i] + inputs[i - 1]) / 2 + distanceList[i - 1].Value;
-                double newTime = times[i];
+                double newDistance = (inputTimes[i].Time - inputTimes[i - 1].Time) * (inputTimes[i].Value + inputTimes[i - 1].Value) / 2 + distanceList[i - 1].Value;
+                double newTime = inputTimes[i].Time;
                 distanceList.Add(new TimePoint(newDistance, newTime));
 
                 //(t1-t0) * (v1+v0)/2 + d0 
@@ -83,7 +80,7 @@ namespace Serial.DynamicCalibrationName
             double slope = CalculateTendencySlope(accelerationCalibrationBatch);
             double offset = CalculateTendensyOffset(accelerationCalibrationBatch, slope);
             double errorMarginCalibration = CalculateResidualSumOfSquares(accelerationCalibrationBatch, slope, offset);
-            _pointCoefficientOfDeterminitionTreshold = errorMarginCalibration * 1.2;
+            _pointResidualSSTreshold = errorMarginCalibration * 3;
         }
 
 
@@ -300,56 +297,51 @@ namespace Serial.DynamicCalibrationName
 
 
         /// <summary>
-        /// Finds the stationary ranges.
+        /// Finds the stationary ranges for the scrubber.
         /// </summary>
-        /// <returns>The stationary ranges.</returns>
-        /// <param name="inputsTimes">Inputs times.</param>
+        /// <returns>A list containing the indexPoints for when the scrubber is stationary.</returns>
+        /// <param name="inputsTimes">The inputs which should be accelerometer data.</param>
         /// <param name="batchTime">Batch time in seconds (the time for the batch size).</param>
-        /// <param name="offset">Offset.</param>
+        /// <param name="offset">Offset between each batch on which the residualSS is calculated.</param>
         private List<IndexPoint> FindStationaryRanges(List<TimePoint> inputsTimes, double batchTime, int offset)
         {
-            List<double> inputs = inputsTimes.Select(x => x.Value).ToList();
-            List<double> times = inputsTimes.Select(x => x.Time).ToList();
+            List<IndexPoint> stationaryRanges = new List<IndexPoint>();
+            bool hasInput = true;
+            int i = 0;
 
-            List<IndexPoint> listToReturn = new List<IndexPoint>();
-
-            if (inputs.Count == times.Count)
+            while (hasInput)
             {
-                bool hasInput = true;
-
-                int i = 0;
-                while (hasInput)
+                if (inputsTimes[i].Time <= batchTime / 2)
                 {
-                    if (inputsTimes[i].Time < batchTime / 2)
-                    {
-                        i++;
-                        continue;
-                    }
-
-                    double midPointTime = inputsTimes[i * offset].Time;
-                    List<TimePoint> batchInputsTimes = inputsTimes.FindAll(x => x.Time >= midPointTime - batchTime / 2 && x.Time < midPointTime + batchTime / 2).ToList();
-
-                    double tendensySlope = CalculateTendencySlope(batchInputsTimes);
-                    double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
-
-                    double coefficientOfDeterminition = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
-                    //Console.WriteLine($"\"{inputsTimes[i].Item2.ToString().Replace(",",".")}\",\"{coefficientOfDeterminition.ToString().Replace(",",".")}\"");
-
-                    if (coefficientOfDeterminition < _pointCoefficientOfDeterminitionTreshold)
-                    {
-                        listToReturn.Add(new IndexPoint(times[i * offset], i * offset));
-                    }
-
-                    if (inputsTimes.Last() == batchInputsTimes.Last())
-                    {
-                        hasInput = false;
-                    }
-
+                    //Increments i until i represents the index for the midpoint in the first batch.
                     i++;
+                    continue;
                 }
-                return listToReturn;
+
+                double midPointTime = inputsTimes[i].Time;
+                //Takes a batch containing datapoints for a batchTime period. Takes half batchTime before midpoint and half after.
+                List<TimePoint> batchInputsTimes = inputsTimes.FindAll(x => x.Time >= midPointTime - batchTime / 2 && x.Time < midPointTime + batchTime / 2).ToList();
+
+                double tendensySlope = CalculateTendencySlope(batchInputsTimes);
+                double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
+                double residualSS = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
+
+
+
+                if (residualSS < _pointResidualSSTreshold)
+                {
+                    //If the residualSS is under a previous set treshold, the point is said to be stationary.
+                    stationaryRanges.Add(new IndexPoint(inputsTimes[i].Time, i));
+                }
+
+                if (inputsTimes.Last() == batchInputsTimes.Last())
+                {
+                    hasInput = false;
+                }
+
+                i += offset;
             }
-            throw new InvalidInputException("FindStationaryRangesRanges got a different amount of times and inputs, they should be that same");
+            return stationaryRanges;
         }
 
         /// <summary>
@@ -393,8 +385,6 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         private List<IndexPoint> FindAccelerationPoints(List<TimePoint> inputsTimes, double batchTime, int offset)
         {
-            List<double> times = inputsTimes.Select(x => x.Time).ToList();
-
             List<IndexPoint> listToReturn = new List<IndexPoint>();
 
             List<IndexPoint> slopeDifferencesList = CalculateSlopeDifferences(inputsTimes, batchTime, offset);
@@ -403,7 +393,7 @@ namespace Serial.DynamicCalibrationName
             {
                 if (Math.Abs(slope.Value) > _slopeDiffenceTreshold)
                 {
-                    listToReturn.Add(new IndexPoint(times[slope.Index], slope.Index));
+                    listToReturn.Add(new IndexPoint(inputsTimes[slope.Index].Time, slope.Index));
                 }
             }
             return listToReturn;
@@ -419,7 +409,9 @@ namespace Serial.DynamicCalibrationName
         /// <param name="offset">The offset between ranges on which the slope will be calculated</param>
         private List<IndexPoint> CalculateSlopeDifferences(List<TimePoint> inputsTimes, double batchTime, int offset)
         {
-            List<TimePoint> inputTimesDyn = inputsTimes;
+            List<TimePoint> inputTimesDyn = new List<TimePoint>();
+
+            inputsTimes.ForEach(x => inputTimesDyn.Add(new TimePoint(x.Value, x.Time)));
             List<IndexPoint> listToReturn = new List<IndexPoint>();
             bool hasInput = true;
 
@@ -499,7 +491,7 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         /// <returns>The residual coefficient.</returns>
         /// <param name="inputsTimes">Input which should be acceleration and times</param>
-        /// <param name="slopeTendensy">Tendensy line offset.</param>
+        /// <param name="slopeTendensy">Tendensy line slope.</param>
         /// <param name="offsetTendensy">Tendensy line offset.</param>
         private double CalculateResidualSumOfSquares(List<TimePoint> inputsTimes, double slopeTendensy, double offsetTendensy)
         {
