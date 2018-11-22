@@ -58,6 +58,8 @@
     <Compile Include="Data Mapper\SerialReader.cs" />
     <Compile Include="Data Mapper\Utilities.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
+    <Compile Include="HighpassFilter\HPFilterToOutput.cs" />
+    <Compile Include="HighpassFilter\NYHP.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data Mapper\CustomSerialPort.cs" />
@@ -76,13 +78,6 @@
     <None Include="Data Mapper\packages.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Data Mapper\" />
-    <Folder Include="Data Mapper\Exception\" />
-    <Folder Include="CSV\" />
-    <Folder Include="Dynamic Calibration\" />
-    <Folder Include="Menu\" />
-    <Folder Include="HighpassFilter\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

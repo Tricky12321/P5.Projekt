@@ -47,7 +47,7 @@ namespace Serial.Highpass
                     b2 = (1.0f - resonance * c + c * c) * a1;
                     break;
                 case PassType.Highpass:
-                    c = (float)Math.Tan(Math.PI * frequency / sampleRate);
+                    c = (float)Math.Tan(Math.PI * frequency / sampleRate); 
                     a1 = 1.0f / (1.0f + resonance * c + c * c);
                     a2 = -2f * a1;
                     a3 = a1;
