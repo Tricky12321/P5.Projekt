@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Serial.DataMapper.Highpass;
 using System.Linq;
 using Serial.Utility;
+using Serial.Highpass;
 namespace Serial.Menu
 {
 	public static class MainMenu
@@ -45,7 +46,7 @@ namespace Serial.Menu
 
 		public static void Test()
 		{
-            HPFilterToOutput hp = new HPFilterToOutput();
+            HighAndLowPass ok = new HighAndLowPass(PassType.Highpass, 200);
 		}
 
 		public static void PrintCommands()

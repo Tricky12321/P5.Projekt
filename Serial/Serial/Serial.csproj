@@ -50,8 +50,7 @@
   <ItemGroup>
     <Compile Include="Data Mapper\DataMapper.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
-    <Compile Include="HighpassFilter\HPFilterToOutput.cs" />
-    <Compile Include="HighpassFilter\NYHP.cs" />
+    <Compile Include="HighpassFilter\HighAndLowPass.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data Mapper\HzCalculator.cs" />
@@ -76,17 +75,6 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Data Mapper\" />
-    <Folder Include="Data Mapper\Exception\" />
-    <Folder Include="Dynamic Calibration\" />
-    <Folder Include="Menu\" />
-    <Folder Include="Data Mapper\Kalman\" />
-    <Folder Include="Data Mapper\DataReader\" />
-    <Folder Include="Data Mapper\Segmenter\" />
-    <Folder Include="Data Mapper\Serial\" />
-    <Folder Include="Data Mapper\Highpass\" />
-    <Folder Include="Utility\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
