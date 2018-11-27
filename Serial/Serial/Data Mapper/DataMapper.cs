@@ -27,10 +27,15 @@ namespace Serial.DataMapper
 			return SegmentController.SegmentData(AllDataEntries, NumOfSplits);
 		}
 
-        private List<double> RollingAverage(List<double> InputList, int PeriodLength)
+        private List<double> RollingAverage(List<double> input, int periodLength)
         {
-
-            return Enumerable.Range(0, InputList.Count - PeriodLength).Select(n => InputList.Skip(n).Take(PeriodLength).Average()).ToList();
+            List<double> listToReturn = new List<double>();
+            for (int i = 0; i < input.Count - periodLength; i++)
+            {
+                List<double> subRange = input.GetRange(i, periodLength);
+                listToReturn.Add(subRange.Average());
+            }
+            return listToReturn;
         }
 
 		public void CalculateRollingAverage(int PeriodLength)
@@ -72,6 +77,29 @@ namespace Serial.DataMapper
                 RollingAverageData.Enqueue(new Tuple<XYZ, XYZ>(new XYZ(AX[i], AY[i], AZ[i], Timer[i]), new XYZ(GX[i], GY[i], GZ[i], Timer[i])));
             }
             RollingAverageBool = true;
+        }
+
+        public ConcurrentQueue<Tuple<DataEntry, double>> CalculateVariance(int periodLength = 50)
+        {
+            List<DataEntry> data = AllDataEntries.ToList();
+            ConcurrentQueue<Tuple<DataEntry, double>> output = new ConcurrentQueue<Tuple<DataEntry, double>>();
+            double maxEntry;
+            double minEntry;
+            double variance;
+
+            int periodCount = data.Count() / periodLength;
+            for (int i = 0; i < periodCount; i++)
+            {
+                maxEntry = data.GetRange(i * periodLength, periodLength).Max(x => x.INS_Accelerometer.X);
+                minEntry = data.GetRange(i * periodLength, periodLength).Min(x => x.INS_Accelerometer.X);
+                variance = maxEntry - minEntry;
+
+                for (int j = i * periodLength; j < (i + 1) * periodLength; j++)
+                {
+                    output.Enqueue(new Tuple<DataEntry, double>(data[j], variance));
+                }
+            }
+            return output;
         }
 
     }

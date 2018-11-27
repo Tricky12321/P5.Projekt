@@ -314,6 +314,27 @@ namespace Serial.Menu
 					}
 					Console.WriteLine($"Done segmenting data! {OutputSegments.Count}");
 					break;
+                case "variance":
+                    ConcurrentQueue<Tuple<DataEntry, double>> varianceData = dataMapper.CalculateVariance();
+                    string VarianceFile = "Variance.csv";
+
+                    if (File.Exists(VarianceFile))
+                    {
+                        File.Delete(VarianceFile);
+                    }
+
+                    using (var test = File.AppendText(VarianceFile))
+                    {
+                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Variance");
+                        int i = 0;
+                        foreach (var item in varianceData)
+                        {
+                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\"";
+                            test.WriteLine(output);
+                        }
+                    }
+                    Console.WriteLine("Done!");
+                    break;
 				default:
 					Console.WriteLine("Invalid input format, use help command!");
 					break;
