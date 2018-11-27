@@ -69,6 +69,8 @@
     <Compile Include="Data Mapper\Highpass\HighpassFilter.cs" />
     <Compile Include="Utility\Load.cs" />
     <Compile Include="Utility\Utilities.cs" />
+    <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
+    <Compile Include="Dynamic Calibration\Point.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
