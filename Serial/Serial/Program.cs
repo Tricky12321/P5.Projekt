@@ -1,15 +1,34 @@
 ﻿using System;
 using Serial.Menu;
+using Serial.Utility;
+using Serial.DynamicCalibrationName;
+using System.Linq;
+using System.IO;
 namespace Serial
 {
     class MainClass
     {
         public static void Main()
         {
-            CSVController csvController = new CSVController();
-            csvController.GetFiles();
+            string filePath = Directory.GetCurrentDirectory() + "/Test";
+            string[] fileNamesArray = Directory.GetFiles(filePath);
+
+            string fileName = string.Empty;
+
+            foreach(string file in fileNamesArray)
+            {
+                if (file.EndsWith(".csv"))
+                {
+                    fileName = file;
+                    break;
+                }
+            }
+
+            Load csvController = new Load(fileName);
+            csvController.HandleCSV();
             //var test = csvController.AccDataList[20];
-            DynamicCalibration dyn = new DynamicCalibration(csvController.AccDataList[0].AccelerationData);
+            var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
+            DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
             dyn.CalibrateResidualSumOfSquares(2.0);
             dyn.CalibrateAccelerationPointCoefficient();
 
@@ -27,7 +46,8 @@ namespace Serial
             foreach (var csdc in test)
             {
                 Console.WriteLine($"\"{csdc.Time.ToString().Replace(',', '.')}\", \"{csdc.Value.ToString().Replace(',', '.')}\"");
-            }*/
+            }
+            */
             foreach (var csdc in testet)
             {
                 Console.WriteLine($"\"{csdc.Time.ToString().Replace(',', '.')}\", \"{csdc.Value.ToString().Replace(',', '.')}\"");

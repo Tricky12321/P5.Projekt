@@ -10,13 +10,13 @@ namespace Serial.DynamicCalibrationName
     public class DynamicCalibration
     {
         const double _runningAverageBatchTime = 1.0;
-
+       
         private double _slopeDiffenceTreshold = 0.2;                      //The lower the value is, the more acceleration points will be found.
         private double _pointResidualSSTreshold;   //defines the upper value for when the scrubber is stationary.
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
-        const double _floorTextureConst = 1.5;
+        const double _floorTextureConst = 10000;
 
         const double _gravitationalConst = 9.81;
 

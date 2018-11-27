@@ -71,6 +71,7 @@
     <Compile Include="Data Mapper\Highpass\HighpassFilter.cs" />
     <Compile Include="Utility\Load.cs" />
     <Compile Include="Utility\Utilities.cs" />
+    <Compile Include="CSVWriter\CSVWriterController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -87,6 +88,7 @@
     <Folder Include="Data Mapper\Serial\" />
     <Folder Include="Data Mapper\Highpass\" />
     <Folder Include="Utility\" />
+    <Folder Include="CSVWriter\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Serial.DataMapper.Highpass;
 using System.Linq;
 using Serial.Utility;
+using Serial.CSVWriter;
 namespace Serial.Menu
 {
 	public static class MainMenu
@@ -122,6 +123,43 @@ namespace Serial.Menu
 						}
 					}
 					break;
+				case "latex":
+                    if (MenuController.Confirm("Are you sure you want to replace everything?", false))
+                    {
+                        string[] entries = Directory.GetFileSystemEntries(".", "*.csv", SearchOption.AllDirectories);
+                        foreach (var FilePath in entries)
+                        {
+                            string FileContents = File.ReadAllText(FilePath);
+                            string Output = Regex.Replace(FileContents, @"\d+,\d+", delegate (Match match)
+                            {
+                                string v = match.ToString().Replace(",", ".");
+                                return v;
+                            });
+
+                            Output = Regex.Replace(Output, @"""\d+""\,", delegate (Match match)
+                            {
+                                string substringed = match.ToString().Substring(1, match.Length - 3);
+                                double newNum = Convert.ToDouble(substringed) / 1000f;
+                                return newNum.ToString().Replace(",", ".") + ",";
+                            });
+
+                            Output = Regex.Replace(Output, @"""(|-)\d+(|\.|\,)\d*""", delegate (Match match)
+                            {
+                                string v = match.ToString().Replace(@"""", "");
+                                return v;
+                            });
+
+                            Output = Regex.Replace(Output, @"""(|-)\d+(\.|\,)\d+""", delegate (Match match)
+                            {
+                                string v = match.ToString().Replace(@"""", "");
+                                return v;
+                            });
+
+                            File.WriteAllText(FilePath, Output);
+                        }
+                    }
+                    break;
+
 				case "combine":
 					if (true)
 					{
@@ -163,13 +201,27 @@ namespace Serial.Menu
 					break;
 
 				case "calibrate":
+					
 					if (dataMapper == null)
 					{
 						Console.WriteLine("No Data Mapper has been created!");
 					}
 					else
 					{
-						dataMapper.CalibrateINS();
+						if (Input.Length == 3) {
+							int Timer = 0;
+							try
+							{
+								Timer = Convert.ToInt32(Input[2]) * 1000;
+								dataMapper.CalibrateINS(Timer);
+							}
+							catch (FormatException ex)
+							{
+								Console.WriteLine("Not a number givin!");
+							}
+						} else {
+							dataMapper.CalibrateINS();
+						}
 					}
 					break;
 
@@ -251,7 +303,8 @@ namespace Serial.Menu
 							{
 								if (MenuController.Confirm("This file already exists, Overwrite?", false))
 								{
-									WriteToCSV(FileName);
+									CSVWriterController csvWriter = new CSVWriterController(dataMapper, FileName);
+									csvWriter.Execute();
 									Console.WriteLine($"Saved to {FileName}");
 								}
 								else
@@ -261,7 +314,8 @@ namespace Serial.Menu
 							}
 							else
 							{
-								WriteToCSV(FileName);
+								CSVWriterController csvWriter = new CSVWriterController(dataMapper, FileName);
+								csvWriter.Execute();
 								Console.WriteLine($"Saved to {FileName}");
 							}
 						}
@@ -320,154 +374,7 @@ namespace Serial.Menu
 			}
 		}
 
-		public static void WriteToCSV(string Name)
-		{
-			string INSFile = Name + "_INS.csv";
-			string POZYXFile = Name + "_POZYX.csv";
-			string INSKalmanFile = Name + "_INS_KALMAN.csv";
-			string INSRollingAverageFile = Name + "_INS_RA.csv";
-			List<DataMapper.DataEntry> DataList = new List<DataMapper.DataEntry>(dataMapper.AllDataEntries.ToArray());
-			List<XYZ> Accelerometer = new List<XYZ>();
-			List<XYZ> GyroScope = new List<XYZ>();
-			List<XYZ> Pozyx = new List<XYZ>();
-			List<double> Angles = new List<double>();
-			List<XYZ> Kalman_Accelerometer = new List<XYZ>();
-			List<XYZ> Kalman_Gyroscope = new List<XYZ>();
-			List<XYZ> RA_Accelerometer = new List<XYZ>();
-			List<XYZ> RA_Gyroscope = new List<XYZ>();
-			foreach (var DataEntryElement in DataList)
-			{
-				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
-				GyroScope.Add(DataEntryElement.INS_Gyroscope);
-				Pozyx.Add(DataEntryElement.PoZYX);
-				Angles.Add(DataEntryElement.INS_Angle);
-			}
 
-			if (dataMapper.Kalman)
-			{
-				foreach (var Kalman in dataMapper.KalmanData)
-				{
-					Kalman_Accelerometer.Add(Kalman.Item1);
-					Kalman_Gyroscope.Add(Kalman.Item2);
-				}
-			}
-
-			if (dataMapper.RollingAverageBool)
-			{
-				foreach (var RollingAverage in dataMapper.RollingAverageData)
-				{
-					RA_Accelerometer.Add(RollingAverage.Item1);
-					RA_Gyroscope.Add(RollingAverage.Item2);
-				}
-			}
-
-			if (File.Exists(INSFile))
-			{
-				File.Delete(INSFile);
-			}
-
-			if (File.Exists(INSKalmanFile))
-			{
-				File.Delete(INSKalmanFile);
-			}
-
-			if (File.Exists(INSRollingAverageFile))
-			{
-				File.Delete(INSRollingAverageFile);
-			}
-
-			if (File.Exists(POZYXFile))
-			{
-				File.Delete(POZYXFile);
-			}
-
-			// WRITE INS
-			using (StreamWriter FileWriter = File.AppendText(INSFile))
-			{
-				FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ,A");
-				int DataCount = GyroScope.Count;
-				for (int i = 0; i < DataCount; i++)
-				{
-					if (GyroScope[i] != null && Accelerometer[i] != null)
-					{
-						FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
-											 $"\"{Accelerometer[i].X}\"," +
-											 $"\"{Accelerometer[i].Y}\"," +
-											 $"\"{Accelerometer[i].Z}\"," +
-											 $"\"{GyroScope[i].X}\"," +
-											 $"\"{GyroScope[i].Y}\"," +
-											 $"\"{GyroScope[i].Z}\"," +
-											 $"\"{Angles[i]}\"");
-					}
-				}
-				FileWriter.Close();
-			}
-			// Write INS KALMAN
-			if (dataMapper.Kalman)
-			{
-				using (StreamWriter FileWriter = File.AppendText(INSKalmanFile))
-				{
-					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ,A");
-					int DataCount = Kalman_Gyroscope.Count;
-					for (int i = 0; i < DataCount; i++)
-					{
-						if (Kalman_Gyroscope[i] != null && Kalman_Accelerometer[i] != null)
-						{
-							FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
-												 $"\"{Kalman_Accelerometer[i].X}\"," +
-												 $"\"{Kalman_Accelerometer[i].Y}\"," +
-												 $"\"{Kalman_Accelerometer[i].Z}\"," +
-												 $"\"{Kalman_Gyroscope[i].X}\"," +
-												 $"\"{Kalman_Gyroscope[i].Y}\"," +
-												 $"\"{Kalman_Gyroscope[i].Z}\"," +
-												 $"\"{Angles[i]}\"");
-						}
-					}
-					FileWriter.Close();
-				}
-			}
-			// Write RollingAverage
-			if (dataMapper.RollingAverageBool)
-			{
-				using (StreamWriter FileWriter = File.AppendText(INSRollingAverageFile))
-				{
-					FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ");
-					int DataCount = RA_Gyroscope.Count;
-					for (int i = 0; i < DataCount; i++)
-					{
-						if (RA_Gyroscope[i] != null && RA_Accelerometer[i] != null)
-						{
-							FileWriter.WriteLine($"\"{RA_Gyroscope[i].TimeOfData}\"," +
-												 $"\"{RA_Accelerometer[i].X}\"," +
-												 $"\"{RA_Accelerometer[i].Y}\"," +
-												 $"\"{RA_Accelerometer[i].Z}\"," +
-												 $"\"{RA_Gyroscope[i].X}\"," +
-												 $"\"{RA_Gyroscope[i].Y}\"," +
-												 $"\"{RA_Gyroscope[i].Z}\"," +
-												 $"\"{Angles[i]}\"");
-						}
-					}
-					FileWriter.Close();
-				}
-			}
-			// WRITE POZYX
-			using (StreamWriter FileWriter = File.AppendText(POZYXFile))
-			{
-				FileWriter.WriteLine($"Timer,X,Y,Z");
-
-				foreach (var Data in Pozyx)
-				{
-					if (Data != null)
-					{
-						FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
-											 $"\"{Data.X}\"," +
-											 $"\"{Data.Y}\"," +
-											 $"\"{Data.Z}\"");
-					}
-				}
-				FileWriter.Close();
-			}
-		}
 
 		public static void dataMapperTimer()
 		{
