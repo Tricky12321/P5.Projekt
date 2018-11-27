@@ -36,7 +36,15 @@ namespace Serial.DataMapper.DataReader
 		bool Pozyx;
 		bool Ins;
 
-		public bool Calibrated => _INS.IsCalibrated();
+		public bool Calibrated {
+			get {
+				if (_INS != null) {
+					return _INS.IsCalibrated();
+				} else {
+					return false;
+				}
+			}
+		}
 
 
 		public ReaderController(bool Pozyx = true, bool Ins = true)

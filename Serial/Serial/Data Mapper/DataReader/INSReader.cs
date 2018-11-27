@@ -149,6 +149,8 @@ namespace Serial.DataMapper.DataReader
 
 		public void ResetTid()
 		{
+			_serialPort.DiscardInBuffer();
+            _serialPort.DiscardOutBuffer();
 			Tid = 0;
 			Last_Timer = Timer_Input.ElapsedMilliseconds;
 		}

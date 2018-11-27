@@ -135,12 +135,12 @@ namespace Serial.CSVWriter
 						if (Kalman_Gyroscope[i] != null && Kalman_Accelerometer[i] != null)
 						{
 							FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
-												 $"\"{String.Format("{0:F20}", Kalman_Accelerometer[i].X)}\"," +
-												 $"\"{String.Format("{0:F20}", Kalman_Accelerometer[i].Y)}\"," +
-												 $"\"{String.Format("{0:F20}", Kalman_Accelerometer[i].Z)}\"," +
-												 $"\"{String.Format("{0:F20}", Kalman_Gyroscope[i].X)}\"," +
-												 $"\"{String.Format("{0:F20}", Kalman_Gyroscope[i].Y)}\"," +
-												 $"\"{String.Format("{0:F20}", Kalman_Gyroscope[i].Z)}\"," +
+							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].X, 5))}\"," +
+							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].Y, 5))}\"," +
+							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].Z, 5))}\"," +
+							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].X, 5))}\"," +
+							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].Y, 5))}\"," +
+							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].Z, 5))}\"," +
 												 $"\"{Angles[i]}\"");
 						}
 					}
