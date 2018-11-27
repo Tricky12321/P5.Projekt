@@ -279,7 +279,7 @@ node_modules/
 **/*.Server/GeneratedArtifacts
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
-
+**/*.DS_Store
 # Paket dependency manager
 .paket/paket.exe
 paket-files/
