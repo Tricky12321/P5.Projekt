@@ -56,6 +56,8 @@
     <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
     <Compile Include="Data Mapper\DataEntry.cs" />
     <Compile Include="Dynamic Calibration\DynamicCalibration.cs" />
+    <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
+    <Compile Include="Dynamic Calibration\Point.cs" />
     <Compile Include="Menu\MainMenu.cs" />
     <Compile Include="Data Mapper\Kalman\KalmanController.cs" />
     <Compile Include="Data Mapper\Kalman\KalmanFilter.cs" />
