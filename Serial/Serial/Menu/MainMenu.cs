@@ -102,9 +102,9 @@ namespace Serial.Menu
                         CSVWriterController csvWriter = new CSVWriterController(FileName + "_acc");
                         csvWriter.DynamicToCSV(accelerationList);
                         csvWriter.FileName = FileName + "_vel";
-                        csvWriter.DynamicToCSV(accelerationList);
+                        csvWriter.DynamicToCSV(velocityList);
                         csvWriter.FileName = FileName + "_dic";
-                        csvWriter.DynamicToCSV(accelerationList);
+                        csvWriter.DynamicToCSV(distanceList);
                         Console.WriteLine("Done writing to files!");
                         break;
                     default:

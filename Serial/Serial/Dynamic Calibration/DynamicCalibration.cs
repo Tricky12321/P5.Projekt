@@ -16,7 +16,7 @@ namespace Serial.DynamicCalibrationName
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
-        const double _floorTextureConst = 10000;
+        const double _floorTextureConst = 1.5;
 
         const double _gravitationalConst = 9.81;
 
