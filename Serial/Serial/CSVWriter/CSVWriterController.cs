@@ -5,15 +5,18 @@ using Serial.Utility;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
+using Serial.DynamicCalibrationName.Points;
+
 namespace Serial.CSVWriter
 {
 	public class CSVWriterController
 	{
 		DataMapper.DataMapper currentDataMapper;
-		string FileName = "";
+		public string FileName = "";
 
 		string INSFile => FileName + "_INS.csv";
-		string NoCalibrateINSFile => FileName + "_INS_NOCALIBRATE.csv";
+        string DYNAMICCALIBFILE => FileName + "_DYNAM_CALI.csv";
+        string NoCalibrateINSFile => FileName + "_INS_NOCALIBRATE.csv";
 		string POZYXFile => FileName + "_POZYX.csv";
 		string INSKalmanFile => FileName + "_INS_KALMAN.csv";
 		string INSRollingAverageFile => FileName + "_INS_RA.csv";
@@ -25,7 +28,13 @@ namespace Serial.CSVWriter
 			DeleteOldFiles();
 		}
 
-		private void DeleteOldFiles()
+        public CSVWriterController( string Name)
+        {
+            FileName = Name;
+            DeleteOldFiles();
+        }
+
+        private void DeleteOldFiles()
 		{
 			if (File.Exists(INSFile))
 			{
@@ -50,8 +59,6 @@ namespace Serial.CSVWriter
 
 		private List<double> PrepareNormal()
 		{
-
-
 			List<XYZ> Accelerometer = new List<XYZ>();
 			List<XYZ> GyroScope = new List<XYZ>();
 			List<XYZ> Pozyx = new List<XYZ>();
@@ -67,6 +74,24 @@ namespace Serial.CSVWriter
 			WritePozyx(Pozyx);
 			return Angles;
 		}
+
+        public void DynamicToCSV(List<TimePoint> inputList)
+        {
+            using (StreamWriter FileWriter = File.AppendText(DYNAMICCALIBFILE))
+            {
+                FileWriter.WriteLine($"Timer,Value");
+                int DataCount = inputList.Count;
+                for (int i = 0; i < DataCount; i++)
+                {
+                    if (inputList[i] != null)
+                    {
+                        FileWriter.WriteLine($"\"{inputList[i].Time}\"," +
+                                             $"\"{inputList[i].Value}\"");
+                    }
+                }
+                FileWriter.Close();
+            }
+        }
 
 		private void WriteNormal(List<XYZ> Accelerometer, List<XYZ> GyroScope, List<XYZ> Pozyx, List<double> Angles)
 		{
