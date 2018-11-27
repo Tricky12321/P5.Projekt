@@ -2,59 +2,45 @@
 using System.Collections.Generic;
 using System.Linq;
 using Serial.DynamicCalibrationName.Points;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Serial.DynamicCalibrationName
 {
     public class DynamicCalibration
     {
         const double _runningAverageBatchTime = 1.0;
-        private double _slopeDiffenceTreshold = 0.25;                      //The lower the value is, the more acceleration points will be found.
+
+        private double _slopeDiffenceTreshold = 0.2;                      //The lower the value is, the more acceleration points will be found.
         private double _pointResidualSSTreshold;   //defines the upper value for when the scrubber is stationary.
-        const double _stationaryDetectionBatchTime = 1.0;
-        const double _gravitationalConst = 9.81;
         const int _gradientCalculationOffset = 1;
 
-        public List<XYZ> NaiveVelocityList = new List<XYZ>();
+        const double _stationaryDetectionBatchTime = 1.0;
+        const double _floorTextureConst = 1.5;
 
-        private List<XYZ> _accelerationList = new List<XYZ>();
+        const double _gravitationalConst = 9.81;
+
+        public List<TimePoint> NaiveVelocityList = new List<TimePoint>();
+        public List<TimePoint> AccelerationList = new List<TimePoint>();
+        public List<TimePoint> AccelerationListRAW = new List<TimePoint>();
+
 
         public DynamicCalibration(List<XYZ> acceleration)
         {
-            _accelerationList.Add(new XYZ(0, 0, 0, 0.0));
+            AccelerationListRAW.Add(new TimePoint(0.0, 0.0));
+            AccelerationList.Add(new TimePoint(0.0, 0.0));
 
             foreach (XYZ acc in acceleration)
             {
-                XYZ pos = new XYZ();
-                pos.X = (acc.X / 1000.0) * _gravitationalConst;
-                pos.Y = (acc.Y / 1000.0) * _gravitationalConst;
-                pos.Z = (acc.Z / 1000.0) * _gravitationalConst;
-                pos.TimeOfData = acc.TimeOfData / 1000.0;
-                _accelerationList.Add(pos);
-            }
-        }
+                double value = (acc.X / 1000.0) * _gravitationalConst;
+                double time = acc.TimeOfData / 1000.0;
+                TimePoint posx = new TimePoint(value, time);
+                TimePoint pos = new TimePoint(value, time);
 
-        public List<TimePoint> GetPointListWithOneAxisAndTimes(List<XYZ> inputsTimes, char axis = 'X')
-        {
-            List<TimePoint> listToReturn = new List<TimePoint>();
-            foreach (XYZ input in inputsTimes)
-            {
-                double axisValue;
-                switch (axis)
-                {
-                    case 'X':
-                        axisValue = input.X;
-                        break;
-                    case 'Y':
-                        axisValue = input.Y;
-                        break;
-                    case 'Z':
-                        axisValue = input.Z;
-                        break;
-                    default: throw new InvalidInputException("The axis name has to be uppercase, either X, Y or Z");
-                }
-                listToReturn.Add(new TimePoint(axisValue, input.TimeOfData));
+                AccelerationListRAW.Add(pos);
+                AccelerationList.Add(posx);
             }
-            return listToReturn;
+            NaiveVelocityList = CalculateNaiveVelocity(true);
         }
 
         public List<TimePoint> CalculatePosition(List<TimePoint> inputTimes)
@@ -75,37 +61,79 @@ namespace Serial.DynamicCalibrationName
 
         public void CalibrateResidualSumOfSquares(double calibrationTime)
         {
-            List<TimePoint> accelerationCalibrationBatch = GetPointListWithOneAxisAndTimes(_accelerationList.TakeWhile(x => x.TimeOfData <= calibrationTime).ToList());
+            List<TimePoint> accelerationCalibrationBatch = AccelerationListRAW.TakeWhile(x => x.Time <= calibrationTime).ToList();
 
             double slope = CalculateTendencySlope(accelerationCalibrationBatch);
             double offset = CalculateTendensyOffset(accelerationCalibrationBatch, slope);
             double errorMarginCalibration = CalculateResidualSumOfSquares(accelerationCalibrationBatch, slope, offset);
-            _pointResidualSSTreshold = errorMarginCalibration * 3;
+            _pointResidualSSTreshold = errorMarginCalibration * _floorTextureConst;
         }
 
+        private ConcurrentBag<Tuple<double, Double>> _coefficientValues = new ConcurrentBag<Tuple<double, Double>>();
+        public void CalibrateAccelerationPointCoefficient()
+        {
+            List<Tuple<double, Double>> averageList = new List<Tuple<double, Double>>();
+            List<Thread> runningThreads = new List<Thread>();
+            for (Double j = 0.0; j < 1; j += 0.05)
+            {
+                Thread thread = new Thread(new ParameterizedThreadStart(CalibrationThread));
+                runningThreads.Add(thread);
+                thread.Start(j);
+            }
+
+            int liveTreadsCount = 1;
+            while (liveTreadsCount > 0)
+            {
+                Thread.Sleep(10);
+                liveTreadsCount = runningThreads.Where(x => x.ThreadState == ThreadState.Running && x.IsAlive).Count();
+
+            }
+            _slopeDiffenceTreshold = _coefficientValues.OrderByDescending(x => x.Item1).First().Item2;
+            //averageList.ForEach(Console.WriteLine);
+        }
+
+        private void CalibrationThread(object j)
+        {
+            List<int> accelerationCountList = new List<int>();
+
+            int counter = 0;
+
+            var accelerationPointsList = FindAccelerationPoints(NaiveVelocityList, _runningAverageBatchTime, _gradientCalculationOffset, (Double)j);
+
+            for (int i = 1; i < accelerationPointsList.Count; i++)
+            {
+                if (accelerationPointsList[i].Index == accelerationPointsList[i - 1].Index + 1)
+                {
+                    counter++;
+                }
+                else
+                {
+                    accelerationCountList.Add(counter);
+                    counter = 0;
+                }
+            }
+            _coefficientValues.Add(new Tuple<double, double>(accelerationCountList.Count == 0 ? 0 : accelerationCountList.Average(), (Double)j));
+            Console.WriteLine((accelerationCountList.Count == 0 ? 0 : accelerationCountList.Average()).ToString() + j);
+        }
 
         /// <summary>
         /// Calculates the naive velocity.
         /// </summary>
-        public void CalculateNaiveVelocity()
+        public List<TimePoint> CalculateNaiveVelocity(bool useRawAccelerometerData)
         {
-            NaiveVelocityList.Add(new XYZ(0, 0, 0, 0.0));
-            for (int i = 1; i < _accelerationList.Count; i++)
-            {
-                XYZ placeXYZ = new XYZ();
+            List<TimePoint> accelerometerList = useRawAccelerometerData ? AccelerationListRAW : AccelerationList;
 
-                placeXYZ.TimeOfData = _accelerationList[i].TimeOfData;
-                placeXYZ.X = (placeXYZ.TimeOfData - NaiveVelocityList[i - 1].TimeOfData)
-                                            * ((_accelerationList[i - 1].X + _accelerationList[i].X) / 2)
-                                            + NaiveVelocityList[i - 1].X;
-                placeXYZ.Y = (placeXYZ.TimeOfData - NaiveVelocityList[i - 1].TimeOfData)
-                                            * ((_accelerationList[i - 1].Y + _accelerationList[i].Y) / 2)
-                                            + NaiveVelocityList[i - 1].Y;
-                placeXYZ.Z = (placeXYZ.TimeOfData - NaiveVelocityList[i - 1].TimeOfData)
-                                            * ((_accelerationList[i - 1].Z + _accelerationList[i].Z) / 2)
-                                            + NaiveVelocityList[i - 1].Z;
-                NaiveVelocityList.Add(placeXYZ);
+            List<TimePoint> naiveVelocityList = new List<TimePoint>();
+            naiveVelocityList.Add(new TimePoint(0.0, 0.0));
+            for (int i = 1; i < accelerometerList.Count; i++)
+            {
+                double time = accelerometerList[i].Time;
+                double value = (time - naiveVelocityList[i - 1].Time)
+                    * ((accelerometerList[i - 1].Value + accelerometerList[i].Value) / 2)
+                    + naiveVelocityList[i - 1].Value;
+                naiveVelocityList.Add(new TimePoint(value, time));
             }
+            return naiveVelocityList;
         }
 
         /// <summary>
@@ -113,16 +141,18 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         /// <param name="inputs"> list of naive calculated velocities from an axis </param>
         /// <param name="times"> a list of times from the naive calculated velocity </param>
-        public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = false, bool useStationaryDetection = true)
+        public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = true, bool useStationaryDetection = true)
         {
-            List<TimePoint> dynamicVelocityList = new List<TimePoint>();
             List<TimePoint> velocityList = useRunningAverage ? GetRunningAverageAcceleration(inputTimes) : inputTimes;
 
-            velocityList.ForEach(x => dynamicVelocityList.Add(new TimePoint(x.Value, x.Time)));
-            /*
+            List<IndexRangePoint> stationaryIndexList = GetStationaryIndexes(AccelerationListRAW, _stationaryDetectionBatchTime, _gradientCalculationOffset);
+            List<IndexRangePoint> drivingIndexList = GetDrivingRangesFromStationaryIndex(stationaryIndexList);
+
             #region DriftRemoval
 
             //Trying to remove drift//
+
+            List<IndexRangePoint> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
 
             if (useDriftCalibration)
             {
@@ -131,7 +161,14 @@ namespace Serial.DynamicCalibrationName
                     int startIndex = driftingIndexesList[i].IndexStart;
                     int endIndex = driftingIndexesList[i].IndexEnd;
 
-                    List<TimePoint> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
+                    for (int j = 0; j < endIndex - startIndex; j++)
+                    {
+                        AccelerationList[j + startIndex].Value = 0;
+                        AccelerationList[j + startIndex].DriftPoint = true;
+                    }
+                    //dynamicVelocityList.Clear();
+
+                    /*List<TimePoint> driftVelocity = dynamicVelocityList.GetRange(startIndex, endIndex - startIndex);
                     double slope = CalculateTendencySlope(driftVelocity);
 
                     for (int j = startIndex; j < velocityList.Count; j++)
@@ -143,21 +180,19 @@ namespace Serial.DynamicCalibrationName
                     for (int j = startIndex; j < endIndex; j++)
                     {
                         dynamicVelocityList[j].Value = dynamicVelocityList[startIndex].Value;
-                    }
+                    }*/
                 }
             }
 
             #endregion
             //Done trying to remove drift/
-*/
-            List<IndexRangePoint> stationaryIndexList = GetStationaryIndexes(GetPointListWithOneAxisAndTimes(_accelerationList), _stationaryDetectionBatchTime, _gradientCalculationOffset);
-            List<IndexRangePoint> drivingIndexList = GetDrivingRangesFromStationaryIndex(stationaryIndexList);
+            List<TimePoint> dynamicVelocityList = new List<TimePoint>();
+            CalculateNaiveVelocity(false).ForEach(x => dynamicVelocityList.Add(new TimePoint(x.Value, x.Time)));
 
-            #region StationaryCalibrate
+            #region StationaryCalibration
 
             if (useStationaryDetection)
             {
-
                 for (int i = 0; i < drivingIndexList.Count; i++)
                 {
                     int startIndex = drivingIndexList[i].IndexStart;
@@ -170,7 +205,6 @@ namespace Serial.DynamicCalibrationName
                     driftVelocity.First(),
                     driftVelocity.Last()
                 };
-
                     double slope = CalculateTendencySlope(driftVelocityStartEnd);
                     double startPointOffset = dynamicVelocityList[startIndex].Value;
 
@@ -181,6 +215,21 @@ namespace Serial.DynamicCalibrationName
                         dynamicVelocityList[j].Value = dynamicVelocityList[j].Value - slopeOffset - startPointOffset;
                     }
                 }
+                /*
+                foreach (IndexRangePoint startEndIndex in stationaryIndexList)
+                {
+                    for (int j = startEndIndex.IndexStart; j <= startEndIndex.IndexEnd; j++)
+                    {
+                        dynamicVelocityList[j].Value = 0.0;
+                    }
+                }*/
+            }
+            #endregion
+
+            #region StationaryCalibrationExtra
+
+            if (useStationaryDetection)
+            {
                 foreach (IndexRangePoint startEndIndex in stationaryIndexList)
                 {
                     for (int j = startEndIndex.IndexStart; j <= startEndIndex.IndexEnd; j++)
@@ -190,6 +239,7 @@ namespace Serial.DynamicCalibrationName
                 }
             }
             #endregion
+
             /*
             for (int i = 0; i < drivingIndexList.Count; i++)
             {
@@ -236,8 +286,12 @@ namespace Serial.DynamicCalibrationName
             }*/
 
             return dynamicVelocityList;
-
         }
+
+        void HandleFunc(TimePoint arg)
+        {
+        }
+
 
         private List<IndexRangePoint> GetDrivingRangesFromStationaryIndex(List<IndexRangePoint> stationaryIndexes)
         {
@@ -383,7 +437,7 @@ namespace Serial.DynamicCalibrationName
         /// <summary>
         /// Finds times for when the difference in velocity is over a gradient treshold.
         /// </summary>
-        private List<IndexPoint> FindAccelerationPoints(List<TimePoint> inputsTimes, double batchTime, int offset)
+        private List<IndexPoint> FindAccelerationPoints(List<TimePoint> inputsTimes, double batchTime, int offset, double coefficient = 0)
         {
             List<IndexPoint> listToReturn = new List<IndexPoint>();
 
@@ -391,7 +445,7 @@ namespace Serial.DynamicCalibrationName
 
             foreach (IndexPoint slope in slopeDifferencesList)
             {
-                if (Math.Abs(slope.Value) > _slopeDiffenceTreshold)
+                if (Math.Abs(slope.Value) > (Math.Abs(coefficient) <= 0.0 ? _slopeDiffenceTreshold : coefficient))
                 {
                     listToReturn.Add(new IndexPoint(inputsTimes[slope.Index].Time, slope.Index));
                 }
@@ -455,7 +509,6 @@ namespace Serial.DynamicCalibrationName
         private List<TimePoint> GetRunningAverageAcceleration(List<TimePoint> inputsTimes, int periodLength = 100)
         {
             List<double> inputs = inputsTimes.Select(x => x.Value).ToList();
-            List<double> times = inputsTimes.Select(x => x.Time).ToList();
 
             List<TimePoint> listToReturn = new List<TimePoint>();
 
@@ -463,7 +516,7 @@ namespace Serial.DynamicCalibrationName
 
             for (int i = 0; i < averageList.Count; i++)
             {
-                listToReturn.Add(new TimePoint(averageList[i], times[i]));
+                listToReturn.Add(new TimePoint(averageList[i], inputsTimes[i].Time));
             }
             return listToReturn;
         }

@@ -17,6 +17,7 @@ namespace Serial.DynamicCalibrationName.Points
     {
         public double Value;
         public double Time;
+        public bool DriftPoint = false;
 
         public TimePoint(double value, double time)
         {
