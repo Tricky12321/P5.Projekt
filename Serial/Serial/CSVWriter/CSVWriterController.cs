@@ -171,9 +171,9 @@ namespace Serial.CSVWriter
 						if (GyroScopeNonCalibrated[i] != null && GyroScopeNonCalibrated[i] != null)
 						{
 							FileWriter.WriteLine($"\"{GyroScopeNonCalibrated[i].TimeOfData}\"," +
-												 $"\"{GyroScopeNonCalibrated[i].X}\"," +
-												 $"\"{GyroScopeNonCalibrated[i].Y}\"," +
-												 $"\"{GyroScopeNonCalibrated[i].Z}\"," +
+												 $"\"{AccelerometerNonCalibrated[i].X}\"," +
+							                     $"\"{AccelerometerNonCalibrated[i].Y}\"," +
+							                     $"\"{AccelerometerNonCalibrated[i].Z}\"," +
 												 $"\"{GyroScopeNonCalibrated[i].X}\"," +
 												 $"\"{GyroScopeNonCalibrated[i].Y}\"," +
 												 $"\"{GyroScopeNonCalibrated[i].Z}\"," +
