@@ -11,6 +11,9 @@ using Serial.DataMapper.Highpass;
 using System.Linq;
 using Serial.Utility;
 using Serial.CSVWriter;
+using Serial.DynamicCalibrationName;
+using Serial.DynamicCalibrationName.Points;
+
 namespace Serial.Menu
 {
 	public static class MainMenu
@@ -37,14 +40,81 @@ namespace Serial.Menu
 					case "test":
 						Test();
 						break;
-					default:
+                    case "dc":
+                        RunDynamicCalibration();
+                        break;
+                    default:
 						Exit = MenuController.DefaultCommands(Input);
 						break;
 				}
 			} while (!Exit);
 		}
 
-		public static void Test()
+        private static void RunDynamicCalibration()
+        {
+            string filePath = Directory.GetCurrentDirectory() + "/Test";
+            string[] fileNamesArray = Directory.GetFiles(filePath).Where(x => x.EndsWith(".csv")).ToArray();
+
+            for (int i = 0; i < fileNamesArray.Count(); i++)
+            {
+                Console.WriteLine($"{fileNamesArray[i]} : Number {i}");
+            }
+
+            int number = 0;
+
+            while (!(int.TryParse(Console.ReadLine(), out number) && number < fileNamesArray.Count() && number >= 0))
+            {
+                Console.WriteLine("Wrong input!");
+            }
+
+            string fileName = fileNamesArray[number];
+
+            Load csvController = new Load(fileName);
+            csvController.HandleCSV();
+            //var test = csvController.AccDataList[20];
+            var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
+            DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
+            dyn.CalibrateResidualSumOfSquares(2.0);
+            dyn.CalibrateAccelerationPointCoefficient();
+
+            List<TimePoint> accelerationList = dyn.AccelerationList;
+            List<TimePoint> velocityList = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList);
+            List<TimePoint> distanceList = dyn.CalculatePosition(velocityList);
+
+            while (Console.ReadLine() != "q")
+            {
+                Console.WriteLine("What do you want to print? (acc, vel, dis or toCSV)");
+
+                string input = Console.ReadLine();
+                switch (input)
+                {
+                    case "acc":
+                        accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+                        break;
+                    case "vel":
+                        velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+                        break;
+                    case "dis":
+                        distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+                        break;
+                    case "toCSV":
+                        string FileName = fileName.Replace(".csv", string.Empty).Split('/').Last();
+                        CSVWriterController csvWriter = new CSVWriterController(FileName + "_acc");
+                        csvWriter.DynamicToCSV(accelerationList);
+                        csvWriter.FileName = FileName + "_vel";
+                        csvWriter.DynamicToCSV(velocityList);
+                        csvWriter.FileName = FileName + "_dic";
+                        csvWriter.DynamicToCSV(distanceList);
+                        Console.WriteLine("Done writing to files!");
+                        break;
+                    default:
+                        Console.WriteLine("acc, vel, dis or toCSV?");
+                        break;
+                }
+            }        
+        }
+
+        public static void Test()
 		{
 			Load load = new Load("frem_5m_2_INS.csv");
 			load.HandleCSV();
