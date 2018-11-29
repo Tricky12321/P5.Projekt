@@ -17,7 +17,7 @@ namespace Serial.Highpass
     {
         public HighAndLowPass(PassType passType, int period)
         {
-            Load load = new Load("new_calibrate_still1_INS.csv");
+            Load load = new Load("start_stop_3_INS.csv");
             load.HandleCSV();
             List<Tuple<double, double>> input = new List<Tuple<double, double>>();
             foreach (var item in load.data.AllDataEntries)
