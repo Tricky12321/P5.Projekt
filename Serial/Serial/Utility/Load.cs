@@ -2,6 +2,8 @@
 using Serial.DataMapper;
 using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
+
 namespace Serial.Utility
 {
 	public enum CSVTypes
@@ -18,6 +20,15 @@ namespace Serial.Utility
 			this.Path = Path;
 		}
 
+        private double StringToDouble(string doubleString){
+            double value;
+            // Probably want to use a more specific NumberStyles selection here.
+            if (!double.TryParse(doubleString, NumberStyles.Any, new CultureInfo("en-US", false), out value))
+            {
+                throw new InvalidCastException($"There are errors in the CSV file : File string was {doubleString} : Path was {Path}");
+            }
+            return value;
+        }
 
 		public void HandleCSV()
 		{
@@ -37,13 +48,13 @@ namespace Serial.Utility
 					int Length = LineReplaced.Length;
 					string[] LineSplit = LineReplaced.Substring(1, LineReplaced.Length - 2).Split('#');
 					// INS
-					long Timer = Convert.ToInt32(LineSplit[0]);
-					double AX = Convert.ToDouble(LineSplit[1]);
-					double AY = Convert.ToDouble(LineSplit[2]);
-					double AZ = Convert.ToDouble(LineSplit[3]);
-					double GX = Convert.ToDouble(LineSplit[4]);
-					double GY = Convert.ToDouble(LineSplit[5]);
-					double GZ = Convert.ToDouble(LineSplit[6]);
+                    double Timer = StringToDouble(LineSplit[0]);
+					double AX = StringToDouble(LineSplit[1]);
+					double AY = StringToDouble(LineSplit[2]);
+					double AZ = StringToDouble(LineSplit[3]);
+					double GX = StringToDouble(LineSplit[4]);
+					double GY = StringToDouble(LineSplit[5]);
+					double GZ = StringToDouble(LineSplit[6]);
 					double Angle = 0f;
 					if (LineSplit.Length == 8) {
 						Angle = Convert.ToDouble(LineSplit[7]);
@@ -56,12 +67,14 @@ namespace Serial.Utility
 				foreach (var line in DataList)
                 {
 					// Replace "," with # and skip first char " and last char "
-                    string[] LineSplit = line.Replace("\",\"", "#").Substring(1, line.Length - 2).Split('#');
-                    // POZYX
-                    int Timer = Convert.ToInt32(LineSplit[0]);
-                    double X = Convert.ToDouble(LineSplit[1]);
-                    double Y = Convert.ToDouble(LineSplit[2]);
-                    double Z = Convert.ToDouble(LineSplit[3]);
+					string LineReplaced = line.Replace("\",\"", "#");
+                    int Length = LineReplaced.Length;
+                    string[] LineSplit = LineReplaced.Substring(1, LineReplaced.Length - 2).Split('#');
+					// POZYX
+                    double Timer = StringToDouble(LineSplit[0]);
+                    double X = StringToDouble(LineSplit[1]);
+                    double Y = StringToDouble(LineSplit[2]);
+                    double Z = StringToDouble(LineSplit[3]);
 					data.AddDataEntry(new DataEntry(new XYZ(X, Y, Z, Timer), null, null,0));
                 }
 				Console.WriteLine($"Loaded {DataList.Count} lines from {Path} [{Type}]");
