@@ -67,8 +67,10 @@ namespace Serial.Utility
 				foreach (var line in DataList)
                 {
 					// Replace "," with # and skip first char " and last char "
-                    string[] LineSplit = line.Replace("\",\"", "#").Substring(1, line.Length - 2).Split('#');
-                    // POZYX
+					string LineReplaced = line.Replace("\",\"", "#");
+                    int Length = LineReplaced.Length;
+                    string[] LineSplit = LineReplaced.Substring(1, LineReplaced.Length - 2).Split('#');
+					// POZYX
                     double Timer = StringToDouble(LineSplit[0]);
                     double X = StringToDouble(LineSplit[1]);
                     double Y = StringToDouble(LineSplit[2]);
