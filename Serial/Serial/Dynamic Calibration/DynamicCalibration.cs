@@ -19,7 +19,7 @@ namespace Serial.DynamicCalibrationName
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
-        const double _floorTextureConst = 1.5;
+        const double _floorTextureConst = 0.1;
 
         const double _gravitationalConst = 9.81;
 
@@ -62,7 +62,7 @@ namespace Serial.DynamicCalibrationName
             return distanceList;
         }
 
-        public void CalibrateResidualSumOfSquares(double calibrationTime)
+        /*public void CalibrateResidualSumOfSquares(double calibrationTime)
         {
             List<TimePoint> accelerationCalibrationBatch = AccelerationListRAW.TakeWhile(x => x.Time <= calibrationTime).ToList();
 
@@ -70,7 +70,7 @@ namespace Serial.DynamicCalibrationName
             double offset = CalculateTendensyOffset(accelerationCalibrationBatch, slope);
             double errorMarginCalibration = CalculateResidualSumOfSquares(accelerationCalibrationBatch, slope, offset);
             _pointResidualSSTreshold = errorMarginCalibration * _floorTextureConst;
-        }
+        }*/
 
         private ConcurrentBag<Tuple<double, Double>> _coefficientValues = new ConcurrentBag<Tuple<double, Double>>();
         public void CalibrateAccelerationPointCoefficient()
@@ -378,8 +378,8 @@ namespace Serial.DynamicCalibrationName
                 double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
                 double residualSS = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
 
-
-
+                Console.WriteLine($"\"{midPointTime.ToString().Replace(',', '.')}\", \"{residualSS.ToString().Replace(',', '.')}\", \"0.1\"");
+                
                 if (residualSS < _pointResidualSSTreshold)
                 {
                     //If the residualSS is under a previous set treshold, the point is said to be stationary.

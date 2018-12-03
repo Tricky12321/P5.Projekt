@@ -74,8 +74,8 @@ namespace Serial.Menu
 			//var test = csvController.AccDataList[20];
 			var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
 			DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
-			dyn.CalibrateResidualSumOfSquares(2.0);
-			dyn.CalibrateAccelerationPointCoefficient();
+			//dyn.CalibrateResidualSumOfSquares(2.0);
+			//dyn.CalibrateAccelerationPointCoefficient();
 
 			List<TimePoint> accelerationList = dyn.AccelerationList;
 			List<TimePoint> velocityList = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList);
