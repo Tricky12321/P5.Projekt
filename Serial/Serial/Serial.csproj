@@ -52,6 +52,9 @@
     <Reference Include="IKVM.OpenJDK.Core">
       <HintPath>..\..\..\..\..\Downloads\IKVM.OpenJDK.Core.dll</HintPath>
     </Reference>
+    <Reference Include="IKVM.Runtime">
+      <HintPath>..\..\..\..\..\Downloads\ikvm-7.2.4630.5\bin\IKVM.Runtime.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data Mapper\DataMapper.cs" />
