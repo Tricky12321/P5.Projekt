@@ -4,6 +4,9 @@ using System.Linq;
 using Serial.DynamicCalibrationName.Points;
 using System.Collections.Concurrent;
 using System.Threading;
+using weka.core;
+using weka.clusterers;
+using weka.core.converters;
 
 namespace Serial.DynamicCalibrationName
 {
@@ -16,7 +19,7 @@ namespace Serial.DynamicCalibrationName
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
-        const double _floorTextureConst = 10000;
+        const double _floorTextureConst = 10;
 
         const double _gravitationalConst = 9.81;
 
@@ -287,11 +290,6 @@ namespace Serial.DynamicCalibrationName
 
             return dynamicVelocityList;
         }
-
-        void HandleFunc(TimePoint arg)
-        {
-        }
-
 
         private List<IndexRangePoint> GetDrivingRangesFromStationaryIndex(List<IndexRangePoint> stationaryIndexes)
         {
@@ -573,7 +571,7 @@ namespace Serial.DynamicCalibrationName
             List<double> inputs = inputsTimes.Select(x => x.Value).ToList();
             List<double> times = inputsTimes.Select(x => x.Time).ToList();
 
-            if (inputs.Count != 0 || times.Count != 0)
+            if (inputsTimes.Count != 0)
             {
                 double pointsAverage = inputs.Average();
                 double timeAverage = times.Average();

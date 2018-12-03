@@ -46,6 +46,12 @@
     <Reference Include="MathNet.Numerics.IO">
       <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\MathNet.Numerics.IO.dll</HintPath>
     </Reference>
+    <Reference Include="weka">
+      <HintPath>..\..\..\..\..\Downloads\weka.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core">
+      <HintPath>..\..\..\..\..\Downloads\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data Mapper\DataMapper.cs" />
