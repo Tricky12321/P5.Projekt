@@ -40,81 +40,81 @@ namespace Serial.Menu
 					case "test":
 						Test();
 						break;
-                    case "dc":
-                        RunDynamicCalibration();
-                        break;
-                    default:
+					case "dc":
+						RunDynamicCalibration();
+						break;
+					default:
 						Exit = MenuController.DefaultCommands(Input);
 						break;
 				}
 			} while (!Exit);
 		}
 
-        private static void RunDynamicCalibration()
-        {
-            string filePath = Directory.GetCurrentDirectory() + "/Test";
-            string[] fileNamesArray = Directory.GetFiles(filePath).Where(x => x.EndsWith(".csv")).ToArray();
+		private static void RunDynamicCalibration()
+		{
+			string filePath = Directory.GetCurrentDirectory() + "/Test";
+			string[] fileNamesArray = Directory.GetFiles(filePath).Where(x => x.EndsWith(".csv")).ToArray();
 
-            for (int i = 0; i < fileNamesArray.Count(); i++)
-            {
-                Console.WriteLine($"{fileNamesArray[i]} : Number {i}");
-            }
+			for (int i = 0; i < fileNamesArray.Count(); i++)
+			{
+				Console.WriteLine($"{fileNamesArray[i]} : Number {i}");
+			}
 
-            int number = 0;
+			int number = 0;
 
-            while (!(int.TryParse(Console.ReadLine(), out number) && number < fileNamesArray.Count() && number >= 0))
-            {
-                Console.WriteLine("Wrong input!");
-            }
+			while (!(int.TryParse(Console.ReadLine(), out number) && number < fileNamesArray.Count() && number >= 0))
+			{
+				Console.WriteLine("Wrong input!");
+			}
 
-            string fileName = fileNamesArray[number];
+			string fileName = fileNamesArray[number];
 
-            Load csvController = new Load(fileName);
-            csvController.HandleCSV();
-            //var test = csvController.AccDataList[20];
-            var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
-            DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
-            dyn.CalibrateResidualSumOfSquares(2.0);
-            dyn.CalibrateAccelerationPointCoefficient();
+			Load csvController = new Load(fileName);
+			csvController.HandleCSV();
+			//var test = csvController.AccDataList[20];
+			var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
+			DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
+			dyn.CalibrateResidualSumOfSquares(2.0);
+			dyn.CalibrateAccelerationPointCoefficient();
 
-            List<TimePoint> accelerationList = dyn.AccelerationList;
-            List<TimePoint> velocityList = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList);
-            List<TimePoint> distanceList = dyn.CalculatePosition(velocityList);
+			List<TimePoint> accelerationList = dyn.AccelerationList;
+			List<TimePoint> velocityList = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList);
+			List<TimePoint> distanceList = dyn.CalculatePosition(velocityList);
 
-            while (Console.ReadLine() != "q")
-            {
-                Console.WriteLine("What do you want to print? (acc, vel, dis or toCSV)");
+			while (Console.ReadLine() != "q")
+			{
+				Console.WriteLine("What do you want to print? (acc, vel, dis or toCSV)");
 
-                string input = Console.ReadLine();
-                switch (input)
-                {
-                    case "acc":
-                        accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
-                        break;
-                    case "vel":
-                        velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
-                        break;
-                    case "dis":
-                        distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
-                        break;
-                    case "toCSV":
-                        string FileName = fileName.Replace(".csv", string.Empty).Split('/').Last();
-                        CSVWriterController csvWriter = new CSVWriterController(FileName + "_acc");
-                        csvWriter.DynamicToCSV(accelerationList);
-                        csvWriter.FileName = FileName + "_vel";
-                        csvWriter.DynamicToCSV(velocityList);
-                        csvWriter.FileName = FileName + "_dic";
-                        csvWriter.DynamicToCSV(distanceList);
-                        Console.WriteLine("Done writing to files!");
-                        break;
-                    default:
-                        Console.WriteLine("acc, vel, dis or toCSV?");
-                        break;
-                }
-            }        
-        }
+				string input = Console.ReadLine();
+				switch (input)
+				{
+					case "acc":
+						accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						break;
+					case "vel":
+						velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						break;
+					case "dis":
+						distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						break;
+					case "toCSV":
+						string FileName = fileName.Replace(".csv", string.Empty).Split('/').Last();
+						CSVWriterController csvWriter = new CSVWriterController(FileName + "_acc");
+						csvWriter.DynamicToCSV(accelerationList);
+						csvWriter.FileName = FileName + "_vel";
+						csvWriter.DynamicToCSV(velocityList);
+						csvWriter.FileName = FileName + "_dic";
+						csvWriter.DynamicToCSV(distanceList);
+						Console.WriteLine("Done writing to files!");
+						break;
+					default:
+						Console.WriteLine("acc, vel, dis or toCSV?");
+						break;
+				}
+			}
+		}
 
-        public static void Test()
+		public static void Test()
 		{
 			Load load = new Load("frem_5m_2_INS.csv");
 			load.HandleCSV();
@@ -177,6 +177,21 @@ namespace Serial.Menu
 			}
 			switch (Input[1])
 			{
+				case "fixtimer":
+					if (MenuController.Confirm("Are you sure you want to replace everything?", false))
+					{
+						if (Input.Length == 3)
+						{
+							int Seperation = Convert.ToInt32(Input[2]);
+							FixTime(Seperation);
+						}
+						else
+						{
+							FixTime();
+						}
+					}
+					break;
+
 				case "weka":
 					if (MenuController.Confirm("Are you sure you want to replace everything?", false))
 					{
@@ -193,42 +208,43 @@ namespace Serial.Menu
 						}
 					}
 					break;
+
 				case "latex":
-                    if (MenuController.Confirm("Are you sure you want to replace everything?", false))
-                    {
-                        string[] entries = Directory.GetFileSystemEntries(".", "*.csv", SearchOption.AllDirectories);
-                        foreach (var FilePath in entries)
-                        {
-                            string FileContents = File.ReadAllText(FilePath);
-                            string Output = Regex.Replace(FileContents, @"\d+,\d+", delegate (Match match)
-                            {
-                                string v = match.ToString().Replace(",", ".");
-                                return v;
-                            });
+					if (MenuController.Confirm("Are you sure you want to replace everything?", false))
+					{
+						string[] entries = Directory.GetFileSystemEntries(".", "*.csv", SearchOption.AllDirectories);
+						foreach (var FilePath in entries)
+						{
+							string FileContents = File.ReadAllText(FilePath);
+							string Output = Regex.Replace(FileContents, @"\d+,\d+", delegate (Match match)
+							{
+								string v = match.ToString().Replace(",", ".");
+								return v;
+							});
 
-                            Output = Regex.Replace(Output, @"""\d+""\,", delegate (Match match)
-                            {
-                                string substringed = match.ToString().Substring(1, match.Length - 3);
-                                double newNum = Convert.ToDouble(substringed) / 1000f;
-                                return newNum.ToString().Replace(",", ".") + ",";
-                            });
+							Output = Regex.Replace(Output, @"""\d+""\,", delegate (Match match)
+							{
+								string substringed = match.ToString().Substring(1, match.Length - 3);
+								double newNum = Convert.ToDouble(substringed) / 1000f;
+								return newNum.ToString().Replace(",", ".") + ",";
+							});
 
-                            Output = Regex.Replace(Output, @"""(|-)\d+(|\.|\,)\d*""", delegate (Match match)
-                            {
-                                string v = match.ToString().Replace(@"""", "");
-                                return v;
-                            });
+							Output = Regex.Replace(Output, @"""(|-)\d+(|\.|\,)\d*""", delegate (Match match)
+							{
+								string v = match.ToString().Replace(@"""", "");
+								return v;
+							});
 
-                            Output = Regex.Replace(Output, @"""(|-)\d+(\.|\,)\d+""", delegate (Match match)
-                            {
-                                string v = match.ToString().Replace(@"""", "");
-                                return v;
-                            });
+							Output = Regex.Replace(Output, @"""(|-)\d+(\.|\,)\d+""", delegate (Match match)
+							{
+								string v = match.ToString().Replace(@"""", "");
+								return v;
+							});
 
-                            File.WriteAllText(FilePath, Output);
-                        }
-                    }
-                    break;
+							File.WriteAllText(FilePath, Output);
+						}
+					}
+					break;
 
 				case "combine":
 					if (true)
@@ -243,6 +259,7 @@ namespace Serial.Menu
 						File.WriteAllText("Combined.csv", "Timer,AX,AY,AZ,GX,GY,GZ\n" + FileContents.ToString());
 					}
 					break;
+
 				case "ra":
 					if (Input.Length == 3)
 					{
@@ -261,6 +278,7 @@ namespace Serial.Menu
 						dataMapper.CalculateRollingAverage(10);
 					}
 					break;
+
 				case "load":
 					if (Input.Length == 3)
 					{
@@ -271,14 +289,15 @@ namespace Serial.Menu
 					break;
 
 				case "calibrate":
-					
+
 					if (dataMapper == null)
 					{
 						Console.WriteLine("No Data Mapper has been created!");
 					}
 					else
 					{
-						if (Input.Length == 3) {
+						if (Input.Length == 3)
+						{
 							int Timer = 0;
 							try
 							{
@@ -289,7 +308,9 @@ namespace Serial.Menu
 							{
 								Console.WriteLine("Not a number givin!");
 							}
-						} else {
+						}
+						else
+						{
 							dataMapper.CalibrateINS();
 						}
 					}
@@ -337,6 +358,7 @@ namespace Serial.Menu
 						}
 					}
 					break;
+
 				case "stop":
 					if (dataMapper == null)
 					{
@@ -348,6 +370,7 @@ namespace Serial.Menu
 						Console.WriteLine("Stopped data logging");
 					}
 					break;
+
 				case "clear":
 					if (dataMapper == null)
 					{
@@ -359,6 +382,7 @@ namespace Serial.Menu
 						Console.WriteLine("Cleared the DataList");
 					}
 					break;
+
 				case "save":
 					if (dataMapper == null)
 					{
@@ -391,6 +415,7 @@ namespace Serial.Menu
 						}
 					}
 					break;
+
 				case "new":
 					if (Input.Length == 2)
 					{
@@ -413,17 +438,19 @@ namespace Serial.Menu
 
 					Console.WriteLine("Created new DataMapper!");
 					break;
+
 				case "kalman":
 					dataMapper.GenerateKalman();
 					Console.WriteLine("Generated data kalman filtered data of INS data.");
 					break;
+
 				case "segment":
 					string SegmentFile = "Segmented.csv";
 					if (File.Exists(SegmentFile))
 					{
 						File.Delete(SegmentFile);
 					}
-					ConcurrentQueue<DataMapper.DataEntry> OutputSegments = dataMapper.SegmentData();
+					ConcurrentQueue<DataEntry> OutputSegments = dataMapper.SegmentData();
 					using (var test = File.AppendText(SegmentFile))
 					{
 						test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle");
@@ -438,12 +465,81 @@ namespace Serial.Menu
 					}
 					Console.WriteLine($"Done segmenting data! {OutputSegments.Count}");
 					break;
+
 				default:
 					Console.WriteLine("Invalid input format, use help command!");
 					break;
 			}
 		}
 
+
+		public static void FixTime(int TimeInterval = 1)
+		{
+			string[] entries = Directory.GetFileSystemEntries(".", "*_INS*.csv", SearchOption.AllDirectories);
+			foreach (var FilePath in entries)
+			{
+				try
+				{
+					double TimerIntervalMS = TimeInterval * 100;
+					Load load = new Load(FilePath);
+					if (load.GetCSVType() == CSVTypes.INS)
+					{
+						load.HandleCSV();
+						DataMapper.DataMapper SingleDataMapper = load.data;
+						int iteration = 1;
+						List<DataEntry> datas = new List<DataEntry>(SingleDataMapper.AllDataEntries);
+						double test = datas.Max(X => X.INS_Accelerometer.TimeOfData);
+						double CurrentTimerVal = TimerIntervalMS * iteration;
+						while (test > CurrentTimerVal)
+						{
+							double min = TimerIntervalMS * (iteration - 1);
+							double max = TimerIntervalMS * iteration;
+							var dataEntries = datas.Where(X =>
+														  X.INS_Accelerometer.TimeOfData < max &&
+														  X.INS_Accelerometer.TimeOfData > min).ToList();
+							int got = dataEntries.Count();
+							double SectionTimer = ((dataEntries.Max(X => X.INS_Accelerometer.TimeOfData) - min) / got);
+							double entryTimer = SectionTimer + min;
+							foreach (var entry in dataEntries)
+							{
+								entry.INS_Accelerometer.TimeOfData = Math.Round(entryTimer, 5);
+								entry.INS_Gyroscope.TimeOfData = Math.Round(entryTimer, 5);
+								entryTimer += SectionTimer;
+								if (entryTimer > max)
+								{
+
+								}
+							}
+							CurrentTimerVal = TimerIntervalMS * ++iteration;
+						}
+						CSVWriterController INSWriter = new CSVWriterController(FilePath, SingleDataMapper, load.GetCSVType());
+						string POZYX_FilePath = FilePath.Replace("_INS.csv", "_POZYX.csv");
+
+
+
+						if (File.Exists(POZYX_FilePath))
+						{
+							Console.WriteLine($"FOUND POZYX FILE, {POZYX_FilePath}");
+							load = new Load(POZYX_FilePath);
+							load.HandleCSV();
+							var PozyxDatamapper = load.data;
+							var PozyxData = PozyxDatamapper.AllDataEntries.ToList();
+							int count = PozyxDatamapper.AllDataEntries.Count();
+							for (int i = 0; i < count; i++)
+							{
+								PozyxData[i].PoZYX.TimeOfData = datas[i].INS_Gyroscope.TimeOfData;
+							}
+							CSVWriterController PozyxWriter = new CSVWriterController(POZYX_FilePath, PozyxDatamapper, load.GetCSVType());
+						}
+
+					}
+				}
+				catch (Exception)
+				{
+
+				}
+			}
+		}
 
 
 		public static void dataMapperTimer()

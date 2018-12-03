@@ -13,10 +13,10 @@ namespace Serial.CSVWriter
 	{
 		DataMapper.DataMapper currentDataMapper;
 		public string FileName = "";
-
+		public string Path = "";
 		string INSFile => FileName + "_INS.csv";
-        string DYNAMICCALIBFILE => FileName + "_DYNAM_CALI.csv";
-        string NoCalibrateINSFile => FileName + "_INS_NOCALIBRATE.csv";
+		string DYNAMICCALIBFILE => FileName + "_DYNAM_CALI.csv";
+		string NoCalibrateINSFile => FileName + "_INS_NOCALIBRATE.csv";
 		string POZYXFile => FileName + "_POZYX.csv";
 		string INSKalmanFile => FileName + "_INS_KALMAN.csv";
 		string INSRollingAverageFile => FileName + "_INS_RA.csv";
@@ -28,13 +28,97 @@ namespace Serial.CSVWriter
 			DeleteOldFiles();
 		}
 
-        public CSVWriterController( string Name)
-        {
-            FileName = Name;
-            DeleteOldFiles();
-        }
+		public CSVWriterController(string Name)
+		{
+			FileName = Name;
+			DeleteOldFiles();
+		}
 
-        private void DeleteOldFiles()
+		public CSVWriterController(string Path, DataMapper.DataMapper dataMapper, CSVTypes type)
+		{
+			currentDataMapper = dataMapper;
+			this.Path = Path;
+			if (type == CSVTypes.INS)
+			{
+				WriteINSSimple(Path);
+			}
+			if (type == CSVTypes.POZYX)
+			{
+				WritePOZYXSimple(Path);
+			}
+		}
+
+		private void WriteINSSimple(string path)
+		{
+
+			List<XYZ> Accelerometer = new List<XYZ>();
+			List<XYZ> GyroScope = new List<XYZ>();
+			List<double> Angles = new List<double>();
+			foreach (var DataEntryElement in currentDataMapper.AllDataEntries)
+			{
+				Accelerometer.Add(DataEntryElement.INS_Accelerometer);
+				GyroScope.Add(DataEntryElement.INS_Gyroscope);
+				Angles.Add(DataEntryElement.INS_Angle);
+			}
+			if (File.Exists(path))
+			{
+				File.Delete(path);
+			}
+
+			using (StreamWriter FileWriter = File.AppendText(path))
+			{
+				FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ,A");
+				int DataCount = GyroScope.Count;
+				for (int i = 0; i < DataCount; i++)
+				{
+					if (GyroScope[i] != null && Accelerometer[i] != null)
+					{
+						FileWriter.WriteLine($"\"{GyroScope[i].TimeOfData}\"," +
+											 $"\"{Accelerometer[i].X}\"," +
+											 $"\"{Accelerometer[i].Y}\"," +
+											 $"\"{Accelerometer[i].Z}\"," +
+											 $"\"{GyroScope[i].X}\"," +
+											 $"\"{GyroScope[i].Y}\"," +
+											 $"\"{GyroScope[i].Z}\"," +
+											 $"\"{Angles[i]}\"");
+					}
+				}
+				FileWriter.Close();
+			}
+		}
+
+		private void WritePOZYXSimple(string path)
+		{
+
+			List<XYZ> Pozyx = new List<XYZ>();
+			foreach (var DataEntryElement in currentDataMapper.AllDataEntries)
+			{
+				Pozyx.Add(DataEntryElement.PoZYX);
+			}
+			if (File.Exists(path))
+			{
+				File.Delete(path);
+			}
+
+			using (StreamWriter FileWriter = File.AppendText(path))
+			{
+				FileWriter.WriteLine($"Timer,X,Y,Z");
+
+				foreach (var Data in Pozyx)
+				{
+					if (Data != null)
+					{
+						FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
+											 $"\"{Data.X}\"," +
+											 $"\"{Data.Y}\"," +
+											 $"\"{Data.Z}\"");
+					}
+				}
+				FileWriter.Close();
+			}
+		}
+
+		private void DeleteOldFiles()
 		{
 			if (File.Exists(INSFile))
 			{
@@ -75,23 +159,23 @@ namespace Serial.CSVWriter
 			return Angles;
 		}
 
-        public void DynamicToCSV(List<TimePoint> inputList)
-        {
-            using (StreamWriter FileWriter = File.AppendText(DYNAMICCALIBFILE))
-            {
-                FileWriter.WriteLine($"Timer,Value");
-                int DataCount = inputList.Count;
-                for (int i = 0; i < DataCount; i++)
-                {
-                    if (inputList[i] != null)
-                    {
-                        FileWriter.WriteLine($"\"{inputList[i].Time}\"," +
-                                             $"\"{inputList[i].Value}\"");
-                    }
-                }
-                FileWriter.Close();
-            }
-        }
+		public void DynamicToCSV(List<TimePoint> inputList)
+		{
+			using (StreamWriter FileWriter = File.AppendText(DYNAMICCALIBFILE))
+			{
+				FileWriter.WriteLine($"Timer,Value");
+				int DataCount = inputList.Count;
+				for (int i = 0; i < DataCount; i++)
+				{
+					if (inputList[i] != null)
+					{
+						FileWriter.WriteLine($"\"{inputList[i].Time}\"," +
+											 $"\"{inputList[i].Value}\"");
+					}
+				}
+				FileWriter.Close();
+			}
+		}
 
 		private void WriteNormal(List<XYZ> Accelerometer, List<XYZ> GyroScope, List<XYZ> Pozyx, List<double> Angles)
 		{
@@ -117,23 +201,24 @@ namespace Serial.CSVWriter
 			}
 		}
 
-		private void WritePozyx(List<XYZ> Pozyx) {
+		private void WritePozyx(List<XYZ> Pozyx)
+		{
 			using (StreamWriter FileWriter = File.AppendText(POZYXFile))
-            {
-                FileWriter.WriteLine($"Timer,X,Y,Z");
+			{
+				FileWriter.WriteLine($"Timer,X,Y,Z");
 
-                foreach (var Data in Pozyx)
-                {
-                    if (Data != null)
-                    {
-                        FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
-                                             $"\"{Data.X}\"," +
-                                             $"\"{Data.Y}\"," +
-                                             $"\"{Data.Z}\"");
-                    }
-                }
-                FileWriter.Close();
-            }
+				foreach (var Data in Pozyx)
+				{
+					if (Data != null)
+					{
+						FileWriter.WriteLine($"\"{Data.TimeOfData}\"," +
+											 $"\"{Data.X}\"," +
+											 $"\"{Data.Y}\"," +
+											 $"\"{Data.Z}\"");
+					}
+				}
+				FileWriter.Close();
+			}
 		}
 
 		private void WriteKalman(List<double> Angles)
@@ -160,12 +245,12 @@ namespace Serial.CSVWriter
 						if (Kalman_Gyroscope[i] != null && Kalman_Accelerometer[i] != null)
 						{
 							FileWriter.WriteLine($"\"{Kalman_Gyroscope[i].TimeOfData}\"," +
-							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].X, 5))}\"," +
-							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].Y, 5))}\"," +
-							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].Z, 5))}\"," +
-							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].X, 5))}\"," +
-							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].Y, 5))}\"," +
-							                     $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].Z, 5))}\"," +
+												 $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].X, 5))}\"," +
+												 $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].Y, 5))}\"," +
+												 $"\"{String.Format("{0:F20}", Math.Round(Kalman_Accelerometer[i].Z, 5))}\"," +
+												 $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].X, 5))}\"," +
+												 $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].Y, 5))}\"," +
+												 $"\"{String.Format("{0:F20}", Math.Round(Kalman_Gyroscope[i].Z, 5))}\"," +
 												 $"\"{Angles[i]}\"");
 						}
 					}
@@ -196,9 +281,9 @@ namespace Serial.CSVWriter
 						if (GyroScopeNonCalibrated[i] != null && GyroScopeNonCalibrated[i] != null)
 						{
 							FileWriter.WriteLine($"\"{GyroScopeNonCalibrated[i].TimeOfData}\"," +
-												 $"\"{GyroScopeNonCalibrated[i].X}\"," +
-												 $"\"{GyroScopeNonCalibrated[i].Y}\"," +
-												 $"\"{GyroScopeNonCalibrated[i].Z}\"," +
+												 $"\"{AccelerometerNonCalibrated[i].X}\"," +
+												 $"\"{AccelerometerNonCalibrated[i].Y}\"," +
+												 $"\"{AccelerometerNonCalibrated[i].Z}\"," +
 												 $"\"{GyroScopeNonCalibrated[i].X}\"," +
 												 $"\"{GyroScopeNonCalibrated[i].Y}\"," +
 												 $"\"{GyroScopeNonCalibrated[i].Z}\"," +
@@ -257,7 +342,8 @@ namespace Serial.CSVWriter
 			WriteRollingAverage(Angles);
 		}
 
-		public void Execute() {
+		public void Execute()
+		{
 			WriteAll();
 		}
 	}
