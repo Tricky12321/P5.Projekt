@@ -24,14 +24,30 @@ namespace Serial.DataMapper.DataReader
 		double Angle;
 
 		double XGY;
-        double YGY;
-        double ZGY;
+		double YGY;
+		double ZGY;
 
-        double XAC;
-        double YAC;
-        double ZAC;
+		double XAC;
+		double YAC;
+		double ZAC;
 
-        object LockObject = new object();
+		object LockObject = new object();
+
+		public XYZ AcceXYZNoCalibrate
+		{
+			get
+			{
+				return new XYZ(XAC, YAC, ZAC, Tid);
+			}
+		}
+
+		public XYZ GyroXYZNoCalibrate
+        {
+            get
+            {
+                return new XYZ(XGY, YGY, ZGY, Tid);
+            }
+        }
 
 		public XYZ AcceXYZ
 		{
@@ -39,7 +55,7 @@ namespace Serial.DataMapper.DataReader
 			{
 				if (UseCalibration)
 				{
-					return new XYZ(XAC - Accel_Calibration.X, YAC - Accel_Calibration.X, ZAC - Accel_Calibration.X, Tid);
+					return new XYZ(XAC - Accel_Calibration.X, YAC - Accel_Calibration.Y, ZAC - Accel_Calibration.Z, Tid);
 				}
 				else
 				{
@@ -88,7 +104,10 @@ namespace Serial.DataMapper.DataReader
 			{
 				return Read();
 			}
+		}
 
+		public Tuple<XYZ,XYZ, double> GetNonCalibrated() {
+			return new Tuple<XYZ, XYZ, double>(AcceXYZNoCalibrate, GyroXYZNoCalibrate, Angle);
 		}
 
 		private void CheckData(string data)
@@ -114,13 +133,13 @@ namespace Serial.DataMapper.DataReader
 
 				}
 				else if (data.Contains("AN"))
-                {
-                    data = data.Substring(2, data.Length - 3);
-                    var message_split = data.Split(':');
-                    // 360/5760 = 0.0625f MAGIC NUMBER
-					Angle = Convert.ToDouble(message_split[0])*0.0625f;
+				{
+					data = data.Substring(2, data.Length - 3);
+					var message_split = data.Split(':');
+					// 360/5760 = 0.0625f MAGIC NUMBER
+					Angle = Convert.ToDouble(message_split[0]) * 0.0625f;
 					//Console.WriteLine($"Angle {Angle}");
-                }
+				}
 
 			}
 			catch (TimeoutException) { }
@@ -130,6 +149,8 @@ namespace Serial.DataMapper.DataReader
 
 		public void ResetTid()
 		{
+			_serialPort.DiscardInBuffer();
+            _serialPort.DiscardOutBuffer();
 			Tid = 0;
 			Last_Timer = Timer_Input.ElapsedMilliseconds;
 		}
@@ -141,8 +162,13 @@ namespace Serial.DataMapper.DataReader
 			UseCalibration = true;
 		}
 
-		public void ClearCalibration() {
+		public void ClearCalibration()
+		{
 			UseCalibration = false;
+		}
+
+		public bool IsCalibrated() {
+			return UseCalibration;
 		}
 	}
 }
