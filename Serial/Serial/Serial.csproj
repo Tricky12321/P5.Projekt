@@ -46,6 +46,12 @@
     <Reference Include="MathNet.Numerics.IO">
       <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\MathNet.Numerics.IO.dll</HintPath>
     </Reference>
+    <Reference Include="weka">
+      <HintPath>..\..\..\..\..\Downloads\weka.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core">
+      <HintPath>..\..\..\..\..\Downloads\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data Mapper\DataMapper.cs" />
@@ -56,6 +62,8 @@
     <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
     <Compile Include="Data Mapper\DataEntry.cs" />
     <Compile Include="Dynamic Calibration\DynamicCalibration.cs" />
+    <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
+    <Compile Include="Dynamic Calibration\Point.cs" />
     <Compile Include="Menu\MainMenu.cs" />
     <Compile Include="Data Mapper\Kalman\KalmanController.cs" />
     <Compile Include="Data Mapper\Kalman\KalmanFilter.cs" />
@@ -69,6 +77,7 @@
     <Compile Include="Data Mapper\Highpass\HighpassFilter.cs" />
     <Compile Include="Utility\Load.cs" />
     <Compile Include="Utility\Utilities.cs" />
+    <Compile Include="CSVWriter\CSVWriterController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -85,6 +94,7 @@
     <Folder Include="Data Mapper\Serial\" />
     <Folder Include="Data Mapper\Highpass\" />
     <Folder Include="Utility\" />
+    <Folder Include="CSVWriter\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
