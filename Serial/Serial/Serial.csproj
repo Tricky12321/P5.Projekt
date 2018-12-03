@@ -56,6 +56,8 @@
     <Compile Include="Data Mapper\Exception\TooManyDataEntriesRequestedException.cs" />
     <Compile Include="Data Mapper\DataEntry.cs" />
     <Compile Include="Dynamic Calibration\DynamicCalibration.cs" />
+    <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
+    <Compile Include="Dynamic Calibration\Point.cs" />
     <Compile Include="Menu\MainMenu.cs" />
     <Compile Include="Data Mapper\Kalman\KalmanController.cs" />
     <Compile Include="Data Mapper\Kalman\KalmanFilter.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="Utility\Utilities.cs" />
     <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
     <Compile Include="Dynamic Calibration\Point.cs" />
+    <Compile Include="CSVWriter\CSVWriterController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -87,6 +90,7 @@
     <Folder Include="Data Mapper\Serial\" />
     <Folder Include="Data Mapper\Highpass\" />
     <Folder Include="Utility\" />
+    <Folder Include="CSVWriter\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

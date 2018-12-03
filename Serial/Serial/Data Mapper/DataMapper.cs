@@ -28,10 +28,16 @@ namespace Serial.DataMapper
             KalmanData = KalmanController.GenerateKalman(AllDataEntries);
         }
 
-        public ConcurrentQueue<DataEntry> SegmentData(int NumOfSplits = 50)
+        public List<XYZ> GetAccelerationXYZFromCSV()
         {
-            return SegmentController.SegmentData(AllDataEntries, NumOfSplits);
+            List<XYZ> listToReturn = new List<XYZ>();
+            AllDataEntries.ToList().ForEach(x => listToReturn.Add(new XYZ(x.INS_Accelerometer.X, x.INS_Accelerometer.Y, x.INS_Accelerometer.Z, x.INS_Accelerometer.TimeOfData)));
+            return listToReturn;
         }
+
+		public ConcurrentQueue<DataEntry> SegmentData(int NumOfSplits = 50) {
+			return SegmentController.SegmentData(AllDataEntries, NumOfSplits);
+		}
 
         private List<double> RollingAverage(List<double> input, int periodLength)
         {
