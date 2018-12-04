@@ -117,7 +117,7 @@ namespace Serial.Menu
 
 		public static void Test()
 		{
-            HighAndLowPass ok = new HighAndLowPass(PassType.Lowpass, 1000);
+            HighAndLowPass ok = new HighAndLowPass(PassType.Lowpass, 250);
 		}
 
 		public static void PrintCommands()
