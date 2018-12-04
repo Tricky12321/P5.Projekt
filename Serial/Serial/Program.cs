@@ -16,17 +16,32 @@ namespace Serial
     {
         public static void Main()
         {
-            //var tsfdsljk = System.Environment.CurrentDirectory;
 
-            var test = new FileReader("/Users/stenkaer/Documents/GitHub/P5.Projekt/Serial/Serial/bin/Debug/Test/iris-kopi.arff");
-            Instances instances = new Instances(test);
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+
+
+            //var path = System.Environment.CurrentDirectory;
+
+            //var fileReader = new FileReader("/home/fryd/Repos/P5.Projekt/Serial/Serial/bin/Debug/iris1.arff");
+
+
+
+            var fileReader1 = new FileReader("/home/fryd/Repos/P5.Projekt/Serial/Serial/bin/Debug/forsøg1_slut_afstand_INS.csv");
+            weka.core.converters.CSVLoader cSVLoader = new weka.core.converters.CSVLoader();
+            java.io.File file = new java.io.File("/home/fryd/Repos/P5.Projekt/Serial/Serial/bin/Debug/forsøg1_slut_afstand_INS.csv");
+            //cSVLoader.setFile(file);
+            cSVLoader.setSource(file);
+
+            var tilter = cSVLoader.getDataSet();
+
+            Instances instances = new Instances(tilter);
+            
             EM em = new EM();
             em.buildClusterer(instances);
 
             var sfjhdks = em.getClass();
             var sasasasas = em.toString();
 
-            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
 			MainMenu.ShowMenu();
         }
     }
