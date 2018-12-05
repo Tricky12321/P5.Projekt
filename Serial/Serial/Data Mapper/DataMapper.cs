@@ -113,10 +113,6 @@ namespace Serial.DataMapper
 
             return output;
 
-
-
-
-
             /*List<DataEntry> data = AllDataEntries.ToList();
             ConcurrentQueue<Tuple<DataEntry, double>> output = new ConcurrentQueue<Tuple<DataEntry, double>>();
             double maxEntry;
@@ -175,8 +171,6 @@ namespace Serial.DataMapper
         {
             List<double> residualSSList = new List<double>();
             double residual;
-            //slopeTendensy = Math.Round(slopeTendensy, 2);
-            //offsetTendensy = Math.Round(offsetTendensy, 2);
             foreach (DataEntry entry in inputsTimes)
             {
 
@@ -184,12 +178,12 @@ namespace Serial.DataMapper
                 residual = Math.Pow(test, 2);
                 residualSSList.Add(Math.Abs(residual));
             }
-            //inputsTimes.ForEach(x => residualSSList.Add(Math.Round(Math.Pow(x.INS_Accelerometer.X - (slopeTendensy * x.INS_Accelerometer.TimeOfData + offsetTendensy), 1.5), 4)));
             double sSResidual = residualSSList.Sum();
 
             return sSResidual / inputsTimes.Count();
         }
 
+        //Calculates variance, velocity, slope and slope difference
         public ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> CalculateAcceleration(int batchSize = 50)
         {
             List<DataEntry> data = AllDataEntries.ToList();
@@ -223,7 +217,6 @@ namespace Serial.DataMapper
 
                 output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, residualSS, Math.Pow((thresFirst - thresSecond), 2)));
             }
-
             return output;
         }
 

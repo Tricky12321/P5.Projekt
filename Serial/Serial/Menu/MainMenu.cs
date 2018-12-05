@@ -195,7 +195,7 @@ namespace Serial.Menu
 				case "weka":
 					if (MenuController.Confirm("Are you sure you want to replace everything?", false))
 					{
-						string[] entries = Directory.GetFileSystemEntries(".", "acc.csv", SearchOption.AllDirectories);
+						string[] entries = Directory.GetFileSystemEntries(".", "*.csv", SearchOption.AllDirectories);
 						foreach (var FilePath in entries)
 						{
 							string FileContents = File.ReadAllText(FilePath);
