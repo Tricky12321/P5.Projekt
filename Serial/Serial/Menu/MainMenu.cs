@@ -13,6 +13,7 @@ using Serial.Utility;
 using Serial.CSVWriter;
 using Serial.DynamicCalibrationName;
 using Serial.DynamicCalibrationName.Points;
+using Serial.Clustering;
 
 namespace Serial.Menu
 {

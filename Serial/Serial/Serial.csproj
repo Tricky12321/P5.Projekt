@@ -138,6 +138,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clustering\DataPoint.cs" />
+    <Compile Include="Clustering\Clustering.cs" />
     <Compile Include="Data Mapper\DataMapper.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
