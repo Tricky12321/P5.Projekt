@@ -89,13 +89,13 @@ namespace Serial.Menu
 				switch (input)
 				{
 					case "acc":
-						accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\",\"{x.Value.ToString().Replace(',', '.')}\""));
 						break;
 					case "vel":
-						velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\",\"{x.Value.ToString().Replace(',', '.')}\""));
 						break;
 					case "dis":
-						distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\",\"{x.Value.ToString().Replace(',', '.')}\""));
 						break;
 					case "toCSV":
 						string FileName = fileName.Replace(".csv", string.Empty).Split('/').Last();

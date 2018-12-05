@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Serial.DynamicCalibrationName.Points;
@@ -14,12 +14,11 @@ namespace Serial.DynamicCalibrationName
     {
         const double _runningAverageBatchTime = 1.0;
        
-        private double _slopeDiffenceTreshold = 0.2;                      //The lower the value is, the more acceleration points will be found.
-        private double _pointResidualSSTreshold;   //defines the upper value for when the scrubber is stationary.
+        private double _slopeDiffenceTreshold = 0.8;                      //The lower the value is, the more acceleration points will be found.
+        private double _pointResidualSSTreshold = 0.1;   //defines the upper value for when the scrubber is stationary.
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
-        const double _floorTextureConst = 0.1;
 
         const double _gravitationalConst = 9.81;
 
