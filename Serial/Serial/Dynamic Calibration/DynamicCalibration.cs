@@ -12,7 +12,7 @@ namespace Serial.DynamicCalibrationName
         const double _runningAverageBatchTime = 1.0;
        
         private double _slopeDiffenceTreshold = 0.2;                      //The lower the value is, the more acceleration points will be found.
-        private double _pointResidualSSTreshold;   //defines the upper value for when the scrubber is stationary.
+        private double _pointResidualSSTreshold = 0.1;   //defines the upper value for when the scrubber is stationary.
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
@@ -141,7 +141,7 @@ namespace Serial.DynamicCalibrationName
         /// </summary>
         /// <param name="inputs"> list of naive calculated velocities from an axis </param>
         /// <param name="times"> a list of times from the naive calculated velocity </param>
-        public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = true, bool useStationaryDetection = true)
+        public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = false, bool useStationaryDetection = true)
         {
             List<TimePoint> velocityList = useRunningAverage ? GetRunningAverageAcceleration(inputTimes) : inputTimes;
 
@@ -380,7 +380,7 @@ namespace Serial.DynamicCalibrationName
                 double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
                 double residualSS = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
 
-
+                Console.WriteLine($"\"{midPointTime.ToString().Replace(',', '.')}\", \"{residualSS.ToString().Replace(',', '.')}\"");
 
                 if (residualSS < _pointResidualSSTreshold)
                 {
