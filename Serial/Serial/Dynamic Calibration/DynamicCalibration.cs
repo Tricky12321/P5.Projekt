@@ -12,9 +12,9 @@ namespace Serial.DynamicCalibrationName
 {
     public class DynamicCalibration
     {
-        const double _runningAverageBatchTime = 1.0;
+        const double _runningAverageBatchTime = 3.0;
        
-        private double _slopeDiffenceTreshold = 0.8;                      //The lower the value is, the more acceleration points will be found.
+        private double _slopeDiffenceTreshold = 0.1;                      //The lower the value is, the more acceleration points will be found.
         private double _pointResidualSSTreshold = 0.1;   //defines the upper value for when the scrubber is stationary.
         const int _gradientCalculationOffset = 1;
 
@@ -442,6 +442,8 @@ namespace Serial.DynamicCalibrationName
 
             foreach (IndexPoint slope in slopeDifferencesList)
             {
+                Console.WriteLine($"\"{inputsTimes[slope.Index].Time.ToString().Replace(',', '.')}\",\"{slope.Value.ToString().Replace(',', '.')}\"");
+
                 if (Math.Abs(slope.Value) > (Math.Abs(coefficient) <= 0.0 ? _slopeDiffenceTreshold : coefficient))
                 {
                     listToReturn.Add(new IndexPoint(inputsTimes[slope.Index].Time, slope.Index));
