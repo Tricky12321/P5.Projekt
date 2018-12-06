@@ -18,11 +18,7 @@ namespace Serial
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
 
-            Clustering.Clustering clustering = new Clustering.Clustering("start_stop_20m_5m_3s_1_INS.csv");
-            var hej = clustering.GetClusters();
-
             MainMenu.ShowMenu();
-
         }
     }
 }
