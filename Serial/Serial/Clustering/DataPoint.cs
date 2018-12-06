@@ -8,13 +8,14 @@ namespace Serial.Clustering
 {
     public class DataPoint
     {
-        public int Cluster;
         public int PointNumber;
+		public ClusterColor clusterColor;
 
-        public DataPoint(int cluster, int pointNumber)
+		public DataPoint(ClusterColor clusterColor, int pointNumber)
         {
-            Cluster = cluster;
+			this.clusterColor = clusterColor;
             PointNumber = pointNumber;
         }
+
     }
 }

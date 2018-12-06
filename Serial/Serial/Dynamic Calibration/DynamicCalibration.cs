@@ -23,9 +23,11 @@ namespace Serial.DynamicCalibrationName
         public List<TimePoint> AccelerationList = new List<TimePoint>();
         public List<TimePoint> AccelerationListRAW = new List<TimePoint>();
 
+        private IAccelerationPointController _accelerationPointController;
 
-        public DynamicCalibration(List<XYZ> acceleration)
+        public DynamicCalibration(List<XYZ> acceleration, IAccelerationPointController accelerationPointController)
         {
+            _accelerationPointController = accelerationPointController;
             AccelerationListRAW.Add(new TimePoint(0.0, 0.0));
             AccelerationList.Add(new TimePoint(0.0, 0.0));
 
@@ -151,7 +153,8 @@ namespace Serial.DynamicCalibrationName
 
             //Trying to remove drift//
 
-            List<IndexRangePoint> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
+            List<IndexRangePoint> driftingIndexesList = _accelerationPointController.GetDriftRanges();
+            //List<IndexRangePoint> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
 
             if (useDriftCalibration)
             {
