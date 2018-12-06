@@ -511,7 +511,7 @@ namespace Serial.Menu
                     ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData = dataMapper.CalculateAcceleration();
 
                     string appendedFile = "Timer_AX_AY_AZ_GX_GY_GZ_Angle_Velocity_Slope_Variance_SlopeDiff.csv";
-                    string Slope_SlopeDiff = "Slope_SlopeDiff.csv";
+                    string SlopeDivVariance_Slope = "SlopeDivVariance_Slope.csv";
 
                     if (File.Exists(appendedFile))
                     {
@@ -527,16 +527,16 @@ namespace Serial.Menu
                         }
                     }
 
-                    if (File.Exists(Slope_SlopeDiff))
+                    if (File.Exists(SlopeDivVariance_Slope))
                     {
-                        File.Delete(Slope_SlopeDiff);
+                        File.Delete(SlopeDivVariance_Slope);
                     }
-                    using (var test = File.AppendText(Slope_SlopeDiff))
+                    using (var test = File.AppendText(SlopeDivVariance_Slope))
                     {
-                        test.WriteLine("Slope,SlopeDiff");
+                        test.WriteLine("Slope/Variance,SlopeDiff");
                         foreach (var item in accData)
                         {
-                            string outPut = $"\"{item.Item3}\",\"{item.Item5}\"";
+                            string outPut = $"\"{item.Item3/item.Item4}\",\"{item.Item3}\"";
                             test.WriteLine(outPut);
                         }
                     }
