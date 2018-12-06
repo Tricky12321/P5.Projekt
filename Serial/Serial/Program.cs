@@ -6,14 +6,19 @@ using System.Linq;
 using System.IO;
 using System.Threading;
 using System.Globalization;
+using weka.clusterers;
+using weka.core;
+using java.io;
+
 namespace Serial
 {
     class MainClass
     {
         public static void Main()
         {
-			      Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
-			      MainMenu.ShowMenu();
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+
+            MainMenu.ShowMenu();
         }
     }
 }

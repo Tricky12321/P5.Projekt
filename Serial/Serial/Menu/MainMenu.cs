@@ -13,6 +13,7 @@ using Serial.Utility;
 using Serial.CSVWriter;
 using Serial.DynamicCalibrationName;
 using Serial.DynamicCalibrationName.Points;
+using Serial.Clustering;
 
 namespace Serial.Menu
 {
@@ -40,6 +41,9 @@ namespace Serial.Menu
 					case "test":
 						Test();
 						break;
+                    case "cluster":
+                        RunClustering();
+                        break;
 					case "dc":
 						RunDynamicCalibration();
 						break;
@@ -113,6 +117,24 @@ namespace Serial.Menu
 				}
 			}
 		}
+
+        private static void RunClustering()
+        {
+            Console.WriteLine("Enter file name:");
+            string filePath = Console.ReadLine() + ".csv";
+            if (File.Exists(filePath))
+            {
+                Clustering.Clustering clustering = new Clustering.Clustering(filePath);
+                foreach (var data in clustering.GetClusters())
+                {
+                    Console.WriteLine($"Point: {data.PointNumber}, in cluster {data.Cluster}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("File does not exist!");
+            }
+        }
 
 		public static void Test()
 		{
@@ -465,13 +487,67 @@ namespace Serial.Menu
 					}
 					Console.WriteLine($"Done segmenting data! {OutputSegments.Count}");
 					break;
+                case "variance":
+                    ConcurrentQueue<Tuple<DataEntry, double, double>> varianceData = dataMapper.CalculateVariance();
+                    string VarianceFile = "Variance.csv";
 
-				default:
+                    if (File.Exists(VarianceFile))
+                    {
+                        File.Delete(VarianceFile);
+                    }
+
+                    using (var test = File.AppendText(VarianceFile))
+                    {
+                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Variance,Slope");
+                        foreach (var item in varianceData)
+                        {
+                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\"";
+                            test.WriteLine(output);
+                        }
+                    }
+                    Console.WriteLine("Done!");
+                    break;
+                case "acc":
+                    ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData = dataMapper.CalculateAcceleration();
+
+                    string appendedFile = "Timer_AX_AY_AZ_GX_GY_GZ_Angle_Velocity_Slope_Variance_SlopeDiff.csv";
+                    string Slope_SlopeDiff = "Slope_SlopeDiff.csv";
+
+                    if (File.Exists(appendedFile))
+                    {
+                        File.Delete(appendedFile);
+                    }
+                    using (var test = File.AppendText(appendedFile))
+                    {
+                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
+                        foreach (var item in accData)
+                        {
+                            string outPut = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
+                            test.WriteLine(outPut);
+                        }
+                    }
+
+                    if (File.Exists(Slope_SlopeDiff))
+                    {
+                        File.Delete(Slope_SlopeDiff);
+                    }
+                    using (var test = File.AppendText(Slope_SlopeDiff))
+                    {
+                        test.WriteLine("Slope,SlopeDiff");
+                        foreach (var item in accData)
+                        {
+                            string outPut = $"\"{item.Item3}\",\"{item.Item5}\"";
+                            test.WriteLine(outPut);
+                        }
+                    }
+
+                    Console.WriteLine("Done!");
+                    break;
+                default:
 					Console.WriteLine("Invalid input format, use help command!");
 					break;
 			}
 		}
-
 
 		public static void FixTime(int TimeInterval = 1)
 		{
