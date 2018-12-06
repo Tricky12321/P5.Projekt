@@ -14,7 +14,6 @@ using Serial.CSVWriter;
 using Serial.DynamicCalibrationName;
 using Serial.DynamicCalibrationName.Points;
 using Serial.Clustering;
-
 namespace Serial.Menu
 {
 	public static class MainMenu
@@ -79,9 +78,9 @@ namespace Serial.Menu
 			var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
 
 
-            skift det efterfælgende med jeres class der arver fra IAccelerationPointController;
-
-            DynamicCalibration dyn = new DynamicCalibration(tesadsasdas, "IAccelerationPointController test");
+			//TODO: HERE!
+			ClusteringDynamicCalibration Clustering = new ClusteringDynamicCalibration(fileName);
+			DynamicCalibration dyn = new DynamicCalibration(tesadsasdas, Clustering);
 			//dyn.CalibrateResidualSumOfSquares(2.0);
 			//dyn.CalibrateAccelerationPointCoefficient();
 
@@ -128,10 +127,10 @@ namespace Serial.Menu
             string filePath = Console.ReadLine() + ".csv";
             if (File.Exists(filePath))
             {
-                Clustering.Clustering clustering = new Clustering.Clustering(filePath);
+				EMClustering clustering = new EMClustering(filePath);
                 foreach (var data in clustering.GetClusters())
                 {
-                    Console.WriteLine($"Point: {data.PointNumber}, in cluster {data.Cluster}");
+                    Console.WriteLine($"Point: {data.PointNumber}, in cluster {data.clusterColor}");
                 }
             }
             else

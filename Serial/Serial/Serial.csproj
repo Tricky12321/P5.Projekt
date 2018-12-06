@@ -139,7 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Clustering\DataPoint.cs" />
-    <Compile Include="Clustering\Clustering.cs" />
+    <Compile Include="Clustering\EMClustering.cs" />
     <Compile Include="Data Mapper\DataMapper.cs" />
     <Compile Include="Data Mapper\XYZ.cs" />
     <Compile Include="Program.cs" />
@@ -167,6 +167,7 @@
     <Compile Include="Dynamic Calibration\Point.cs" />
     <Compile Include="CSVWriter\CSVWriterController.cs" />
     <Compile Include="Dynamic Calibration\IAccelerationPointController.cs" />
+    <Compile Include="Dynamic Calibration\ClusteringDynamicCalibration.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

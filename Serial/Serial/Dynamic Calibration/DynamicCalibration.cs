@@ -4,7 +4,6 @@ using System.Linq;
 using Serial.DynamicCalibrationName.Points;
 using System.Collections.Concurrent;
 using System.Threading;
-using Serial.DynamicCalibration;
 
 namespace Serial.DynamicCalibrationName
 {
@@ -43,7 +42,6 @@ namespace Serial.DynamicCalibrationName
                 AccelerationList.Add(posx);
             }
             NaiveVelocityList = CalculateNaiveVelocity(true);
-            _accelerationPointController.InsertValocityList(NaiveVelocityList);
         }
 
         public List<TimePoint> CalculatePosition(List<TimePoint> inputTimes)
