@@ -122,11 +122,17 @@ namespace Serial.Menu
         {
             Console.WriteLine("Enter file name:");
             string filePath = Console.ReadLine() + ".csv";
-
-            Clustering.Clustering clustering = new Clustering.Clustering(filePath);
-            foreach (var data in clustering.GetClusters())
+            if (File.Exists(filePath))
             {
-                Console.WriteLine($"Point: {data.PointNumber}, in cluster {data.Cluster}");
+                Clustering.Clustering clustering = new Clustering.Clustering(filePath);
+                foreach (var data in clustering.GetClusters())
+                {
+                    Console.WriteLine($"Point: {data.PointNumber}, in cluster {data.Cluster}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("File does not exist!");
             }
         }
 
