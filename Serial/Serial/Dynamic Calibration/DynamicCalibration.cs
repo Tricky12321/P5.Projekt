@@ -11,7 +11,7 @@ namespace Serial.DynamicCalibrationName
     {
         const double _runningAverageBatchTime = 3.0;
        
-        private double _slopeDiffenceTreshold = 0.1;                      //The lower the value is, the more acceleration points will be found.
+        private double _slopeDiffenceTreshold = 0.1;     //The lower the value is, the more acceleration points will be found.
         private double _pointResidualSSTreshold = 0.1;   //defines the upper value for when the scrubber is stationary.
         const int _gradientCalculationOffset = 1;
 
@@ -41,7 +41,7 @@ namespace Serial.DynamicCalibrationName
             }
             NaiveVelocityList = CalculateNaiveVelocity(true);
         }
-
+		// Calculates the position from acceleration, using Dead Reckoning
         public List<TimePoint> CalculatePosition(List<TimePoint> inputTimes)
         {
             List<TimePoint> distanceList = new List<TimePoint>();
@@ -58,7 +58,7 @@ namespace Serial.DynamicCalibrationName
             return distanceList;
         }
 
-        /*public void CalibrateResidualSumOfSquares(double calibrationTime)
+        public void CalibrateResidualSumOfSquares(double calibrationTime)
         {
             List<TimePoint> accelerationCalibrationBatch = AccelerationListRAW.TakeWhile(x => x.Time <= calibrationTime).ToList();
 
@@ -66,7 +66,7 @@ namespace Serial.DynamicCalibrationName
             double offset = CalculateTendensyOffset(accelerationCalibrationBatch, slope);
             double errorMarginCalibration = CalculateResidualSumOfSquares(accelerationCalibrationBatch, slope, offset);
             _pointResidualSSTreshold = errorMarginCalibration * _floorTextureConst;
-        }*/
+        }
 
         private ConcurrentBag<Tuple<double, Double>> _coefficientValues = new ConcurrentBag<Tuple<double, Double>>();
         public void CalibrateAccelerationPointCoefficient()
@@ -138,8 +138,6 @@ namespace Serial.DynamicCalibrationName
         /// <summary>
         /// Returns a list containing velocity for the dynamic calibration.
         /// </summary>
-        /// <param name="inputs"> list of naive calculated velocities from an axis </param>
-        /// <param name="times"> a list of times from the naive calculated velocity </param>
         public List<TimePoint> CalculateDynamicVelocityList(List<TimePoint> inputTimes, bool useRunningAverage = false, bool useDriftCalibration = true, bool useStationaryDetection = true)
         {
             List<TimePoint> velocityList = useRunningAverage ? GetRunningAverageAcceleration(inputTimes) : inputTimes;
@@ -222,13 +220,7 @@ namespace Serial.DynamicCalibrationName
                         dynamicVelocityList[j].Value = 0.0;
                     }
                 }*/
-            }
-            #endregion
 
-            #region StationaryCalibrationExtra
-
-            if (useStationaryDetection)
-            {
                 foreach (IndexRangePoint startEndIndex in stationaryIndexList)
                 {
                     for (int j = startEndIndex.IndexStart; j <= startEndIndex.IndexEnd; j++)
@@ -310,7 +302,6 @@ namespace Serial.DynamicCalibrationName
         /// Gets the stationary indexes.
         /// </summary>
         /// <returns>The stationary indexes.</returns>
-        /// <param name="stationaryRanges">Stationary ranges.</param>
         private List<IndexRangePoint> GetStationaryIndexes(List<TimePoint> inputsTimes, double batchTime, int offset)
         {
             List<IndexPoint> stationaryRanges = FindStationaryRanges(inputsTimes, batchTime, offset);
@@ -453,8 +444,6 @@ namespace Serial.DynamicCalibrationName
         /// Returns a Tuple containing the difference in slopes between two ranges defined be batchsize and offset
         /// </summary>
         /// <returns>The slope differences.</returns>
-        /// <param name="points">A list of the raw acceleration data for one axis.</param>
-        /// <param name="times">List of all times from the raw data.</param>
         /// <param name="batchTime">The size of the ranges on which the slope will be calculated, the ranges will each be the items within batchTime.</param>
         /// <param name="offset">The offset between ranges on which the slope will be calculated</param>
         private List<IndexPoint> CalculateSlopeDifferences(List<TimePoint> inputsTimes, double batchTime, int offset)
@@ -499,8 +488,7 @@ namespace Serial.DynamicCalibrationName
         /// Gets the running average acceleration.
         /// </summary>
         /// <returns>A list of tuples containing acceleration and time, the list will be without the last range of length.</returns>
-        /// <param name="input">Input acceleration data.</param>
-        /// <param name="times">Times related to the input data.</param>
+		/// <param name="inputsTimes">List of data used to calculate Running Average on.</param>
         /// <param name="periodLength">Period Lenght of the running averages.</param>
         private List<TimePoint> GetRunningAverageAcceleration(List<TimePoint> inputsTimes, int periodLength = 100)
         {
