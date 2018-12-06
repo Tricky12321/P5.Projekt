@@ -77,7 +77,11 @@ namespace Serial.Menu
 			csvController.HandleCSV();
 			//var test = csvController.AccDataList[20];
 			var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
-			DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
+
+
+            skift det efterfælgende med jeres class der arver fra IAccelerationPointController;
+
+            DynamicCalibration dyn = new DynamicCalibration(tesadsasdas, "IAccelerationPointController test");
 			//dyn.CalibrateResidualSumOfSquares(2.0);
 			//dyn.CalibrateAccelerationPointCoefficient();
 

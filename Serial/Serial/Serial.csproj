@@ -166,6 +166,7 @@
     <Compile Include="Data Mapper\Exception\InvalidInputException.cs" />
     <Compile Include="Dynamic Calibration\Point.cs" />
     <Compile Include="CSVWriter\CSVWriterController.cs" />
+    <Compile Include="Dynamic Calibration\IAccelerationPointController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
