@@ -4,9 +4,6 @@ using System.Linq;
 using Serial.DynamicCalibrationName.Points;
 using System.Collections.Concurrent;
 using System.Threading;
-using weka.core;
-using weka.clusterers;
-using weka.core.converters;
 
 namespace Serial.DynamicCalibrationName
 {
@@ -377,7 +374,7 @@ namespace Serial.DynamicCalibrationName
                 double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
                 double residualSS = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
 
-                Console.WriteLine($"\"{midPointTime.ToString().Replace(',', '.')}\", \"{residualSS.ToString().Replace(',', '.')}\", \"0.1\"");
+                //Console.WriteLine($"\"{midPointTime.ToString().Replace(',', '.')}\", \"{residualSS.ToString().Replace(',', '.')}\", \"0.1\"");
                 
                 if (residualSS < _pointResidualSSTreshold)
                 {
@@ -442,7 +439,7 @@ namespace Serial.DynamicCalibrationName
 
             foreach (IndexPoint slope in slopeDifferencesList)
             {
-                Console.WriteLine($"\"{inputsTimes[slope.Index].Time.ToString().Replace(',', '.')}\",\"{slope.Value.ToString().Replace(',', '.')}\"");
+                //Console.WriteLine($"\"{inputsTimes[slope.Index].Time.ToString().Replace(',', '.')}\",\"{slope.Value.ToString().Replace(',', '.')}\"");
 
                 if (Math.Abs(slope.Value) > (Math.Abs(coefficient) <= 0.0 ? _slopeDiffenceTreshold : coefficient))
                 {
