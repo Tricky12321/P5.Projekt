@@ -465,8 +465,47 @@ namespace Serial.Menu
 					}
 					Console.WriteLine($"Done segmenting data! {OutputSegments.Count}");
 					break;
+                case "variance":
+                    ConcurrentQueue<Tuple<DataEntry, double, double>> varianceData = dataMapper.CalculateVariance();
+                    string VarianceFile = "Variance.csv";
 
-				default:
+                    if (File.Exists(VarianceFile))
+                    {
+                        File.Delete(VarianceFile);
+                    }
+
+                    using (var test = File.AppendText(VarianceFile))
+                    {
+                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Variance,Slope");
+                        foreach (var item in varianceData)
+                        {
+                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\"";
+                            test.WriteLine(output);
+                        }
+                    }
+                    Console.WriteLine("Done!");
+                    break;
+                case "acc":
+                    ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData = dataMapper.CalculateAcceleration();
+                    string accFile = "acc.csv";
+
+                    if (File.Exists(accFile))
+                    {
+                        File.Delete(accFile);
+                    }
+
+                    using (var test = File.AppendText(accFile))
+                    {
+                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
+                        foreach (var item in accData)
+                        {
+                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
+                            test.WriteLine(output);
+                        }
+                    }
+                    Console.WriteLine("Done!");
+                    break;
+                default:
 					Console.WriteLine("Invalid input format, use help command!");
 					break;
 			}
