@@ -144,7 +144,7 @@ namespace Serial.DataMapper
         private double CalculateTendencySlope(List<DataEntry> inputsTimes)
         {
             List<double> inputs = inputsTimes.Select(x => x.INS_Accelerometer.X).ToList();
-            List<double> times = inputsTimes.Select(x => x.INS_Accelerometer.TimeOfData).ToList();
+            List<double> times = inputsTimes.Select(x => x.INS_Angle).ToList();
 
             if (inputs.Count != 0 || times.Count != 0)
             {
@@ -226,7 +226,7 @@ namespace Serial.DataMapper
         }
 
         //Calculates variance, velocity, slope and slope difference
-        public ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> CalculateAcceleration(int batchSize = 50)
+        public ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> CalculateAcceleration(int batchSize = 200)
         {
             List<DataEntry> data = AllDataEntries.ToList();
             ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> output = new ConcurrentQueue<Tuple<DataEntry, double, double, double, double>>();
@@ -246,18 +246,23 @@ namespace Serial.DataMapper
 
             for (int i = batchSize; i < velocityList.Count - batchSize; i++)
             {
-                List<DataEntry> firstBatchList = data.GetRange(i - batchSize, batchSize).ToList();
-                List<DataEntry> secondBatchList = data.GetRange(i - 1, batchSize).ToList();
+                List<DataEntry> firstBatchList = velocityList.GetRange(i - batchSize, batchSize).ToList();
+                List<DataEntry> secondBatchList = velocityList.GetRange(i - 1, batchSize).ToList();
                 double thresFirst = CalculateTendencySlope(firstBatchList);
                 double thresSecond = CalculateTendencySlope(secondBatchList);
 
 
-                var batch = data.GetRange(i - batchSize/2, batchSize).ToList();
+                var batch = velocityList.GetRange(i - batchSize/2, batchSize).ToList();
                 double tendencySlope = CalculateTendencySlope(batch);
                 double tendencyOffset = CalculateTendensyOffset(batch, tendencySlope);
                 double residualSS = CalculateResidualSumOfSquares(batch, tendencySlope, tendencyOffset);
 
-                output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, residualSS, Math.Pow((thresFirst - thresSecond), 2)));
+                if (thresFirst - thresSecond > 8000)
+                {
+                    Console.WriteLine("");
+                }
+
+                output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, tendencySlope/(Math.Pow(residualSS,2)), Math.Abs(thresFirst - thresSecond)));
             }
             return output;
         }
