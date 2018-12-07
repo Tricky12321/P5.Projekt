@@ -15,9 +15,9 @@ namespace Serial.Highpass
     }
     class HighAndLowPass
     {
-        public HighAndLowPass(PassType passType, int period)
+        public HighAndLowPass(PassType passType, int period, string inputFile, string outputFile)
         {
-            Load load = new Load("frem_5m_2_INS.csv");
+            Load load = new Load(inputFile);
             load.HandleCSV();
             List<Tuple<double, double>> input = new List<Tuple<double, double>>();
             foreach (var item in load.data.AllDataEntries)
@@ -28,12 +28,12 @@ namespace Serial.Highpass
 
             if (passType == PassType.Lowpass)
             {
-                printToCSV(doLowPass(input, period));
+                printToCSV(doLowPass(input, period), outputFile);
 
             }
             else if (passType == PassType.Highpass)
             {
-                printToCSV(doHighPass(input, period));
+                printToCSV(doHighPass(input, period), outputFile);
             }
             else
             {
@@ -75,16 +75,16 @@ namespace Serial.Highpass
             return highPassedInput;
         }
 
-        private void printToCSV(List<Tuple<double, double>> output)
+        private void printToCSV(List<Tuple<double, double>> output, string outputFile)
         {
-            string INSFile = "HPLP_INSdataUpdated.csv";
+            string INSFile = outputFile;
             if (File.Exists(INSFile))
             {
                 File.Delete(INSFile);
             }
             using (StreamWriter FileWriter = File.AppendText(INSFile))
             {
-                FileWriter.WriteLine($"Timer,AX,AY");
+                FileWriter.WriteLine($"Timer,AX");
                 int DataCount = output.Count;
                 for (int i = 0; i < DataCount; i++)
                 {
