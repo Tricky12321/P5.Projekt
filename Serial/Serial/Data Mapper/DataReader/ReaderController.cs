@@ -18,6 +18,7 @@ namespace Serial.DataMapper.DataReader
 
 		public ConcurrentQueue<Tuple<XYZ, XYZ>> KalmanData;
 		public ConcurrentQueue<Tuple<XYZ, XYZ>> RollingAverageData;
+		public ConcurrentQueue<DataEntry> RollingAverageDataEntry;
 
 		public ConcurrentQueue<DataEntry> UnCalibrated = new ConcurrentQueue<DataEntry>();
 
