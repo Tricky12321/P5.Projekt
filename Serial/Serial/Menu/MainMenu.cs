@@ -547,7 +547,7 @@ namespace Serial.Menu
 				test.WriteLine("SlopeDiff,Slope");
                 foreach (var item in accData)
                 {
-					string outPut = $"\"{item.Item3}\",\"{item.Item5}\"";
+					string outPut = $"\"{item.Item5}\",\"{item.Item3}\"";
                     test.WriteLine(outPut);
                 }
             }
