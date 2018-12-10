@@ -31,7 +31,9 @@ namespace Serial.DataMapper
         public List<XYZ> GetAccelerationXYZFromCSV()
         {
             List<XYZ> listToReturn = new List<XYZ>();
-            AllDataEntries.ToList().ForEach(x => listToReturn.Add(new XYZ(x.INS_Accelerometer.X, x.INS_Accelerometer.Y, x.INS_Accelerometer.Z, x.INS_Accelerometer.TimeOfData)));
+            AllDataEntries.ToList().ForEach(x => listToReturn.Add(
+				new XYZ(x.INS_Accelerometer.X, x.INS_Accelerometer.Y, x.INS_Accelerometer.Z, x.INS_Accelerometer.TimeOfData)
+			));
             return listToReturn;
         }
 
@@ -209,13 +211,13 @@ namespace Serial.DataMapper
 
             for (int i = batchSize; i < velocityList.Count - batchSize; i++)
             {
-                List<DataEntry> firstBatchList = data.GetRange(i - batchSize, batchSize).ToList();
+                List<DataEntry> firstBatchList = velocityList.GetRange(i - batchSize, batchSize).ToList();
                 List<DataEntry> secondBatchList = velocityList.GetRange(i - 1, batchSize).ToList();
                 double thresFirst = CalculateTendencySlope(firstBatchList);
                 double thresSecond = CalculateTendencySlope(secondBatchList);
 
 
-                var batch = velocityList.GetRange(i - batchSize / 2, batchSize).ToList();
+                var batch = data.GetRange(i - batchSize / 2, batchSize).ToList();
                 double tendencySlope = CalculateTendencySlope(batch);
                 double tendencyOffset = CalculateTendensyOffset(batch, tendencySlope);
                 double residualSS = CalculateResidualSumOfSquares(batch, tendencySlope, tendencyOffset);

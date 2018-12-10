@@ -24,22 +24,26 @@ namespace Serial.Clustering
 	public class EMClustering
 	{
 		public EM eM = new EM();
-		public Instances dataSet;
+		public Instances TrainingSet;
+		public Instances TestSet;
 		private string path;
-		public EMClustering(string filePath)
+		public EMClustering(string Training, string Test)
 		{
-			path = filePath;
-			EMAlgorithm(filePath);
+			path = Test;
+			EMAlgorithm(Training, Test);
 		}
 
-		public void EMAlgorithm(string filePath)
+		public void EMAlgorithm(string Training, string Test)
 		{
 
 			weka.core.converters.CSVLoader cSVLoader = new weka.core.converters.CSVLoader();
-			File file = new File(filePath);
+			File file = new File(Training);
 
 			cSVLoader.setSource(file);
-			dataSet = cSVLoader.getDataSet();
+			TrainingSet = cSVLoader.getDataSet();
+			file = new File(Test);
+			cSVLoader.setSource(file);
+            TestSet = cSVLoader.getDataSet();
 
 			eM.setNumClusters(3);
 			eM.setSeed(100);
@@ -48,8 +52,9 @@ namespace Serial.Clustering
 			eM.setMaximumNumberOfClusters(-1);
 			eM.setNumExecutionSlots(1);
 			eM.setNumKMeansRuns(10);
-
-			eM.buildClusterer(dataSet);
+			System.Console.WriteLine("Building Cluster");
+			eM.buildClusterer(TrainingSet);
+			System.Console.WriteLine("Done Building Cluster");
 		}
 
 		private List<Tuple<double, double, double, double>> GetColums(string FilePath)
@@ -75,13 +80,13 @@ namespace Serial.Clustering
 		{
 			List<Tuple<double, double, double, double>> DataValues = GetColums(path);
 			List<DataPoint> dataPoints = new List<DataPoint>();
-			int lengthOfDataSet = dataSet.size();
+			int lengthOfDataSet = TestSet.size();
 
 			for (int i = 0; i < lengthOfDataSet; ++i)
 			{
-				ClusterColor cluster = (ClusterColor)eM.clusterInstance(dataSet.get(i));
+				ClusterColor cluster = (ClusterColor)eM.clusterInstance(TestSet.get(i));
 				var test = eM.clusterPriors();
-				DataPoint dataPoint = new DataPoint(cluster, i, eM.distributionForInstance(dataSet.get(i)));
+				DataPoint dataPoint = new DataPoint(cluster, i, eM.distributionForInstance(TestSet.get(i)));
 
 				dataPoint.AX = DataValues[i].Item1;
 				dataPoint.SlopeVarians = DataValues[i].Item2;

@@ -11,7 +11,7 @@ namespace Serial.DataMapper.DataReader
 		PozyxReader _pozyx;
 		INSReader _INS;
 
-		ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
+		public ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
 
 		ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
 		public ConcurrentQueue<DataEntry> AllDataEntries => dataEntries;

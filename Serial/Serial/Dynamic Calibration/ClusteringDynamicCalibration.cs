@@ -10,19 +10,20 @@ namespace Serial.DynamicCalibrationName
 {
 	public class ClusteringDynamicCalibration : EMClustering, IAccelerationPointController
 	{
-
+		const int BatchSize = 300;
 		const double ZeroThreashold = 0.5;
 		const int MinimumGroupSize = 50;
 		List<IndexRangePoint> DriftPoints;
-		public ClusteringDynamicCalibration(string Path) : base(Path)
+		public ClusteringDynamicCalibration(string Training, string Test) : base(Training, Test)
 		{
+			Console.WriteLine("Starting cluster processing");
 			List<DataPoint> dataPoints = this.GetClusters();
 			List<List<DataPoint>> Clusters = new List<List<DataPoint>> {
 				dataPoints.Where(x => x.clusterColor == ClusterColor.Blue).ToList(),
 				dataPoints.Where(x => x.clusterColor == ClusterColor.Red).ToList(),
 				dataPoints.Where(x => x.clusterColor == ClusterColor.Green).ToList()
 			};
-			var SortedClusters = Clusters.OrderBy(X => X.Max(Y=>Y.SlopeDiff)).ToList();
+			var SortedClusters = Clusters.OrderBy(X => X.Average(Y=>Math.Abs(Y.SlopeDiff))).ToList();
 			// Update the clusters datapoints with information about what they are. 
 			SortedClusters[0].ForEach(X => X.clusterType = ClusterType.Drift);
 			SortedClusters[1].ForEach(X => X.clusterType = ClusterType.Drift);
@@ -34,9 +35,16 @@ namespace Serial.DynamicCalibrationName
 
 
 			DriftPoints = GetDriftRanges2(dataPoints);
-			foreach (var point in DriftPoints)
+			int count = DriftPoints.Count;
+            for (int i = 0; i < count; i++)
 			{
-				Console.WriteLine($"Drift from {point.IndexStart} to {point.IndexEnd}");
+				if (i == 0) {
+					DriftPoints[i].IndexEnd += BatchSize/2;
+				} else{
+					DriftPoints[i].IndexStart += BatchSize/2;
+					DriftPoints[i].IndexEnd += BatchSize/2;
+				}
+				Console.WriteLine($"Drift from {DriftPoints[i].IndexStart} to {DriftPoints[i].IndexEnd}");
 			}
 		}
 
