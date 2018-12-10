@@ -22,20 +22,47 @@ namespace Serial.DynamicCalibrationName
 				dataPoints.Where(x => x.clusterColor == ClusterColor.Red).ToList(),
 				dataPoints.Where(x => x.clusterColor == ClusterColor.Green).ToList()
 			};
-			var SortedClusters = Clusters.OrderBy(X => X.Max(Y => Y.SlopeVarians)).Reverse().ToList();
+			var SortedClusters = Clusters.OrderBy(X => X.Max(Y=>Y.SlopeDiff)).ToList();
 			// Update the clusters datapoints with information about what they are. 
-			SortedClusters[0].ForEach(X => X.clusterType = ClusterType.Still);
-			SortedClusters[1].ForEach(X => X.clusterType = ClusterType.Acceleration);
-			SortedClusters[2].ForEach(X => X.clusterType = ClusterType.Drift);
+			SortedClusters[0].ForEach(X => X.clusterType = ClusterType.Drift);
+			SortedClusters[1].ForEach(X => X.clusterType = ClusterType.Drift);
+			SortedClusters[2].ForEach(X => X.clusterType = ClusterType.Acceleration);
 
 			Console.WriteLine($"{SortedClusters[0][0].clusterColor} = {SortedClusters[0][0].clusterType}");
 			Console.WriteLine($"{SortedClusters[1][0].clusterColor} = {SortedClusters[1][0].clusterType}");
 			Console.WriteLine($"{SortedClusters[2][0].clusterColor} = {SortedClusters[2][0].clusterType}");
-			DriftPoints = GetDriftRanges(dataPoints);
+
+
+			DriftPoints = GetDriftRanges2(dataPoints);
 			foreach (var point in DriftPoints)
 			{
 				Console.WriteLine($"Drift from {point.IndexStart} to {point.IndexEnd}");
 			}
+		}
+
+		private List<IndexRangePoint> GetDriftRanges2(List<DataPoint> dataPoints)
+		{
+			List<IndexRangePoint> Output = new List<IndexRangePoint>();
+			int start = 0;
+			int count = dataPoints.Count;
+			int end = 0;
+			bool Found = false;
+            for (int i = 0; i < count; i++)
+			{
+				if (dataPoints[i].clusterType == ClusterType.Drift) {
+					end = i;
+					Found = true;
+				} else {
+					if (Found)
+					{
+						Output.Add(new IndexRangePoint(start, end));
+						Found = false;
+					}
+					start = i;
+				}
+			}
+			Output.Add(new IndexRangePoint(start, end));
+			return Output;
 		}
 
 		private List<IndexRangePoint> GetDriftRanges(List<DataPoint> dataPoints)
@@ -44,24 +71,24 @@ namespace Serial.DynamicCalibrationName
 			int start = 0;
 			int end = 0;
 			int count = dataPoints.Count;
-				while (end < count)
+			while (end < count)
+			{
+				try
 				{
-                    try
-    				{
 
-    				
-    				var Acceleration = FindCompleteRange(start, dataPoints);
-    					var Deacceleration = FindCompleteRange(Acceleration.IndexEnd, dataPoints);
-    					start = Acceleration.IndexEnd;
-    					end = Deacceleration.IndexStart;
-    					Output.Add(new IndexRangePoint(start, end));
-    					start = end;
-    				}
-                    catch (Exception)
-                    {
-    					return Output;
-                    }
+
+					var Acceleration = FindCompleteRange(start, dataPoints);
+					var Deacceleration = FindCompleteRange(Acceleration.IndexEnd, dataPoints);
+					start = Acceleration.IndexEnd;
+					end = Deacceleration.IndexStart;
+					Output.Add(new IndexRangePoint(start, end));
+					start = end;
 				}
+				catch (Exception)
+				{
+					return Output;
+				}
+			}
 			return Output;
 
 		}
@@ -79,8 +106,8 @@ namespace Serial.DynamicCalibrationName
 			int end = ClusterRange.IndexEnd;
 			// Check if the range found is an acceleration or deaccleration
 			// This is used to search forward, or backward.
-			double Max = dataPoints.GetRange(start, end-start).Max(X => X.AX);
-			double Min = dataPoints.GetRange(start, end-start).Min(X => X.AX);
+			double Max = dataPoints.GetRange(start, end - start).Max(X => X.AX);
+			double Min = dataPoints.GetRange(start, end - start).Min(X => X.AX);
 
 			bool positive = (Max - Math.Abs(Min)) > 0;
 			// Return the search forward, or backward
@@ -156,7 +183,7 @@ namespace Serial.DynamicCalibrationName
 			int count = dataPoints.Count;
 			for (int i = Start; i < count; i++)
 			{
-				if ((dataPoints[i].AX > 0 && dataPoints[i + 1].AX < 0) || (dataPoints[i].AX < 0 && dataPoints[i + 1].AX > 0) )
+				if ((dataPoints[i].AX > 0 && dataPoints[i + 1].AX < 0) || (dataPoints[i].AX < 0 && dataPoints[i + 1].AX > 0))
 				{
 					return i;
 				}

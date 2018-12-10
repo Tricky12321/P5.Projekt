@@ -52,11 +52,11 @@ namespace Serial.Clustering
 			eM.buildClusterer(dataSet);
 		}
 
-		private List<Tuple<double, double, double>> GetColums(string FilePath)
+		private List<Tuple<double, double, double, double>> GetColums(string FilePath)
 		{
 			string[] FilePathSplit = FilePath.Split('.');
 			FilePath = FilePathSplit[0] + "_WITH_X." + FilePathSplit[1];
-			List<Tuple<double, double, double>> Output = new List<Tuple<double, double, double>>();
+			List<Tuple<double, double, double, double>> Output = new List<Tuple<double, double, double,double>>();
 			List<string> Lines = System.IO.File.ReadAllLines(FilePath).ToList();
 			Lines.RemoveAt(0);
             foreach (var Line in Lines)
@@ -65,14 +65,15 @@ namespace Serial.Clustering
 				double AX = Convert.ToDouble(LineSplit[0]);
 				double SlopeVarians = Convert.ToDouble(LineSplit[1]);
 				double Slope = Convert.ToDouble(LineSplit[2]);
-				Output.Add(new Tuple<double, double, double>(AX, SlopeVarians, Slope));
+				double SlopeDiff = Convert.ToDouble(LineSplit[3]);
+				Output.Add(new Tuple<double, double, double,double>(AX, SlopeVarians, Slope, SlopeDiff));
 			}
 			return Output;
 		}
 
 		public List<DataPoint> GetClusters()
 		{
-			List<Tuple<double, double, double>> DataValues = GetColums(path);
+			List<Tuple<double, double, double, double>> DataValues = GetColums(path);
 			List<DataPoint> dataPoints = new List<DataPoint>();
 			int lengthOfDataSet = dataSet.size();
 
@@ -85,6 +86,7 @@ namespace Serial.Clustering
 				dataPoint.AX = DataValues[i].Item1;
 				dataPoint.SlopeVarians = DataValues[i].Item2;
 				dataPoint.Slope = DataValues[i].Item3;
+				dataPoint.SlopeDiff = DataValues[i].Item4;
 				dataPoints.Add(dataPoint);
 			}
 			return dataPoints;

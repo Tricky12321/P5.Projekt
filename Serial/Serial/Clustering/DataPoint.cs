@@ -15,6 +15,7 @@ namespace Serial.Clustering
 		public double Slope;
 		public double AX;
 		public double[] Weights;
+		public double SlopeDiff;
 
 		public DataPoint(ClusterColor clusterColor, int pointNumber, double[] Weights)
         {

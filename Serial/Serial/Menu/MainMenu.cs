@@ -73,8 +73,8 @@ namespace Serial.Menu
 			Load csvController = new Load(fileName);
             csvController.HandleCSV();
             dataMapper = csvController.data;
-			dataMapper.CalculateRollingAverage(200);
-            CalculateLasseStuff(true);
+			//dataMapper.CalculateRollingAverage(200);
+            CalculateLasseStuff(false);
 
 
 			//var test = csvController.AccDataList[20];
@@ -526,8 +526,8 @@ namespace Serial.Menu
                 test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
                 foreach (var item in accData)
                 {
-                    string outPut = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\"," +
-						"\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
+					
+					string outPut = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
                     test.WriteLine(outPut);
                 }
             }
@@ -544,20 +544,20 @@ namespace Serial.Menu
 
             using (var test = File.AppendText(SlopeDivVariance_Slope))
             {
-                test.WriteLine("Slope/Variance,Slope");
+				test.WriteLine("SlopeDiff,Slope");
                 foreach (var item in accData)
                 {
-					string outPut = $"\"{item.Item3 / item.Item4}\",\"{item.Item3}\"";
+					string outPut = $"\"{item.Item3}\",\"{item.Item5}\"";
                     test.WriteLine(outPut);
                 }
             }
 
 			using (var test = File.AppendText(SlopeDivVariance_Slope_X))
             {
-                test.WriteLine("AX,Slope/Variance,Slope");
+                test.WriteLine("AX,GY,Slope/Variance,Slope,SlopeDiff");
                 foreach (var item in accData)
                 {
-                    string outPut = $"\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item3 / item.Item4}\",\"{item.Item3}\"";
+					string outPut = $"\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item3 / item.Item4}\",\"{item.Item3}\",\"{item.Item5}\"";
                     test.WriteLine(outPut);
                 }
             }
