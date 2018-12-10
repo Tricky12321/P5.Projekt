@@ -252,7 +252,7 @@ namespace Serial.DataMapper
                 double thresSecond = CalculateTendencySlope(secondBatchList);
 
 
-                var batch = data.GetRange(i - batchSize/2, batchSize).ToList();
+                var batch = velocityList.GetRange(i - batchSize/2, batchSize).ToList();
                 double tendencySlope = CalculateTendencySlope(batch);
                 double tendencyOffset = CalculateTendensyOffset(batch, tendencySlope);
                 double residualSS = CalculateResidualSumOfSquares(batch, tendencySlope, tendencyOffset);
