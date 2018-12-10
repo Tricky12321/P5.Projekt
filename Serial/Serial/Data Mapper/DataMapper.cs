@@ -139,7 +139,7 @@ namespace Serial.DataMapper
         private double CalculateTendencySlope(List<DataEntry> inputsTimes)
         {
             List<double> inputs = inputsTimes.Select(x => x.INS_Accelerometer.X).ToList();
-            List<double> times = inputsTimes.Select(x => x.INS_Angle).ToList();
+            List<double> times = inputsTimes.Select(x => x.INS_Accelerometer.TimeOfData).ToList();
 
             if (inputs.Count != 0 || times.Count != 0)
             {
@@ -210,15 +210,10 @@ namespace Serial.DataMapper
                 double thresSecond = CalculateTendencySlope(secondBatchList);
 
 
-                var batch = velocityList.GetRange(i - batchSize/2, batchSize).ToList();
+                var batch = data.GetRange(i - batchSize/2, batchSize).ToList();
                 double tendencySlope = CalculateTendencySlope(batch);
                 double tendencyOffset = CalculateTendensyOffset(batch, tendencySlope);
                 double residualSS = CalculateResidualSumOfSquares(batch, tendencySlope, tendencyOffset);
-
-                if (thresFirst - thresSecond > 8000)
-                {
-                    Console.WriteLine("");
-                }
 
                 output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, tendencySlope/(Math.Pow(residualSS,2)), Math.Abs(thresFirst - thresSecond)));
             }
@@ -232,10 +227,10 @@ namespace Serial.DataMapper
             for (int i = 1; i < accelerationList.Count; i++)
             {
                 double time = accelerationList[i].INS_Accelerometer.TimeOfData;
-                double value = (time - velocityList[i - 1].INS_Angle)
+                double value = (time - velocityList[i - 1].INS_Accelerometer.TimeOfData)
                     * ((accelerationList[i - 1].INS_Accelerometer.X + accelerationList[i].INS_Accelerometer.X) / 2)
                     + velocityList[i - 1].INS_Accelerometer.X;
-                velocityList.Add(new DataEntry(new XYZ(0.0, 0.0, 0.0), new XYZ(value, 0.0, 0.0), new XYZ(0.0, 0.0, 0.0), time));
+                velocityList.Add(new DataEntry(new XYZ(0.0, 0.0, 0.0), new XYZ(value, 0.0, 0.0, time), new XYZ(0.0, 0.0, 0.0), 0));
             }
             return velocityList;
         }
