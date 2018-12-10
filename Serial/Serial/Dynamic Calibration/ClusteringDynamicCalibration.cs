@@ -10,7 +10,7 @@ namespace Serial.DynamicCalibrationName
 {
 	public class ClusteringDynamicCalibration : EMClustering, IAccelerationPointController
 	{
-		const int BatchSize = 300;
+		const int BatchSize = 200;
 		const double ZeroThreashold = 0.5;
 		const int MinimumGroupSize = 50;
 		List<IndexRangePoint> DriftPoints;
