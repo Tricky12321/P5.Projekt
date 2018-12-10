@@ -32,9 +32,6 @@
     <Reference Include="IKVM.AWT.WinForms, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.AWT.WinForms.dll</HintPath>
     </Reference>
-    <Reference Include="IKVM.OpenJDK.Beans, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
-      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Beans.dll</HintPath>
-    </Reference>
     <Reference Include="IKVM.OpenJDK.Charsets, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Charsets.dll</HintPath>
     </Reference>
@@ -113,16 +110,7 @@
     <Reference Include="IKVM.Runtime.JNI, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
       <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.Runtime.JNI.dll</HintPath>
     </Reference>
-    <Reference Include="NTTU.BigODM.MachineLearning.Weka, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.1\lib\net40\NTTU.BigODM.MachineLearning.Weka.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="GlobalHotKey">
-      <HintPath>..\packages\GlobalHotKey.1.1.0\lib\GlobalHotKey.dll</HintPath>
-    </Reference>
-    <Reference Include="weka3, Version=3.8.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.1\lib\net40\weka3.dll</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="cs-kalman-filters">
       <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\cs-kalman-filters.dll</HintPath>
@@ -135,6 +123,24 @@
     </Reference>
     <Reference Include="MathNet.Numerics.IO">
       <HintPath>..\packages\cs-kalman-filters.1.0.1\lib\net461\Release\MathNet.Numerics.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Beans, Version=8.1.5717.0, Culture=neutral, PublicKeyToken=13235d27fcbfff58, processorArchitecture=MSIL">
+      <HintPath>..\packages\IKVM.8.1.5717.0\lib\IKVM.OpenJDK.Beans.dll</HintPath>
+    </Reference>
+    <Reference Include="multiInstanceFilters">
+      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.3\lib\net40\multiInstanceFilters.dll</HintPath>
+    </Reference>
+    <Reference Include="multiInstanceLearning">
+      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.3\lib\net40\multiInstanceLearning.dll</HintPath>
+    </Reference>
+    <Reference Include="NTTU.BigODM.MachineLearning.Weka">
+      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.3\lib\net40\NTTU.BigODM.MachineLearning.Weka.dll</HintPath>
+    </Reference>
+    <Reference Include="SMOTE">
+      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.3\lib\net40\SMOTE.dll</HintPath>
+    </Reference>
+    <Reference Include="weka3">
+      <HintPath>..\packages\NTTU.BigODM.MachineLearning.Weka.1.0.0.3\lib\net40\weka3.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
