@@ -25,10 +25,17 @@ namespace Serial.DynamicCalibrationName
 			};
 			var SortedClusters = Clusters.OrderBy(X => X.Average(Y=>Math.Abs(Y.SlopeDiff))).ToList();
 			// Update the clusters datapoints with information about what they are. 
-			SortedClusters[0].ForEach(X => X.clusterType = ClusterType.Drift);
-			SortedClusters[1].ForEach(X => X.clusterType = ClusterType.Drift);
-			SortedClusters[2].ForEach(X => X.clusterType = ClusterType.Acceleration);
-
+            // If there is not found 3 clusters, set all to drift
+            if (SortedClusters.Count < 3)
+            {
+                SortedClusters.ForEach(Y=> Y.ForEach(X => X.clusterType = ClusterType.Drift));
+            }
+            else
+            {
+                SortedClusters[0].ForEach(X => X.clusterType = ClusterType.Drift);
+                SortedClusters[1].ForEach(X => X.clusterType = ClusterType.Drift);
+                SortedClusters[2].ForEach(X => X.clusterType = ClusterType.Acceleration);
+            }
 			Console.WriteLine($"{SortedClusters[0][0].clusterColor} = {SortedClusters[0][0].clusterType}");
 			Console.WriteLine($"{SortedClusters[1][0].clusterColor} = {SortedClusters[1][0].clusterType}");
 			Console.WriteLine($"{SortedClusters[2][0].clusterColor} = {SortedClusters[2][0].clusterType}");
