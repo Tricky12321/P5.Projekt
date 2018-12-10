@@ -13,7 +13,7 @@ using Serial.Utility;
 using Serial.CSVWriter;
 using Serial.DynamicCalibrationName;
 using Serial.DynamicCalibrationName.Points;
-
+using Serial.Clustering;
 namespace Serial.Menu
 {
 	public static class MainMenu
@@ -52,6 +52,8 @@ namespace Serial.Menu
 
 		private static void RunDynamicCalibration()
 		{
+
+
 			string filePath = Directory.GetCurrentDirectory() + "/Test";
 			string[] fileNamesArray = Directory.GetFiles(filePath).Where(x => x.EndsWith(".csv")).ToArray();
 
@@ -68,14 +70,29 @@ namespace Serial.Menu
 			}
 
 			string fileName = fileNamesArray[number];
+			Load csvController = new Load("Combined_ins.csv");
+            csvController.HandleCSV();
+            dataMapper = csvController.data;
+			dataMapper.CalculateRollingAverage(200);
+			dataMapper.dataEntries = dataMapper.RollingAverageDataEntry;
+            CalculateLasseStuff(false, true);
 
-			Load csvController = new Load(fileName);
-			csvController.HandleCSV();
+			csvController = new Load(fileName);
+            csvController.HandleCSV();
+            dataMapper = csvController.data;
+            dataMapper.CalculateRollingAverage(200);
+			var backup = dataMapper.dataEntries;
+			dataMapper.dataEntries = dataMapper.RollingAverageDataEntry;
+            CalculateLasseStuff();
 			//var test = csvController.AccDataList[20];
+			dataMapper.dataEntries = backup;
 			var tesadsasdas = csvController.data.GetAccelerationXYZFromCSV();
-			DynamicCalibration dyn = new DynamicCalibration(tesadsasdas);
-			dyn.CalibrateResidualSumOfSquares(2.0);
-			dyn.CalibrateAccelerationPointCoefficient();
+
+			//TODO: HERE!
+			ClusteringDynamicCalibration Clustering = new ClusteringDynamicCalibration("SlopeDivVariance_Slope_COMBINED.csv","SlopeDivVariance_Slope.csv");
+			DynamicCalibration dyn = new DynamicCalibration(tesadsasdas, Clustering);
+			//dyn.CalibrateResidualSumOfSquares(2.0);
+			//dyn.CalibrateAccelerationPointCoefficient();
 
 			List<TimePoint> accelerationList = dyn.AccelerationList;
 			List<TimePoint> velocityList = dyn.CalculateDynamicVelocityList(dyn.NaiveVelocityList);
@@ -89,13 +106,13 @@ namespace Serial.Menu
 				switch (input)
 				{
 					case "acc":
-						accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						accelerationList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\",\"{x.Value.ToString().Replace(',', '.')}\""));
 						break;
 					case "vel":
-						velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						velocityList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\",\"{x.Value.ToString().Replace(',', '.')}\""));
 						break;
 					case "dis":
-						distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\", \"{x.Value.ToString().Replace(',', '.')}\""));
+						distanceList.ForEach(x => Console.WriteLine($"\"{x.Time.ToString().Replace(',', '.')}\",\"{x.Value.ToString().Replace(',', '.')}\""));
 						break;
 					case "toCSV":
 						string FileName = fileName.Replace(".csv", string.Empty).Split('/').Last();
@@ -486,23 +503,7 @@ namespace Serial.Menu
                     Console.WriteLine("Done!");
                     break;
                 case "acc":
-                    ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData = dataMapper.CalculateAcceleration();
-                    string accFile = "acc.csv";
-
-                    if (File.Exists(accFile))
-                    {
-                        File.Delete(accFile);
-                    }
-
-                    using (var test = File.AppendText(accFile))
-                    {
-                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
-                        foreach (var item in accData)
-                        {
-                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
-                            test.WriteLine(output);
-                        }
-                    }
+					CalculateLasseStuff();
                     Console.WriteLine("Done!");
                     break;
                 default:
@@ -511,6 +512,69 @@ namespace Serial.Menu
 			}
 		}
 
+		private static void CalculateLasseStuff(bool UseRollingAverage = false, bool Combined = false) {
+			ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData;
+			if (UseRollingAverage) {
+				accData = dataMapper.CalculateAccelerationRollingAverage();
+			} else {
+				accData = dataMapper.CalculateAcceleration();
+			}
+
+            string appendedFile = "Timer_AX_AY_AZ_GX_GY_GZ_Angle_Velocity_Slope_Variance_SlopeDiff.csv";
+			string SlopeDivVariance_Slope = "SlopeDivVariance_Slope.csv";
+            string SlopeDivVariance_Slope_X = "SlopeDivVariance_Slope_WITH_X.csv";
+
+			if (Combined) {
+                appendedFile = "Timer_AX_AY_AZ_GX_GY_GZ_Angle_Velocity_Slope_Variance_SlopeDiff_COMBINED.csv";
+				SlopeDivVariance_Slope = "SlopeDivVariance_Slope_COMBINED.csv";
+				SlopeDivVariance_Slope_X = "SlopeDivVariance_Slope_WITH_X_COMBINED.csv";
+			}
+
+            if (File.Exists(appendedFile))
+            {
+                File.Delete(appendedFile);
+            }
+            using (var test = File.AppendText(appendedFile))
+            {
+                test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
+                foreach (var item in accData)
+                {
+					
+					string outPut = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
+                    test.WriteLine(outPut);
+                }
+            }
+
+            if (File.Exists(SlopeDivVariance_Slope))
+            {
+                File.Delete(SlopeDivVariance_Slope);
+            }
+
+			if (File.Exists(SlopeDivVariance_Slope_X))
+            {
+				File.Delete(SlopeDivVariance_Slope_X);
+            }
+
+            using (var test = File.AppendText(SlopeDivVariance_Slope))
+            {
+				test.WriteLine("AX,SlopeDiff,Slope");
+                foreach (var item in accData)
+                {
+					string outPut = $"\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item5}\",\"{item.Item3}\"";
+                    test.WriteLine(outPut);
+                }
+            }
+
+			using (var test = File.AppendText(SlopeDivVariance_Slope_X))
+            {
+                test.WriteLine("AX,Slope/Variance,Slope,SlopeDiff");
+                foreach (var item in accData)
+                {
+					string outPut = $"\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item3 / item.Item4}\",\"{item.Item3}\",\"{item.Item5}\"";
+                    test.WriteLine(outPut);
+                }
+            }
+		}
 
 		public static void FixTime(int TimeInterval = 1)
 		{

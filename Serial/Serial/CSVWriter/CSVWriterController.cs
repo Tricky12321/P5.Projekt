@@ -161,6 +161,10 @@ namespace Serial.CSVWriter
 
 		public void DynamicToCSV(List<TimePoint> inputList)
 		{
+			if (File.Exists(DYNAMICCALIBFILE)) {
+				File.Delete(DYNAMICCALIBFILE);
+			}
+
 			using (StreamWriter FileWriter = File.AppendText(DYNAMICCALIBFILE))
 			{
 				FileWriter.WriteLine($"Timer,Value");

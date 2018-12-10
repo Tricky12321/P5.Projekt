@@ -11,13 +11,14 @@ namespace Serial.DataMapper.DataReader
 		PozyxReader _pozyx;
 		INSReader _INS;
 
-		ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
+		public ConcurrentQueue<DataEntry> dataEntries = new ConcurrentQueue<DataEntry>();
 
 		ConcurrentQueue<DataEntry> avalibleDataEntries => new ConcurrentQueue<DataEntry>(dataEntries.Where(X => X.Used == false));
 		public ConcurrentQueue<DataEntry> AllDataEntries => dataEntries;
 
 		public ConcurrentQueue<Tuple<XYZ, XYZ>> KalmanData;
 		public ConcurrentQueue<Tuple<XYZ, XYZ>> RollingAverageData;
+		public ConcurrentQueue<DataEntry> RollingAverageDataEntry;
 
 		public ConcurrentQueue<DataEntry> UnCalibrated = new ConcurrentQueue<DataEntry>();
 
