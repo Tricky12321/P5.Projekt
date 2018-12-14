@@ -84,14 +84,14 @@ namespace Serial.Highpass
             }
             using (StreamWriter FileWriter = File.AppendText(INSFile))
             {
-                FileWriter.WriteLine($"Timer,AX");
+                FileWriter.WriteLine($"Timer,AX,AY,AZ,GX,GY,GZ,A");
                 int DataCount = output.Count;
                 for (int i = 0; i < DataCount; i++)
                 {
                     if (output[i] != null)
                     {
                         FileWriter.WriteLine($"\"{output[i].Item1}\"," +
-                                             $"\"{output[i].Item2}\"");
+                                             $"\"{output[i].Item2}\"," + "\"0\"," + "\"0\"," + "\"0\"," + "\"0\"," + "\"0\"," + "\"0\"");
                     }
                 }
                 FileWriter.Close();
