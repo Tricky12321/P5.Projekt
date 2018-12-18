@@ -47,14 +47,14 @@ namespace Serial.Highpass
             for (int i = 0; i < input.Count - period; i++)
             {
                 List<Tuple<double, double>> subRange = input.GetRange(i, period);
-                double sumValue = 0;
+                /*double sumValue = 0;
                 foreach (var item in subRange)
                 {
                     sumValue += item.Item2;
                 }
-                sumValue /= subRange.Count;
-                double middleTime = subRange[subRange.Count / 2].Item1;
-                listToReturn.Add(new Tuple<double, double>(middleTime, sumValue));
+                sumValue /= subRange.Count;*/
+                double middleTime = subRange[subRange.Count / 2-2].Item1;
+                listToReturn.Add(new Tuple<double, double>(middleTime, subRange.Select(x=>x.Item2).Average()));
             }
 
             return listToReturn;

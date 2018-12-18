@@ -117,8 +117,8 @@ namespace Serial.Menu
 
 		public static void Test()
 		{
-            HighAndLowPass LP = new HighAndLowPass(PassType.Lowpass, 200, "10m_frem_ins_pozyx_2_INS_NOCALIBRATE.csv", "HPLP_INSdataUpdated.csv");
-            HighAndLowPass HP = new HighAndLowPass(PassType.Lowpass, 500, "HPLP_INSdataUpdated.csv", "HPLP_INSdataUpdated2.csv");
+            HighAndLowPass LP = new HighAndLowPass(PassType.Highpass, 200, "10m_frem_ins_pozyx_1_INS_NOCALIBRATE.csv", "HPLP_INSdataUpdated.csv");
+            //HighAndLowPass HP = new HighAndLowPass(PassType.Lowpass, 500, "HPLP_INSdataUpdated.csv", "HPLP_INSdataUpdated2.csv");
 		}
 
 		public static void PrintCommands()
