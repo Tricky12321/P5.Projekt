@@ -465,47 +465,47 @@ namespace Serial.Menu
 					}
 					Console.WriteLine($"Done segmenting data! {OutputSegments.Count}");
 					break;
-                case "variance":
-                    ConcurrentQueue<Tuple<DataEntry, double, double>> varianceData = dataMapper.CalculateVariance();
-                    string VarianceFile = "Variance.csv";
+				case "variance":
+					ConcurrentQueue<Tuple<DataEntry, double, double>> varianceData = dataMapper.CalculateVariance();
+					string VarianceFile = "Variance.csv";
 
-                    if (File.Exists(VarianceFile))
-                    {
-                        File.Delete(VarianceFile);
-                    }
+					if (File.Exists(VarianceFile))
+					{
+						File.Delete(VarianceFile);
+					}
 
-                    using (var test = File.AppendText(VarianceFile))
-                    {
-                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Variance,Slope");
-                        foreach (var item in varianceData)
-                        {
-                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\"";
-                            test.WriteLine(output);
-                        }
-                    }
-                    Console.WriteLine("Done!");
-                    break;
-                case "acc":
-                    ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData = dataMapper.CalculateAcceleration();
-                    string accFile = "acc.csv";
+					using (var test = File.AppendText(VarianceFile))
+					{
+						test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Variance,Slope");
+						foreach (var item in varianceData)
+						{
+							string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\"";
+							test.WriteLine(output);
+						}
+					}
+					Console.WriteLine("Done!");
+					break;
+				case "acc":
+					ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> accData = dataMapper.CalculateAcceleration();
+					string accFile = "acc.csv";
 
-                    if (File.Exists(accFile))
-                    {
-                        File.Delete(accFile);
-                    }
+					if (File.Exists(accFile))
+					{
+						File.Delete(accFile);
+					}
 
-                    using (var test = File.AppendText(accFile))
-                    {
-                        test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
-                        foreach (var item in accData)
-                        {
-                            string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
-                            test.WriteLine(output);
-                        }
-                    }
-                    Console.WriteLine("Done!");
-                    break;
-                default:
+					using (var test = File.AppendText(accFile))
+					{
+						test.WriteLine("Timer,AX,AY,AZ,GX,GY,GZ,Angle,Velocity,Slope,Variance,SlopeDiff");
+						foreach (var item in accData)
+						{
+							string output = $"\"{item.Item1.INS_Accelerometer.TimeOfData}\",\"{item.Item1.INS_Accelerometer.X}\",\"{item.Item1.INS_Accelerometer.Y}\",\"{item.Item1.INS_Accelerometer.Z}\",\"{item.Item1.INS_Gyroscope.X}\",\"{item.Item1.INS_Gyroscope.Y}\",\"{item.Item1.INS_Gyroscope.Z}\",\"{item.Item1.INS_Angle}\",\"{item.Item2}\",\"{item.Item3}\",\"{item.Item4}\",\"{item.Item5}\"";
+							test.WriteLine(output);
+						}
+					}
+					Console.WriteLine("Done!");
+					break;
+				default:
 					Console.WriteLine("Invalid input format, use help command!");
 					break;
 			}
@@ -517,26 +517,26 @@ namespace Serial.Menu
 			string[] entries = Directory.GetFileSystemEntries(".", "*_INS*.csv", SearchOption.AllDirectories);
 			foreach (var FilePath in entries)
 			{
-				try
+				double TimerIntervalMS = TimeInterval * 100;
+				Load load = new Load(FilePath);
+				if (load.GetCSVType() == CSVTypes.INS)
 				{
-					double TimerIntervalMS = TimeInterval * 100;
-					Load load = new Load(FilePath);
-					if (load.GetCSVType() == CSVTypes.INS)
+					load.HandleCSV();
+					DataMapper.DataMapper SingleDataMapper = load.data;
+					int iteration = 1;
+					List<DataEntry> datas = new List<DataEntry>(SingleDataMapper.AllDataEntries);
+					double test = datas.Max(X => X.INS_Accelerometer.TimeOfData);
+					double CurrentTimerVal = TimerIntervalMS * iteration;
+					while (test > CurrentTimerVal)
 					{
-						load.HandleCSV();
-						DataMapper.DataMapper SingleDataMapper = load.data;
-						int iteration = 1;
-						List<DataEntry> datas = new List<DataEntry>(SingleDataMapper.AllDataEntries);
-						double test = datas.Max(X => X.INS_Accelerometer.TimeOfData);
-						double CurrentTimerVal = TimerIntervalMS * iteration;
-						while (test > CurrentTimerVal)
+						double min = TimerIntervalMS * (iteration - 1);
+						double max = TimerIntervalMS * iteration;
+						var dataEntries = datas.Where(X =>
+													  X.INS_Accelerometer.TimeOfData < max &&
+													  X.INS_Accelerometer.TimeOfData > min).ToList();
+						int got = dataEntries.Count();
+						if (got > 0)
 						{
-							double min = TimerIntervalMS * (iteration - 1);
-							double max = TimerIntervalMS * iteration;
-							var dataEntries = datas.Where(X =>
-														  X.INS_Accelerometer.TimeOfData < max &&
-														  X.INS_Accelerometer.TimeOfData > min).ToList();
-							int got = dataEntries.Count();
 							double SectionTimer = ((dataEntries.Max(X => X.INS_Accelerometer.TimeOfData) - min) / got);
 							double entryTimer = SectionTimer + min;
 							foreach (var entry in dataEntries)
@@ -549,32 +549,25 @@ namespace Serial.Menu
 
 								}
 							}
-							CurrentTimerVal = TimerIntervalMS * ++iteration;
 						}
-						CSVWriterController INSWriter = new CSVWriterController(FilePath, SingleDataMapper, load.GetCSVType());
-						string POZYX_FilePath = FilePath.Replace("_INS.csv", "_POZYX.csv");
-
-
-
-						if (File.Exists(POZYX_FilePath))
-						{
-							Console.WriteLine($"FOUND POZYX FILE, {POZYX_FilePath}");
-							load = new Load(POZYX_FilePath);
-							load.HandleCSV();
-							var PozyxDatamapper = load.data;
-							var PozyxData = PozyxDatamapper.AllDataEntries.ToList();
-							int count = PozyxDatamapper.AllDataEntries.Count();
-							for (int i = 0; i < count; i++)
-							{
-								PozyxData[i].PoZYX.TimeOfData = datas[i].INS_Gyroscope.TimeOfData;
-							}
-							CSVWriterController PozyxWriter = new CSVWriterController(POZYX_FilePath, PozyxDatamapper, load.GetCSVType());
-						}
-
+						CurrentTimerVal = TimerIntervalMS * ++iteration;
 					}
-				}
-				catch (Exception)
-				{
+					CSVWriterController INSWriter = new CSVWriterController(FilePath, SingleDataMapper, load.GetCSVType());
+					string POZYX_FilePath = FilePath.Replace("_INS.csv", "_POZYX.csv");
+					if (File.Exists(POZYX_FilePath) && POZYX_FilePath.Contains("_POZYX.csv"))
+					{
+						Console.WriteLine($"FOUND POZYX FILE, {POZYX_FilePath}");
+						load = new Load(POZYX_FilePath);
+						load.HandleCSV();
+						var PozyxDatamapper = load.data;
+						var PozyxData = PozyxDatamapper.AllDataEntries.ToList();
+						int count = PozyxDatamapper.AllDataEntries.Count();
+						for (int i = 0; i < count; i++)
+						{
+							PozyxData[i].PoZYX.TimeOfData = datas[i].INS_Gyroscope.TimeOfData;
+						}
+						CSVWriterController PozyxWriter = new CSVWriterController(POZYX_FilePath, PozyxDatamapper, load.GetCSVType());
+					}
 
 				}
 			}
