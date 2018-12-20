@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Serial.DynamicCalibrationName.Points;
@@ -9,14 +9,13 @@ namespace Serial.DynamicCalibrationName
 {
     public class DynamicCalibration
     {
-        const double _runningAverageBatchTime = 1.0;
-       
-        private double _slopeDiffenceTreshold = 0.2;                      //The lower the value is, the more acceleration points will be found.
-        private double _pointResidualSSTreshold;   //defines the upper value for when the scrubber is stationary.
+        const double _runningAverageBatchTime = 3.0;
+
+        private double _slopeDiffenceTreshold = 0.1;                      //The lower the value is, the more acceleration points will be found.
+        private double _pointResidualSSTreshold = 0.1;   //defines the upper value for when the scrubber is stationary.
         const int _gradientCalculationOffset = 1;
 
         const double _stationaryDetectionBatchTime = 1.0;
-        const double _floorTextureConst = 1.5;
 
         const double _gravitationalConst = 9.81;
 
@@ -24,9 +23,11 @@ namespace Serial.DynamicCalibrationName
         public List<TimePoint> AccelerationList = new List<TimePoint>();
         public List<TimePoint> AccelerationListRAW = new List<TimePoint>();
 
+        private IAccelerationPointController _accelerationPointController;
 
-        public DynamicCalibration(List<XYZ> acceleration)
+        public DynamicCalibration(List<XYZ> acceleration, IAccelerationPointController accelerationPointController)
         {
+            _accelerationPointController = accelerationPointController;
             AccelerationListRAW.Add(new TimePoint(0.0, 0.0));
             AccelerationList.Add(new TimePoint(0.0, 0.0));
 
@@ -59,7 +60,7 @@ namespace Serial.DynamicCalibrationName
             return distanceList;
         }
 
-        public void CalibrateResidualSumOfSquares(double calibrationTime)
+        /*public void CalibrateResidualSumOfSquares(double calibrationTime)
         {
             List<TimePoint> accelerationCalibrationBatch = AccelerationListRAW.TakeWhile(x => x.Time <= calibrationTime).ToList();
 
@@ -67,7 +68,7 @@ namespace Serial.DynamicCalibrationName
             double offset = CalculateTendensyOffset(accelerationCalibrationBatch, slope);
             double errorMarginCalibration = CalculateResidualSumOfSquares(accelerationCalibrationBatch, slope, offset);
             _pointResidualSSTreshold = errorMarginCalibration * _floorTextureConst;
-        }
+        }*/
 
         private ConcurrentBag<Tuple<double, Double>> _coefficientValues = new ConcurrentBag<Tuple<double, Double>>();
         public void CalibrateAccelerationPointCoefficient()
@@ -152,7 +153,8 @@ namespace Serial.DynamicCalibrationName
 
             //Trying to remove drift//
 
-            List<IndexRangePoint> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
+            List<IndexRangePoint> driftingIndexesList = _accelerationPointController.GetDriftRanges();
+            //List<IndexRangePoint> driftingIndexesList = FindDriftRanges(velocityList, _runningAverageBatchTime, _gradientCalculationOffset, velocityList.Count - 1);
 
             if (useDriftCalibration)
             {
@@ -288,11 +290,6 @@ namespace Serial.DynamicCalibrationName
             return dynamicVelocityList;
         }
 
-        void HandleFunc(TimePoint arg)
-        {
-        }
-
-
         private List<IndexRangePoint> GetDrivingRangesFromStationaryIndex(List<IndexRangePoint> stationaryIndexes)
         {
             int startDrivingIndex = 0;
@@ -380,7 +377,7 @@ namespace Serial.DynamicCalibrationName
                 double tendensyOffset = CalculateTendensyOffset(batchInputsTimes, tendensySlope);
                 double residualSS = CalculateResidualSumOfSquares(batchInputsTimes, tendensySlope, tendensyOffset);
 
-
+                //Console.WriteLine($"\"{midPointTime.ToString().Replace(',', '.')}\", \"{residualSS.ToString().Replace(',', '.')}\", \"0.1\"");
 
                 if (residualSS < _pointResidualSSTreshold)
                 {
@@ -445,6 +442,8 @@ namespace Serial.DynamicCalibrationName
 
             foreach (IndexPoint slope in slopeDifferencesList)
             {
+                //Console.WriteLine($"\"{inputsTimes[slope.Index].Time.ToString().Replace(',', '.')}\",\"{slope.Value.ToString().Replace(',', '.')}\"");
+
                 if (Math.Abs(slope.Value) > (Math.Abs(coefficient) <= 0.0 ? _slopeDiffenceTreshold : coefficient))
                 {
                     listToReturn.Add(new IndexPoint(inputsTimes[slope.Index].Time, slope.Index));
@@ -573,7 +572,7 @@ namespace Serial.DynamicCalibrationName
             List<double> inputs = inputsTimes.Select(x => x.Value).ToList();
             List<double> times = inputsTimes.Select(x => x.Time).ToList();
 
-            if (inputs.Count != 0 || times.Count != 0)
+            if (inputsTimes.Count != 0)
             {
                 double pointsAverage = inputs.Average();
                 double timeAverage = times.Average();

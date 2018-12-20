@@ -31,7 +31,9 @@ namespace Serial.DataMapper
         public List<XYZ> GetAccelerationXYZFromCSV()
         {
             List<XYZ> listToReturn = new List<XYZ>();
-            AllDataEntries.ToList().ForEach(x => listToReturn.Add(new XYZ(x.INS_Accelerometer.X, x.INS_Accelerometer.Y, x.INS_Accelerometer.Z, x.INS_Accelerometer.TimeOfData)));
+            AllDataEntries.ToList().ForEach(x => listToReturn.Add(
+				new XYZ(x.INS_Accelerometer.X, x.INS_Accelerometer.Y, x.INS_Accelerometer.Z, x.INS_Accelerometer.TimeOfData)
+			));
             return listToReturn;
         }
 
@@ -53,6 +55,7 @@ namespace Serial.DataMapper
         public void CalculateRollingAverage(int PeriodLength)
         {
             RollingAverageData = new ConcurrentQueue<Tuple<XYZ, XYZ>>();
+			RollingAverageDataEntry = new ConcurrentQueue<DataEntry>();
             List<DataEntry> datas = new List<DataEntry>(AllDataEntries);
             List<double> AX = new List<double>();
             List<double> AY = new List<double>();
@@ -82,12 +85,16 @@ namespace Serial.DataMapper
             GY = RollingAverage(GY, PeriodLength);
             GZ = RollingAverage(GZ, PeriodLength);
             int count = AX.Count;
-            for (int i = 0; i < count; i++)
-            {
-                //Console.WriteLine($"[{i}] Accelerometer {AX[i]},{AY[i]},{AZ[i]}");
-                //Console.WriteLine($"[{i}] Gyroscope {GX[i]},{GY[i]},{GZ[i]}");
-                RollingAverageData.Enqueue(new Tuple<XYZ, XYZ>(new XYZ(AX[i], AY[i], AZ[i], Timer[i]), new XYZ(GX[i], GY[i], GZ[i], Timer[i])));
-            }
+			for (int i = 0; i < count; i++)
+			{
+				//Console.WriteLine($"[{i}] Accelerometer {AX[i]},{AY[i]},{AZ[i]}");
+				//Console.WriteLine($"[{i}] Gyroscope {GX[i]},{GY[i]},{GZ[i]}");
+				XYZ acc = new XYZ(AX[i], AY[i], AZ[i], Timer[i]);
+				XYZ gyro = new XYZ(GX[i], GY[i], GZ[i], Timer[i]);
+				RollingAverageData.Enqueue(new Tuple<XYZ, XYZ>(acc, gyro));
+				DataEntry newDataEntry = new DataEntry(null, acc, gyro, 0);
+				RollingAverageDataEntry.Enqueue(newDataEntry);
+			}
             RollingAverageBool = true;
         }
 
@@ -183,8 +190,45 @@ namespace Serial.DataMapper
             return sSResidual / inputsTimes.Count();
         }
 
+		//Calculates variance, velocity, slope and slope difference
+        public ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> CalculateAccelerationRollingAverage(int batchSize = 50)
+        {
+			List<DataEntry> data = RollingAverageDataEntry.ToList();
+            ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> output = new ConcurrentQueue<Tuple<DataEntry, double, double, double, double>>();
+            List<DataEntry> accelerationList = new List<DataEntry>();
+            accelerationList.Add(new DataEntry(new XYZ(0.0, 0.0, 0.0), new XYZ(0.0, 0.0, 0.0), new XYZ(0.0, 0.0, 0.0), 0.0));
+
+            foreach (DataEntry entry in data)
+            {
+                double value = (entry.INS_Accelerometer.X / 1000.0) * _gravitationalConst;
+                double time = entry.INS_Accelerometer.TimeOfData / 1000.0;
+                DataEntry pos = new DataEntry(new XYZ(0.0, 0.0, 0.0), new XYZ(value, 0.0, 0.0, time), new XYZ(0.0, 0.0, 0.0), 0);
+
+                accelerationList.Add(pos);
+            }
+
+            List<DataEntry> velocityList = CalculateVelocity(accelerationList);
+
+            for (int i = batchSize; i < velocityList.Count - batchSize; i++)
+            {
+                List<DataEntry> firstBatchList = velocityList.GetRange(i - batchSize, batchSize).ToList();
+                List<DataEntry> secondBatchList = velocityList.GetRange(i - 1, batchSize).ToList();
+                double thresFirst = CalculateTendencySlope(firstBatchList);
+                double thresSecond = CalculateTendencySlope(secondBatchList);
+
+
+                var batch = data.GetRange(i - batchSize / 2, batchSize).ToList();
+                double tendencySlope = CalculateTendencySlope(batch);
+                double tendencyOffset = CalculateTendensyOffset(batch, tendencySlope);
+                double residualSS = CalculateResidualSumOfSquares(batch, tendencySlope, tendencyOffset);
+
+                output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, residualSS, Math.Pow((thresFirst - thresSecond), 2)));
+            }
+            return output;
+        }
+
         //Calculates variance, velocity, slope and slope difference
-        public ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> CalculateAcceleration(int batchSize = 50)
+        public ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> CalculateAcceleration(int batchSize = 200)
         {
             List<DataEntry> data = AllDataEntries.ToList();
             ConcurrentQueue<Tuple<DataEntry, double, double, double, double>> output = new ConcurrentQueue<Tuple<DataEntry, double, double, double, double>>();
@@ -204,8 +248,8 @@ namespace Serial.DataMapper
 
             for (int i = batchSize; i < velocityList.Count - batchSize; i++)
             {
-                List<DataEntry> firstBatchList = data.GetRange(i - batchSize, batchSize).ToList();
-                List<DataEntry> secondBatchList = data.GetRange(i - 1, batchSize).ToList();
+                List<DataEntry> firstBatchList = velocityList.GetRange(i - batchSize, batchSize).ToList();
+                List<DataEntry> secondBatchList = velocityList.GetRange(i - 1, batchSize).ToList();
                 double thresFirst = CalculateTendencySlope(firstBatchList);
                 double thresSecond = CalculateTendencySlope(secondBatchList);
 
@@ -215,7 +259,7 @@ namespace Serial.DataMapper
                 double tendencyOffset = CalculateTendensyOffset(batch, tendencySlope);
                 double residualSS = CalculateResidualSumOfSquares(batch, tendencySlope, tendencyOffset);
 
-                output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, residualSS, Math.Pow((thresFirst - thresSecond), 2)));
+                output.Enqueue(new Tuple<DataEntry, double, double, double, double>(data[i], velocityList[i].INS_Accelerometer.X, tendencySlope, tendencySlope/(Math.Pow(residualSS,2)), Math.Abs(thresFirst - thresSecond)));
             }
             return output;
         }
@@ -230,9 +274,10 @@ namespace Serial.DataMapper
                 double value = (time - velocityList[i - 1].INS_Accelerometer.TimeOfData)
                     * ((accelerationList[i - 1].INS_Accelerometer.X + accelerationList[i].INS_Accelerometer.X) / 2)
                     + velocityList[i - 1].INS_Accelerometer.X;
-                velocityList.Add(new DataEntry(new XYZ(0.0, 0.0, 0.0), new XYZ(value, 0.0, 0.0), new XYZ(0.0, 0.0, 0.0), time));
+                velocityList.Add(new DataEntry(new XYZ(0.0, 0.0, 0.0), new XYZ(value, 0.0, 0.0, time), new XYZ(0.0, 0.0, 0.0), 0));
             }
             return velocityList;
         }
     }
 }
+    
